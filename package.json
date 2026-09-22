@@ -1,0 +1,19 @@
+{
+  "name": "admin-fenix",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema profesional de administración de proveedores y control operativo para minisúper",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host --port 5173",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.2.0"
+  },
+  "dependencies": {
+    "canvas-confetti": "^1.9.4",
+    "firebase": "^12.19.0"
+  }
+}

@@ -1,0 +1,50 @@
+:root {
+  /* Tipografía solicitada estrictamente por el usuario */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* Paleta Sobria Fénix: Azul Marino Corporativo y Rojo Fénix */
+  --bg-app: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-surface-alt: #f8fafc;
+  --bg-sidebar: #0f172a; /* Azul oscuro profundo */
+  --bg-sidebar-hover: #1e293b;
+  --bg-sidebar-active: #b91c1c; /* Rojo Fénix para elemento activo */
+  
+  /* Azul Corporativo */
+  --color-blue-dark: #0f172a;
+  --color-blue-navy: #1e3a8a;
+  --color-blue-primary: #1d4ed8;
+  --color-blue-hover: #1e40af;
+  --color-blue-light: #eff6ff;
+  --color-blue-border: #bfdbfe;
+
+  /* Rojo Fénix */
+  --color-red-dark: #7f1d1d;
+  --color-red-primary: #dc2626;
+  --color-red-fenix: #b91c1c;
+  --color-red-hover: #991b1b;
+  --color-red-light: #fef2f2;
+  --color-red-border: #fecaca;
+
+  /* Neutros */
+  --text-main: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --text-inverse: #ffffff;
+  
+  --border-color: #cbd5e1;
+  --border-color-light: #e2e8f0;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.12);
+
+  --transition-fast: 0.15s ease;
+  --sidebar-width: 70px;
+  --header-height: 64px;
+}
