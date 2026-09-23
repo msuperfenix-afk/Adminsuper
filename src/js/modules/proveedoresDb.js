@@ -216,8 +216,17 @@ export class ProveedoresDbModule {
                       </td>
                       <td>
                         <div class="provdb-dia-cell">
-                          <span class="dia-nombre font-bold">${diaNombre}</span>
-                          ${p.horaHabitual ? `<span class="dia-hora">⏰ ${p.horaHabitual}</span>` : ''}
+                          ${(() => {
+                            const diasList = Array.isArray(p.diasHabituales) && p.diasHabituales.length > 0 
+                              ? p.diasHabituales 
+                              : [(p.diaHabitual || 'lunes')];
+                            const textoDias = diasList.map(dId => DIAS_SEMANA.find(d => d.id === dId)?.corto || dId).join(', ');
+                            return `
+                              <span class="dia-nombre font-bold" title="${diasList.join(', ')}">${textoDias}</span>
+                              ${p.tienePreventa ? '<span style="font-size:0.65rem; background:#fef3c7; color:#92400e; border:1px solid #fde68a; padding:1px 5px; border-radius:3px; display:inline-block; margin-top:2px; font-weight:700;">📝 Preventa</span>' : ''}
+                              ${p.horaHabitual ? `<span class="dia-hora">⏰ ${p.horaHabitual}</span>` : ''}
+                            `;
+                          })()}
                         </div>
                       </td>
                       <td>

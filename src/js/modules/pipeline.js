@@ -26,10 +26,11 @@ export const CATEGORIAS_PROVEEDOR = {
 };
 
 export class PipelineModule {
-  constructor(containerId, onOpenEditModal, onOpenPedidoModal) {
+  constructor(containerId, onOpenEditModal, onOpenPedidoModal, onOpenVinoPreventaModal = null) {
     this.container = document.getElementById(containerId);
     this.onOpenEditModal = onOpenEditModal;
     this.onOpenPedidoModal = onOpenPedidoModal;
+    this.onOpenVinoPreventaModal = onOpenVinoPreventaModal;
     this.searchTerm = '';
     this.filtroCategoria = 'todas';
     this.filtroTipoPago = 'todos';
@@ -127,30 +128,42 @@ export class PipelineModule {
 
   renderBannerHoy(proveedores, diasInfo) {
     const provsHoy = proveedores.filter(p => p.dia === diasInfo.idHoy);
-    const provsHoyVinieron = provsHoy.filter(p => p.yaVino);
-    const totalPresupuestoHoy = provsHoy.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
-    const totalPagadoHoy = provsHoyVinieron.reduce((acc, p) => acc + (parseFloat(p.montoPagadoReal) || 0), 0);
+    const entregasHoy = provsHoy.filter(p => p.tipoVisita !== 'preventa');
+    const preventasHoy = provsHoy.filter(p => p.tipoVisita === 'preventa');
+
+    const entregasAtendidas = entregasHoy.filter(p => p.yaVino);
+    const preventasAtendidas = preventasHoy.filter(p => p.vinoPreventa);
+
+    const totalPresupuestoHoy = entregasHoy.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
+    const totalPagadoHoy = entregasAtendidas.reduce((acc, p) => acc + (parseFloat(p.montoPagadoReal) || 0), 0);
+    const totalPreventasHoy = preventasHoy.reduce((acc, p) => acc + (parseFloat(p.costoPreventa || p.presupuestoAprox) || 0), 0);
 
     return `
       <div style="padding: 12px 20px 0 20px;">
         <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               <span style="font-weight: 800; font-size: 0.95rem; color: #0f172a;">Hoy: ${diasInfo.nombreHoy}</span>
               <span class="badge-dia-destacado hoy">HOY</span>
-              <span style="font-size: 0.78rem; color: #64748b;">• ${provsHoy.length} proveedores programados</span>
-              <span style="font-size: 0.78rem; color: #047857; font-weight: 700;">• ${provsHoyVinieron.length} atendidos</span>
+              <span style="font-size: 0.78rem; color: #64748b;">• ${entregasHoy.length} entregas (${entregasAtendidas.length} recibidas)</span>
+              ${preventasHoy.length > 0 ? `<span style="font-size: 0.78rem; color: #92400e; font-weight: 700;">• ${preventasHoy.length} preventas (${preventasAtendidas.length} atendidas)</span>` : ''}
             </div>
 
-            <div style="display: flex; align-items: center; gap: 14px; font-size: 0.8rem;">
+            <div style="display: flex; align-items: center; gap: 14px; font-size: 0.8rem; flex-wrap: wrap;">
               <div>
-                <span style="color: #64748b;">Presupuesto Hoy:</span>
+                <span style="color: #64748b;">Presupuesto Caja Hoy:</span>
                 <strong style="color: #0f172a; margin-left: 4px;">${this.formatCurrency(totalPresupuestoHoy)}</strong>
               </div>
               <div>
                 <span style="color: #64748b;">Pagado en Caja:</span>
                 <strong style="color: #047857; margin-left: 4px;">${this.formatCurrency(totalPagadoHoy)}</strong>
               </div>
+              ${preventasHoy.length > 0 ? `
+                <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 4px;">
+                  <span style="color: #92400e; font-weight: 600;">Preventas Hoy (para mañana):</span>
+                  <strong style="color: #b45309; margin-left: 4px;">${this.formatCurrency(totalPreventasHoy)}</strong>
+                </div>
+              ` : ''}
               <button type="button" id="btnAgregarProveedorHoyBanner" class="btn-secondary" style="font-size: 0.74rem; height: 26px; padding: 0 10px; cursor: pointer;">
                 + Proveedor para Hoy
               </button>
@@ -161,13 +174,16 @@ export class PipelineModule {
           ${provsHoy.length > 0 ? `
             <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f1f5f9;">
               ${provsHoy.map(p => {
+                const esPreventa = p.tipoVisita === 'preventa';
                 const cant = Array.isArray(p.listaPedido) ? p.listaPedido.length : 0;
                 return `
-                  <button type="button" class="btn-chip-proveedor-hoy" data-id="${p.id}" style="background: ${p.yaVino ? '#f0fdf4' : '#ffffff'}; border: 1px solid ${p.yaVino ? '#bbf7d0' : '#e2e8f0'}; border-radius: 4px; padding: 3px 8px; font-size: 0.74rem; font-weight: 600; color: ${p.yaVino ? '#166534' : '#1e293b'}; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                  <button type="button" class="btn-chip-proveedor-hoy" data-id="${p.id}" style="background: ${esPreventa ? '#fffbeb' : (p.yaVino ? '#f0fdf4' : '#ffffff')}; border: 1px solid ${esPreventa ? '#fde68a' : (p.yaVino ? '#bbf7d0' : '#e2e8f0')}; border-radius: 4px; padding: 3px 8px; font-size: 0.74rem; font-weight: 600; color: ${esPreventa ? '#92400e' : (p.yaVino ? '#166534' : '#1e293b')}; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    ${esPreventa ? '<span style="font-size: 0.65rem; background:#fef3c7; color:#92400e; padding:1px 4px; border-radius:3px;">📝 PREV</span>' : ''}
                     <span class="${p.yaVino ? 'nombre-prov-tachado' : ''}">${p.proveedor}</span>
-                    <span style="color: #64748b; font-size: 0.7rem;">${this.formatCurrency(p.presupuestoAprox || p.preventaPresupuesto)}</span>
+                    <span style="color: #64748b; font-size: 0.7rem;">${this.formatCurrency(esPreventa ? (p.costoPreventa || p.presupuestoAprox) : (p.presupuestoAprox || p.preventaPresupuesto))}</span>
                     ${cant > 0 ? `<span style="color: #0284c7; font-size: 0.68rem;">📋 ${cant}</span>` : ''}
-                    ${p.yaVino ? `<span style="color:#047857; font-size:0.68rem; font-weight:700;">✓ ${p.horaVino}</span>` : ''}
+                    ${esPreventa && p.vinoPreventa ? `<span style="color:#166534; font-size:0.68rem; font-weight:700;">✓ Vino ${p.horaVinoPreventa}</span>` : ''}
+                    ${!esPreventa && p.yaVino ? `<span style="color:#047857; font-size:0.68rem; font-weight:700;">✓ ${p.horaVino}</span>` : ''}
                   </button>
                 `;
               }).join('')}
@@ -210,7 +226,12 @@ export class PipelineModule {
 
     diasVisibles.forEach(dia => {
       const provsDia = filtrados.filter(p => p.dia === dia.id);
-      const totalPresupuesto = provsDia.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
+      const entregasDia = provsDia.filter(p => p.tipoVisita !== 'preventa');
+      const preventasDia = provsDia.filter(p => p.tipoVisita === 'preventa');
+
+      const totalPresupuestoEntregas = entregasDia.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
+      const totalCostoPreventas = preventasDia.reduce((acc, p) => acc + (parseFloat(p.costoPreventa || p.presupuestoAprox) || 0), 0);
+
       const esHoy = dia.id === diasInfo.idHoy;
       const claseColExtra = esHoy ? 'col-hoy' : '';
 
@@ -227,9 +248,15 @@ export class PipelineModule {
               </span>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #475569; margin-top: 4px;">
-              <span>Presupuesto Aprox:</span>
-              <span class="column-total-budget">${this.formatCurrency(totalPresupuesto)}</span>
+              <span>Presupuesto Caja:</span>
+              <span class="column-total-budget">${this.formatCurrency(totalPresupuestoEntregas)}</span>
             </div>
+            ${preventasDia.length > 0 ? `
+              <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #92400e; margin-top: 2px;">
+                <span>📝 Preventas (${preventasDia.length}):</span>
+                <span style="font-weight: 700;">${this.formatCurrency(totalCostoPreventas)}</span>
+              </div>
+            ` : ''}
           </div>
 
           <!-- Contenedor con scroll interno para que deslice en el mismo recuadro -->
@@ -257,28 +284,89 @@ export class PipelineModule {
 
   renderDealCard(p) {
     const cantArticulos = Array.isArray(p.listaPedido) ? p.listaPedido.length : 0;
-    const esVino = !!p.yaVino;
+    const esPreventa = p.tipoVisita === 'preventa';
+    const esVino = !esPreventa && !!p.yaVino;
+
+    let subtituloEstado = '';
+    let bloqueAccionPreventa = '';
+
+    if (esPreventa) {
+      if (p.vinoPreventa) {
+        subtituloEstado = `
+          <div style="font-size: 0.7rem; color: #166534; font-weight: 700;">
+            ✓ Preventa vino ${p.horaVinoPreventa || ''}
+          </div>
+        `;
+        if (!p.entregaAgendada) {
+          const diaDestino = p.diaEntregaProgramada ? p.diaEntregaProgramada.toUpperCase() : 'MAÑANA';
+          bloqueAccionPreventa = `
+            <button type="button" class="btn-agendar-entrega" data-action="agendar-entrega" data-id="${p.id}" style="width: 100%; margin-top: 6px; background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; border-radius: 5px; padding: 4px 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 4px;" title="Agendar entrega para ${diaDestino} con el costo acordado">
+              <span>📅</span> Agendar Entrega (${diaDestino})
+            </button>
+          `;
+        } else {
+          const diaDestino = p.diaEntregaProgramada ? p.diaEntregaProgramada.toUpperCase() : 'MAÑANA';
+          bloqueAccionPreventa = `
+            <div style="margin-top: 5px; font-size: 0.68rem; color: #15803d; font-weight: 700; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px; padding: 2px 6px; text-align: center;">
+              ✓ Entrega agendada para el ${diaDestino}
+            </div>
+          `;
+        }
+      } else {
+        subtituloEstado = `
+          <div style="font-size: 0.7rem; color: #92400e;">
+            ⏰ Preventa: ${p.hora || '10:00'}
+          </div>
+        `;
+        bloqueAccionPreventa = `
+          <button type="button" class="btn-vino-preventa" data-action="vino-preventa" data-id="${p.id}" style="width: 100%; margin-top: 6px; background: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; border-radius: 5px; padding: 4px 8px; font-size: 0.74rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 5px;" title="Registrar que vino el preventista, anotar costo y agendar entrega">
+            <span>✓</span> Vino Preventa
+          </button>
+        `;
+      }
+    } else {
+      subtituloEstado = `
+        <div style="font-size: 0.7rem; color: #64748b;">
+          ${esVino 
+            ? `<span class="badge-vino-hora">✓ Vino ${p.horaVino || ''}</span>` 
+            : `<span>⏰ ${p.hora || '10:00'}</span>`
+          }
+        </div>
+      `;
+    }
+
+    const badgeTipo = esPreventa 
+      ? `<span style="font-size: 0.65rem; font-weight: 800; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 1px 6px; border-radius: 4px; letter-spacing: 0.3px;">📝 PREVENTA</span>`
+      : (p.idPreventaOrigen 
+          ? `<span style="font-size: 0.65rem; font-weight: 700; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 4px;">📦 ENTREGA PREVENTA</span>` 
+          : '');
+
+    const montoMostrar = esPreventa 
+      ? (p.vinoPreventa ? (p.costoPreventa || p.presupuestoAprox) : (p.presupuestoAprox || p.preventaPresupuesto || 0))
+      : (p.presupuestoAprox || p.preventaPresupuesto || 0);
 
     return `
-      <div class="deal-card ${esVino ? 'proveedor-vino' : ''}" data-id="${p.id}" id="card-${p.id}" style="cursor: pointer;">
-        <!-- Línea 1: Nombre del proveedor + Presupuesto Aprox (Sin venta anterior) -->
+      <div class="deal-card ${esVino ? 'proveedor-vino' : ''} ${esPreventa ? 'card-preventa' : ''}" data-id="${p.id}" id="card-${p.id}" style="cursor: pointer; ${esPreventa ? 'border-left: 3.5px solid #d97706;' : ''}">
+        
+        <!-- Línea superior: Badge de tipo si aplica -->
+        ${badgeTipo ? `<div style="margin-bottom: 4px;">${badgeTipo}</div>` : ''}
+
+        <!-- Línea 1: Nombre del proveedor + Costo/Presupuesto -->
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
           <div class="card-proveedor-nombre ${esVino ? 'nombre-prov-tachado' : ''}" style="font-weight: 700; font-size: 0.88rem; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.proveedor}">
             ${p.proveedor}
           </div>
-          <div style="font-weight: 700; font-size: 0.82rem; color: #1e293b; white-space: nowrap;">
-            ${this.formatCurrency(p.presupuestoAprox || p.preventaPresupuesto)}
+          <div style="font-weight: 700; font-size: 0.82rem; color: ${esPreventa ? '#92400e' : '#1e293b'}; white-space: nowrap;">
+            ${this.formatCurrency(montoMostrar)}
           </div>
         </div>
 
+        <!-- Acciones especiales de Preventa si aplica -->
+        ${bloqueAccionPreventa}
+
         <!-- Línea 2: Hora / Estado + Botones con Logo (Lista, Editar, Eliminar) -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px; padding-top: 4px; border-top: 1px solid #f1f5f9;">
-          <div style="font-size: 0.7rem; color: #64748b;">
-            ${esVino 
-              ? `<span class="badge-vino-hora">✓ Vino ${p.horaVino || ''}</span>` 
-              : `<span>⏰ ${p.hora || '10:00'}</span>`
-            }
-          </div>
+          ${subtituloEstado}
 
           <div style="display: flex; align-items: center; gap: 4px;" class="card-action-bar">
             <!-- Botón Lista de Pedido con Logo -->
@@ -446,6 +534,16 @@ export class PipelineModule {
         } else if (action === 'ver-pedido') {
           if (prov && this.onOpenPedidoModal) {
             this.onOpenPedidoModal(prov);
+          }
+        } else if (action === 'vino-preventa') {
+          if (prov && this.onOpenVinoPreventaModal) {
+            this.onOpenVinoPreventaModal(prov);
+          }
+        } else if (action === 'agendar-entrega') {
+          if (prov) {
+            const diaDest = prov.diaEntregaProgramada || stateManager.getDiaSiguiente(prov.dia);
+            stateManager.agendarEntregaDesdePreventa(prov.id, diaDest);
+            this.render();
           }
         }
       });

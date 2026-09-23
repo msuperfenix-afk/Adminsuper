@@ -65,12 +65,15 @@ export class ModalManager {
 
     const p = {
       dia: diaDefault,
+      tipoVisita: 'entrega',
       proveedor: '',
       categoria: 'abarrotes',
       hora: '10:00',
       tipoPago: 'Efectivo',
       presupuestoAprox: '',
       preventaPresupuesto: '',
+      costoPreventa: '',
+      diaEntregaProgramada: stateManager.getDiaSiguiente(diaDefault),
       compra: '',
       estado: 'programado',
       notas: '',
@@ -81,11 +84,36 @@ export class ModalManager {
     const proveedoresBD = stateManager.getProveedoresCatalogo();
 
     const diasOptions = DIAS_SEMANA.map(d => `<option value="${d.id}" ${p.dia === d.id ? 'selected' : ''}>${d.nombre}</option>`).join('');
+    const diasEntregaOptions = DIAS_SEMANA.map(d => `<option value="${d.id}" ${p.diaEntregaProgramada === d.id ? 'selected' : ''}>${d.nombre}</option>`).join('');
     const catsOptions = Object.entries(CATEGORIAS_PROVEEDOR).map(([key, val]) => `<option value="${key}" ${p.categoria === key ? 'selected' : ''}>${val.nombre}</option>`).join('');
 
     const body = `
       <form id="formProveedor" style="display: flex; flex-direction: column; gap: 14px;">
         
+        <!-- SELECTOR DE TIPO DE VISITA (ENTREGA VS PREVENTA) -->
+        <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 14px;">
+          <label style="display: block; font-weight: 700; font-size: 0.82rem; color: #0f172a; margin-bottom: 6px;">
+            📌 Tipo de Visita en este Día *
+          </label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <label style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1.5px solid ${p.tipoVisita !== 'preventa' ? '#0284c7' : '#cbd5e1'}; background: ${p.tipoVisita !== 'preventa' ? '#f0f9ff' : '#ffffff'}; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #0f172a;">
+              <input type="radio" name="tipoVisita" value="entrega" ${p.tipoVisita !== 'preventa' ? 'checked' : ''} id="radioTipoEntrega">
+              <div>
+                <div>📦 Entrega y Cobro</div>
+                <div style="font-size: 0.7rem; font-weight: normal; color: #64748b;">Llega camión repartidor, entrega mercancía y cobra en caja</div>
+              </div>
+            </label>
+
+            <label style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1.5px solid ${p.tipoVisita === 'preventa' ? '#d97706' : '#cbd5e1'}; background: ${p.tipoVisita === 'preventa' ? '#fffbeb' : '#ffffff'}; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #0f172a;">
+              <input type="radio" name="tipoVisita" value="preventa" ${p.tipoVisita === 'preventa' ? 'checked' : ''} id="radioTipoPreventa">
+              <div>
+                <div>📝 Preventa (Toma Pedido)</div>
+                <div style="font-size: 0.7rem; font-weight: normal; color: #64748b;">Viene preventista un día antes a levantar la orden para mañana</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
         <!-- BLOQUE 1: PROVEEDOR DESDE LA BASE DE DATOS -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -116,7 +144,7 @@ export class ModalManager {
 
             <!-- Input editable del nombre -->
             <input type="text" class="form-control font-bold" id="inputNombreProvAgenda" name="proveedor" placeholder="O escribe el nombre del proveedor..." value="${p.proveedor}" required style="font-size: 0.95rem;">
-            <small style="color: #64748b; font-size: 0.72rem;">* Al seleccionar de la lista se autocompletan en automático su categoría, forma de pago y presupuesto habitual.</small>
+            <small style="color: #64748b; font-size: 0.72rem;">* Al seleccionar de la lista se autocompletan categoría, forma de pago y presupuesto.</small>
           </div>
         </div>
 
@@ -124,7 +152,7 @@ export class ModalManager {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" style="font-weight: 700;">🗓️ Día de Visita en Agenda *</label>
-            <select class="form-control font-bold" name="dia" required>
+            <select class="form-control font-bold" name="dia" id="selectDiaPrincipalAgenda" required>
               ${diasOptions}
             </select>
           </div>
@@ -136,13 +164,34 @@ export class ModalManager {
           </div>
         </div>
 
+        <!-- BLOQUE ESPECÍFICO DE PREVENTA (SI SE MARCA PREVENTA) -->
+        <div id="seccionCamposPreventa" style="display: ${p.tipoVisita === 'preventa' ? 'block' : 'none'}; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 12px 14px;">
+          <div style="font-weight: 700; font-size: 0.85rem; color: #92400e; margin-bottom: 8px;">
+            📝 Configuración de Preventa
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700; color: #92400e;">Costo Estimado de Preventa ($ MXN)</label>
+              <input type="number" step="10" min="0" class="form-control font-bold" id="inputCostoPreventaAgenda" name="costoPreventa" placeholder="0.00" value="${p.costoPreventa || p.presupuestoAprox || ''}" style="font-size: 0.95rem;">
+              <small style="color: #78350f; font-size: 0.72rem;">Monto estimado que cobrará en la entrega</small>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700; color: #92400e;">Día de Entrega Programada</label>
+              <select class="form-control font-bold" name="diaEntregaProgramada" id="selectDiaEntregaProgramada">
+                ${diasEntregaOptions}
+              </select>
+              <small style="color: #78350f; font-size: 0.72rem;">Día en que llegará la mercancía</small>
+            </div>
+          </div>
+        </div>
+
         <!-- BLOQUE 3: PRESUPUESTO, HORA Y FORMA DE PAGO -->
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+        <div id="seccionCamposEntrega" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700;">💰 Presupuesto Aprox. ($ MXN)</label>
+              <label class="form-label" style="font-weight: 700;" id="labelPresupuestoGeneral">💰 Presupuesto Aprox. ($ MXN)</label>
               <input type="number" step="10" min="0" class="form-control font-bold" id="inputPresupuestoProvAgenda" name="presupuestoAprox" placeholder="0.00" value="${p.presupuestoAprox || p.preventaPresupuesto || ''}" style="font-size: 0.95rem;">
-              <small style="color: #64748b; font-size: 0.72rem;">Estimado a pagar este día</small>
+              <small style="color: #64748b; font-size: 0.72rem;">Estimado a pagar al proveedor</small>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" style="font-weight: 700;">⏰ Hora Estimada de Llegada</label>
@@ -169,6 +218,26 @@ export class ModalManager {
           </div>
         </div>
 
+        <!-- BLOQUE FRECUENCIA MÚLTIPLE (HASTA 3 VECES POR SEMANA) -->
+        ${!isEdit ? `
+          <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px 14px;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              🔄 Frecuencia múltiple (proveedores que vienen 2 o 3 veces por semana)
+            </div>
+            <p style="font-size: 0.72rem; color: #64748b; margin: 0 0 8px 0;">
+              Si este proveedor visita varios días a la semana, marca los días adicionales y se agendarán juntos:
+            </p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              ${DIAS_SEMANA.map(d => `
+                <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 600; background: #ffffff; border: 1px solid #cbd5e1; padding: 3px 8px; border-radius: 4px; cursor: pointer;">
+                  <input type="checkbox" name="diasMultiples" value="${d.id}" class="check-dia-multiple" ${d.id === diaDefault ? 'disabled title="Día principal ya seleccionado"' : ''}>
+                  <span>${d.corto}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
         <!-- BLOQUE 4: OBSERVACIONES -->
         <div class="form-group" style="margin-bottom: 0;">
           <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569;">Observaciones / Instrucciones de Entrega</label>
@@ -184,11 +253,37 @@ export class ModalManager {
 
     this.open(title, body, footer);
 
+    // Conectar reactividad entre Entrega y Preventa
+    const radioEntrega = document.getElementById('radioTipoEntrega');
+    const radioPreventa = document.getElementById('radioTipoPreventa');
+    const seccionPreventa = document.getElementById('seccionCamposPreventa');
+    const selectDiaPrincipal = document.getElementById('selectDiaPrincipalAgenda');
+    const selectDiaEntrega = document.getElementById('selectDiaEntregaProgramada');
+
+    const actualizarVistaTipo = () => {
+      const esPrev = radioPreventa?.checked;
+      if (seccionPreventa) {
+        seccionPreventa.style.display = esPrev ? 'block' : 'none';
+      }
+    };
+
+    radioEntrega?.addEventListener('change', actualizarVistaTipo);
+    radioPreventa?.addEventListener('change', actualizarVistaTipo);
+
+    // Actualizar día de entrega automático si cambia el día principal
+    selectDiaPrincipal?.addEventListener('change', (e) => {
+      const nuevoDia = e.target.value;
+      if (selectDiaEntrega) {
+        selectDiaEntrega.value = stateManager.getDiaSiguiente(nuevoDia);
+      }
+    });
+
     // Conectar autocompletado en vivo al seleccionar proveedor de la BD
     const selectBD = document.getElementById('selectProvAgendaDesdeBD');
     const inputNombre = document.getElementById('inputNombreProvAgenda');
     const selectCat = document.getElementById('selectCatProvAgenda');
     const inputPresupuesto = document.getElementById('inputPresupuestoProvAgenda');
+    const inputCostoPrev = document.getElementById('inputCostoPreventaAgenda');
     const inputHora = document.getElementById('inputHoraProvAgenda');
     const inputNotas = document.getElementById('inputNotasProvAgenda');
 
@@ -206,6 +301,7 @@ export class ModalManager {
       if (inputNombre) inputNombre.value = nombre;
       if (selectCat && cat) selectCat.value = cat;
       if (inputPresupuesto && presupuesto) inputPresupuesto.value = presupuesto;
+      if (inputCostoPrev && presupuesto) inputCostoPrev.value = presupuesto;
       if (inputHora && hora) inputHora.value = hora;
       if (inputNotas && notas && !inputNotas.value) inputNotas.value = notas;
 
@@ -231,14 +327,22 @@ export class ModalManager {
       }
 
       const formData = new FormData(form);
+      const tipoVisita = formData.get('tipoVisita') || 'entrega';
+      const diaPrincipal = formData.get('dia');
+      const costoPrev = parseFloat(formData.get('costoPreventa')) || 0;
+      const presupAprox = parseFloat(formData.get('presupuestoAprox')) || (tipoVisita === 'preventa' ? costoPrev : 0);
+
       const datos = {
-        dia: formData.get('dia'),
+        dia: diaPrincipal,
+        tipoVisita: tipoVisita,
         categoria: formData.get('categoria'),
         proveedor: formData.get('proveedor').trim(),
-        hora: formData.get('hora'),
+        hora: formData.get('hora') || '10:00',
         tipoPago: formData.get('tipoPago') || 'Efectivo',
-        presupuestoAprox: parseFloat(formData.get('presupuestoAprox')) || 0,
-        preventaPresupuesto: parseFloat(formData.get('presupuestoAprox')) || 0,
+        presupuestoAprox: presupAprox,
+        preventaPresupuesto: presupAprox,
+        costoPreventa: costoPrev,
+        diaEntregaProgramada: formData.get('diaEntregaProgramada') || stateManager.getDiaSiguiente(diaPrincipal),
         compra: parseFloat(p.compra) || 0,
         estado: p.estado || 'programado',
         notas: formData.get('notas')?.trim() || ''
@@ -247,8 +351,127 @@ export class ModalManager {
       if (isEdit) {
         stateManager.updateProveedor(proveedor.id, datos);
       } else {
-        stateManager.addProveedor(datos);
+        // Revisar si seleccionó días múltiples adicionales
+        const diasExtras = Array.from(document.querySelectorAll('.check-dia-multiple:checked')).map(cb => cb.value);
+        if (diasExtras.length > 0) {
+          stateManager.addProveedorMultiplesDias({
+            dias: [diaPrincipal, ...diasExtras],
+            ...datos
+          });
+        } else {
+          stateManager.addProveedor(datos);
+        }
       }
+
+      this.close();
+      if (onGuardado) onGuardado();
+    });
+  }
+
+  // ==========================================
+  // MODAL: REGISTRAR "VINO PREVENTA", COSTO DE VENTA Y AGENDAR ENTREGA
+  // ==========================================
+  openVinoPreventaModal(proveedor, onGuardado = null) {
+    if (!proveedor) return;
+    const p = proveedor;
+    const diaActual = p.dia || 'lunes';
+    const diaSiguiente = p.diaEntregaProgramada || stateManager.getDiaSiguiente(diaActual);
+    const horaActual = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(v || 0);
+
+    const diasEntregaOptions = DIAS_SEMANA.map(d => `<option value="${d.id}" ${d.id === diaSiguiente ? 'selected' : ''}>${d.nombre} (Entrega)</option>`).join('');
+
+    const body = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <div>
+              <span style="font-size: 0.7rem; font-weight: 800; background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px;">📝 LEVANTAMIENTO DE PREVENTA</span>
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 4px 0 0;">${p.proveedor}</h3>
+            </div>
+            <div style="text-align: right; font-size: 0.78rem; color: #475569;">
+              Visita Preventa: <strong style="text-transform: capitalize; color: #0f172a;">${p.dia}</strong>
+            </div>
+          </div>
+          <p style="margin: 6px 0 0; font-size: 0.75rem; color: #78350f;">
+            Registra la llegada del preventista y el <strong>costo de la orden acordada</strong> para generar de inmediato la entrega en la agenda con ese presupuesto.
+          </p>
+        </div>
+
+        <!-- FORMULARIO DE CAPTURA RÁPIDA -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+          <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">⏰ Hora en que Vino</label>
+              <input type="time" class="form-control font-bold" id="inputHoraVinoPrev" value="${p.horaVinoPreventa || horaActual}">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">💰 Costo de Venta / Pedido ($ MXN) *</label>
+              <input type="number" step="10" min="0" class="form-control font-bold" id="inputCostoVinoPrev" placeholder="0.00" value="${p.costoPreventa || p.presupuestoAprox || ''}" style="font-size: 1rem; color: #047857;" autofocus required>
+              <small style="color: #64748b; font-size: 0.72rem;">Monto a pagar en caja en la entrega</small>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-weight: 700; color: #0f172a;">🗓️ Día en que se Realizará la Entrega</label>
+            <select class="form-control font-bold" id="selectDiaEntregaPrev">
+              ${diasEntregaOptions}
+            </select>
+          </div>
+
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 10px 12px;">
+            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #166534; margin: 0;">
+              <input type="checkbox" id="checkAgendarEntregaAuto" checked style="margin-top: 3px;">
+              <div>
+                <div>📅 Agendar entrega automáticamente para ese día</div>
+                <div style="font-weight: normal; font-size: 0.72rem; color: #15803d; margin-top: 2px;">
+                  Crea en la agenda del día siguiente el registro de entrega con este costo exacto y la lista de pedido para el cajero.
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- NOTAS DE LA PREVENTA -->
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-size: 0.8rem; color: #475569;">Notas de la Preventa / Variedad Pedida</label>
+          <input type="text" class="form-control" id="inputNotasVinoPrev" value="${p.notas || ''}" placeholder="Ej. Pedido acordado con preventista, pedir factura, etc." style="font-size: 0.85rem;">
+        </div>
+      </div>
+    `;
+
+    const footer = `
+      <button type="button" class="btn-secondary" id="btnCancelarVinoPrev">Cancelar</button>
+      <button type="button" class="btn-primary" id="btnGuardarVinoPrev" style="min-width: 170px; background: #0f172a;">
+        ✓ Guardar Preventa y Agendar
+      </button>
+    `;
+
+    this.open(`📝 Registrar Preventa: ${p.proveedor}`, body, footer);
+
+    document.getElementById('btnCancelarVinoPrev')?.addEventListener('click', () => this.close());
+    document.getElementById('btnGuardarVinoPrev')?.addEventListener('click', () => {
+      const hora = document.getElementById('inputHoraVinoPrev')?.value || horaActual;
+      const costo = parseFloat(document.getElementById('inputCostoVinoPrev')?.value) || 0;
+      const diaEntrega = document.getElementById('selectDiaEntregaPrev')?.value || diaSiguiente;
+      const agendarAuto = !!document.getElementById('checkAgendarEntregaAuto')?.checked;
+      const notas = document.getElementById('inputNotasVinoPrev')?.value.trim() || '';
+
+      if (costo <= 0) {
+        if (!confirm('¿Deseas registrar la preventa sin costo de orden definido ($0)?')) {
+          document.getElementById('inputCostoVinoPrev')?.focus();
+          return;
+        }
+      }
+
+      stateManager.updateProveedor(p.id, { notas });
+      stateManager.registrarVinoPreventa(p.id, {
+        hora,
+        costoPreventa: costo,
+        diaEntrega,
+        agendarEntregaAuto: agendarAuto
+      });
 
       this.close();
       if (onGuardado) onGuardado();
@@ -2195,10 +2418,18 @@ export class ModalManager {
   // ==========================================
   openProveedorCatalogoModal(prov = null, onGuardado = null) {
     const isEdit = !!(prov && prov.id);
+    const diasHabitualesActuales = Array.isArray(prov?.diasHabituales) && prov.diasHabituales.length > 0 
+      ? prov.diasHabituales 
+      : [(prov?.diaHabitual || 'lunes')];
+
     const p = {
       nombre: '',
       categoria: 'abarrotes',
-      diaHabitual: 'lunes',
+      diaHabitual: diasHabitualesActuales[0] || 'lunes',
+      diasHabituales: diasHabitualesActuales,
+      tienePreventa: false,
+      diasPreventa: [],
+      diasEntrega: [],
       horaHabitual: '10:00',
       tipoPago: 'Efectivo',
       presupuestoHabitual: '',
@@ -2207,7 +2438,6 @@ export class ModalManager {
       ...(prov || {})
     };
 
-    const diasOptions = DIAS_SEMANA.map(d => `<option value="${d.id}" ${p.diaHabitual === d.id ? 'selected' : ''}>${d.nombre}</option>`).join('');
     const catsOptions = Object.entries(CATEGORIAS_PROVEEDOR).map(([key, val]) => `<option value="${key}" ${p.categoria === key ? 'selected' : ''}>${val.nombre}</option>`).join('');
 
     const body = `
@@ -2221,31 +2451,55 @@ export class ModalManager {
           </p>
         </div>
 
-        <!-- BLOQUE 1: IDENTIFICACIÓN -->
+        <!-- BLOQUE 1: IDENTIFICACIÓN Y CATEGORÍA -->
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
           <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" style="font-weight: 700; color: #0f172a;">Nombre del Proveedor o Empresa *</label>
             <input type="text" class="form-control font-bold" name="nombre" placeholder="Ej: Coca-Cola, Bimbo, Sabritas, Tortillería..." value="${p.nombre}" required autofocus style="font-size: 0.96rem; color: #0f172a;">
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700;">🏷️ Categoría de Producto *</label>
-              <select class="form-control font-bold" name="categoria" required>
-                ${catsOptions}
-              </select>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700;">🗓️ Día Habitual de Visita *</label>
-              <select class="form-control font-bold" name="diaHabitual" required>
-                ${diasOptions}
-              </select>
-            </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 700;">🏷️ Categoría de Producto *</label>
+            <select class="form-control font-bold" name="categoria" required>
+              ${catsOptions}
+            </select>
           </div>
         </div>
 
-        <!-- BLOQUE 2: CONDICIONES DE PAGO Y PRESUPUESTO -->
+        <!-- BLOQUE 2: FRECUENCIA SEMANAL (HASTA 3 VECES POR SEMANA) -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+          <label class="form-label" style="font-weight: 700; margin-bottom: 4px; color: #0f172a;">
+            🗓️ Días Habituales de Visita a la Semana (hasta 3 o más días) *
+          </label>
+          <p style="font-size: 0.72rem; color: #64748b; margin: 0 0 8px 0;">
+            Selecciona todos los días en que el proveedor asiste a la tienda (ej: Lunes, Miércoles y Viernes):
+          </p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+            ${DIAS_SEMANA.map(d => {
+              const isChecked = p.diasHabituales.includes(d.id);
+              return `
+                <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; background: ${isChecked ? '#f0f9ff' : '#ffffff'}; border: 1.5px solid ${isChecked ? '#0284c7' : '#cbd5e1'}; color: ${isChecked ? '#0369a1' : '#334155'}; padding: 4px 10px; border-radius: 6px; cursor: pointer;">
+                  <input type="checkbox" name="diasHabituales" value="${d.id}" class="check-cat-dia" ${isChecked ? 'checked' : ''}>
+                  <span>${d.nombre}</span>
+                </label>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- CONFIGURACIÓN DE PREVENTA -->
+          <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; margin-top: 10px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #0f172a; margin: 0;">
+              <input type="checkbox" id="checkTienePreventaCat" name="tienePreventa" ${p.tienePreventa ? 'checked' : ''}>
+              <span>📝 ¿Este proveedor maneja preventa un día antes de la entrega?</span>
+            </label>
+            <p style="margin: 3px 0 0 24px; font-size: 0.72rem; color: #64748b;">
+              Al marcar esta opción, la agenda sabrá que primero asiste un preventista a levantar pedido y la entrega se agenda con ese costo.
+            </p>
+          </div>
+        </div>
+
+        <!-- BLOQUE 3: CONDICIONES DE PAGO Y PRESUPUESTO -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
           <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; margin-bottom: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" style="font-weight: 700;">💰 Presupuesto Habitual ($ MXN)</label>
@@ -2277,7 +2531,7 @@ export class ModalManager {
           </div>
         </div>
 
-        <!-- BLOQUE 3: CONTACTO Y NOTAS -->
+        <!-- BLOQUE 4: CONTACTO Y NOTAS -->
         <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
           <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569;">📞 Teléfono / Preventista</label>
@@ -2286,8 +2540,16 @@ export class ModalManager {
 
           <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569;">📝 Observaciones / Instrucciones</label>
-            <textarea class="form-control" name="notas" placeholder="Requerimientos de recibo, días alternos, productos especiales..." style="font-size: 0.85rem; height: 60px;">${p.notas || ''}</textarea>
+            <textarea class="form-control" name="notas" placeholder="Requerimientos de recibo, días alternos, productos especiales..." style="font-size: 0.85rem; height: 50px;">${p.notas || ''}</textarea>
           </div>
+        </div>
+
+        <!-- OPCIÓN DE AUTO-SINCRONIZAR A LA AGENDA -->
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 8px 12px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 700; color: #166534; margin: 0;">
+            <input type="checkbox" id="checkSyncAgenda" ${!isEdit ? 'checked' : ''}>
+            <span>🗓️ Generar / sincronizar automáticamente registros en la Agenda Semanal para los días seleccionados</span>
+          </label>
         </div>
       </form>
     `;
@@ -2306,22 +2568,51 @@ export class ModalManager {
         form.reportValidity();
         return;
       }
+
+      const diasSeleccionados = Array.from(document.querySelectorAll('.check-cat-dia:checked')).map(cb => cb.value);
+      if (diasSeleccionados.length === 0) {
+        alert('Por favor selecciona al menos un día habitual de visita.');
+        return;
+      }
+
       const formData = new FormData(form);
+      const tienePrev = !!document.getElementById('checkTienePreventaCat')?.checked;
+      const syncAgenda = !!document.getElementById('checkSyncAgenda')?.checked;
+
       const datos = {
         nombre: formData.get('nombre').trim(),
         categoria: formData.get('categoria'),
         tipoPago: formData.get('tipoPago'),
-        diaHabitual: formData.get('diaHabitual'),
-        horaHabitual: formData.get('horaHabitual'),
+        diaHabitual: diasSeleccionados[0] || 'lunes',
+        diasHabituales: diasSeleccionados,
+        tienePreventa: tienePrev,
+        horaHabitual: formData.get('horaHabitual') || '10:00',
         presupuestoHabitual: parseFloat(formData.get('presupuestoHabitual')) || 0,
-        contacto: formData.get('contacto').trim(),
-        notas: formData.get('notas').trim()
+        contacto: (formData.get('contacto') || '').trim(),
+        notas: (formData.get('notas') || '').trim()
       };
 
       if (isEdit) {
         stateManager.updateProveedorCatalogo(prov.id, datos);
       } else {
         stateManager.addProveedorCatalogo(datos);
+      }
+
+      // Si marcó sincronizar en la agenda y es nuevo o lo solicita:
+      if (syncAgenda) {
+        stateManager.addProveedorMultiplesDias({
+          dias: diasSeleccionados,
+          proveedor: datos.nombre,
+          categoria: datos.categoria,
+          tipoVisita: tienePrev ? 'preventa' : 'entrega',
+          hora: datos.horaHabitual,
+          tipoPago: datos.tipoPago,
+          presupuestoAprox: datos.presupuestoHabitual,
+          preventaPresupuesto: datos.presupuestoHabitual,
+          costoPreventa: tienePrev ? datos.presupuestoHabitual : 0,
+          diaEntregaProgramada: stateManager.getDiaSiguiente(diasSeleccionados[0]),
+          notas: datos.notas
+        });
       }
 
       this.close();

@@ -44,6 +44,11 @@ class App {
           this.modalManager.openListaPedidoModal(prov, () => {
             this.pipelineModule.render();
           });
+        },
+        (prov) => {
+          this.modalManager.openVinoPreventaModal(prov, () => {
+            this.pipelineModule.render();
+          });
         }
       );
     } catch (e) {

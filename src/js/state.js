@@ -1811,11 +1811,37 @@ class StateManager {
   }
 
   // 11. Pipeline Semanal
+  // 11. Pipeline Semanal y Gestión Preventa / Entrega
+  getDiaSiguiente(diaId) {
+    const mapa = {
+      lunes: 'martes',
+      martes: 'miercoles',
+      miercoles: 'jueves',
+      jueves: 'viernes',
+      viernes: 'sabado',
+      sabado: 'lunes',
+      domingo: 'lunes'
+    };
+    return mapa[(diaId || '').toLowerCase()] || 'martes';
+  }
+
   addProveedor(p) {
+    const diaDefault = p.dia || 'lunes';
+    const tipoVisita = p.tipoVisita === 'preventa' ? 'preventa' : 'entrega';
+    const costoPreventa = parseFloat(p.costoPreventa) || 0;
+
     const nuevo = {
-      id: 'p-' + Date.now(),
+      id: 'p-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+      tipoVisita: tipoVisita,
       compra: 0,
-      presupuestoAprox: parseFloat(p.preventaPresupuesto || p.presupuestoAprox) || 0,
+      presupuestoAprox: parseFloat(p.preventaPresupuesto || p.presupuestoAprox) || (tipoVisita === 'preventa' ? costoPreventa : 0),
+      preventaPresupuesto: parseFloat(p.preventaPresupuesto || p.presupuestoAprox) || (tipoVisita === 'preventa' ? costoPreventa : 0),
+      costoPreventa: costoPreventa,
+      vinoPreventa: !!p.vinoPreventa,
+      horaVinoPreventa: p.horaVinoPreventa || '',
+      diaEntregaProgramada: p.diaEntregaProgramada || this.getDiaSiguiente(diaDefault),
+      entregaAgendada: !!p.entregaAgendada,
+      idPreventaOrigen: p.idPreventaOrigen || null,
       ventaAnterior: parseFloat(p.ventaAnterior) || 0,
       listaPedido: Array.isArray(p.listaPedido) ? p.listaPedido : [],
       yaVino: false,
@@ -1824,6 +1850,7 @@ class StateManager {
       estado: 'programado',
       ...p
     };
+
     if (nuevo.presupuestoAprox && !nuevo.preventaPresupuesto) {
       nuevo.preventaPresupuesto = nuevo.presupuestoAprox;
     }
@@ -1839,6 +1866,96 @@ class StateManager {
     this.data.proveedores.push(nuevo);
     this.saveState();
     return nuevo;
+  }
+
+  // Soporte para proveedores que visitan múltiples días a la semana (hasta 3 o más días)
+  addProveedorMultiplesDias({ dias = [], ...datos }) {
+    if (!Array.isArray(dias) || dias.length === 0) {
+      return [this.addProveedor(datos)];
+    }
+    const creados = [];
+    dias.forEach((dia, index) => {
+      const nuevo = this.addProveedor({
+        ...datos,
+        id: 'p-' + Date.now() + '-' + index,
+        dia: dia
+      });
+      creados.push(nuevo);
+    });
+    return creados;
+  }
+
+  // Registrar que vino el preventista, capturar el costo de la orden y opcionalmente agendar la entrega
+  registrarVinoPreventa(id, { hora, costoPreventa, diaEntrega, agendarEntregaAuto = true }) {
+    const prov = this.data.proveedores.find(p => p.id === id);
+    if (!prov) return null;
+
+    const horaReg = hora || new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const costo = parseFloat(costoPreventa) || 0;
+    const diaEntregaFinal = diaEntrega || prov.diaEntregaProgramada || this.getDiaSiguiente(prov.dia);
+
+    prov.vinoPreventa = true;
+    prov.horaVinoPreventa = horaReg;
+    prov.costoPreventa = costo;
+    prov.diaEntregaProgramada = diaEntregaFinal;
+    prov.estado = 'preventa_realizada';
+
+    let entregaGenerada = null;
+
+    if (agendarEntregaAuto) {
+      entregaGenerada = this.agendarEntregaDesdePreventa(id, diaEntregaFinal, costo);
+    }
+
+    this.saveState();
+    return { preventa: prov, entrega: entregaGenerada };
+  }
+
+  // Agendar entrega física a partir de una preventa previa
+  agendarEntregaDesdePreventa(idPreventa, diaEntrega = null, costoForzado = null) {
+    const prov = this.data.proveedores.find(p => p.id === idPreventa);
+    if (!prov) return null;
+
+    const diaFinal = diaEntrega || prov.diaEntregaProgramada || this.getDiaSiguiente(prov.dia);
+    const costoFinal = costoForzado !== null ? parseFloat(costoForzado) : (prov.costoPreventa || prov.presupuestoAprox || 0);
+
+    // Revisar si ya existe una entrega generada desde esta misma preventa para evitar duplicados
+    let entregaExistente = this.data.proveedores.find(p => p.idPreventaOrigen === idPreventa && p.dia === diaFinal);
+
+    if (entregaExistente) {
+      entregaExistente.presupuestoAprox = costoFinal;
+      entregaExistente.preventaPresupuesto = costoFinal;
+      if (Array.isArray(prov.listaPedido) && prov.listaPedido.length > 0) {
+        entregaExistente.listaPedido = JSON.parse(JSON.stringify(prov.listaPedido));
+      }
+      prov.entregaAgendada = true;
+      this.saveState();
+      return entregaExistente;
+    }
+
+    const nuevaEntrega = {
+      tipoVisita: 'entrega',
+      proveedor: prov.proveedor,
+      dia: diaFinal,
+      hora: prov.hora || '10:00',
+      tipoPago: prov.tipoPago || 'Efectivo',
+      presupuestoAprox: costoFinal,
+      preventaPresupuesto: costoFinal,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: prov.categoria || 'abarrotes',
+      idPreventaOrigen: idPreventa,
+      notas: `Entrega de preventa (${prov.dia.toUpperCase()}) por $${costoFinal}` + (prov.notas ? ` • ${prov.notas}` : ''),
+      listaPedido: Array.isArray(prov.listaPedido) ? JSON.parse(JSON.stringify(prov.listaPedido)) : []
+    };
+
+    const creada = this.addProveedor(nuevaEntrega);
+    prov.entregaAgendada = true;
+    prov.diaEntregaProgramada = diaFinal;
+    this.saveState();
+    return creada;
   }
 
   updateProveedor(id, campos) {
@@ -2063,11 +2180,19 @@ class StateManager {
     const nombre = (p.nombre || p.proveedor || '').trim();
     if (!nombre) return null;
 
+    const diasHabituales = Array.isArray(p.diasHabituales) && p.diasHabituales.length > 0 
+      ? p.diasHabituales 
+      : [(p.diaHabitual || p.dia || 'lunes')];
+
     const nuevo = {
       id: 'cat-prov-' + Date.now(),
       nombre,
       categoria: p.categoria || 'abarrotes',
-      diaHabitual: p.diaHabitual || p.dia || 'lunes',
+      diaHabitual: diasHabituales[0] || 'lunes',
+      diasHabituales: diasHabituales,
+      tienePreventa: !!p.tienePreventa,
+      diasPreventa: Array.isArray(p.diasPreventa) ? p.diasPreventa : [],
+      diasEntrega: Array.isArray(p.diasEntrega) ? p.diasEntrega : [],
       horaHabitual: p.horaHabitual || p.hora || '10:00',
       tipoPago: p.tipoPago || 'Efectivo',
       presupuestoHabitual: parseFloat(p.presupuestoHabitual || p.presupuestoAprox || p.preventaPresupuesto) || 0,
@@ -2085,10 +2210,23 @@ class StateManager {
     if (!Array.isArray(this.data.catalogoProveedores)) return null;
     const idx = this.data.catalogoProveedores.findIndex(p => p.id === id);
     if (idx !== -1) {
+      const actual = this.data.catalogoProveedores[idx];
+      let diasHabituales = actual.diasHabituales || [actual.diaHabitual || 'lunes'];
+      if (Array.isArray(campos.diasHabituales) && campos.diasHabituales.length > 0) {
+        diasHabituales = campos.diasHabituales;
+      } else if (campos.diaHabitual) {
+        diasHabituales = [campos.diaHabitual];
+      }
+
       this.data.catalogoProveedores[idx] = {
-        ...this.data.catalogoProveedores[idx],
+        ...actual,
         ...campos,
-        nombre: (campos.nombre !== undefined ? campos.nombre : this.data.catalogoProveedores[idx].nombre).trim()
+        nombre: (campos.nombre !== undefined ? campos.nombre : actual.nombre).trim(),
+        diasHabituales: diasHabituales,
+        diaHabitual: diasHabituales[0] || actual.diaHabitual || 'lunes',
+        tienePreventa: campos.tienePreventa !== undefined ? !!campos.tienePreventa : !!actual.tienePreventa,
+        diasPreventa: campos.diasPreventa !== undefined ? campos.diasPreventa : (actual.diasPreventa || []),
+        diasEntrega: campos.diasEntrega !== undefined ? campos.diasEntrega : (actual.diasEntrega || [])
       };
       if (campos.presupuestoHabitual !== undefined) {
         this.data.catalogoProveedores[idx].presupuestoHabitual = parseFloat(campos.presupuestoHabitual) || 0;
