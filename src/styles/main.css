@@ -4413,5 +4413,25 @@ input:disabled {
   }
 }
 
+/* ==========================================================================
+   NAVEGACIÓN ERGONÓMICA POR TECLADO (FOCUS-VISIBLE MINIMALISTA)
+   ========================================================================== */
+:focus-visible {
+  outline: 2px solid #0284c7 !important;
+  outline-offset: 1px !important;
+}
 
+.fila-conteo-clickeable:focus-visible,
+.cell-clickable-arq:focus-visible,
+[data-ver-detalle-prov]:focus-visible {
+  outline: 2px solid #0284c7 !important;
+  outline-offset: -1px !important;
+  background-color: #f0f9ff !important;
+}
 
+.modal-container input:focus,
+.modal-container select:focus,
+.modal-container textarea:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2) !important;
+}

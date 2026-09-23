@@ -209,7 +209,7 @@ export class HojaDiariaModule {
                         ? this.formatMoney(p.costo) 
                         : ((parseFloat(p.precioPieza) || 0) > 0 ? '$0.00' : '-');
                       return `
-                        <tr class="fila-conteo-clickeable ${editableGeneral ? 'fila-activa' : ''}" data-fila-pan="${idx}" title="${editableGeneral ? 'Clic para registrar bolillos, dulces, cambios y precio' : 'Consulta de conteo de pan'}">
+                        <tr class="fila-conteo-clickeable ${editableGeneral ? 'fila-activa' : ''}" data-fila-pan="${idx}" tabindex="0" role="button" title="${editableGeneral ? 'Clic o Enter para registrar bolillos, dulces, cambios y precio' : 'Consulta de conteo de pan'}">
                           <td>
                             <div class="prov-celda-fija">
                               <span class="prov-nombre-fijo">${p.proveedor}</span>
@@ -253,7 +253,7 @@ export class HojaDiariaModule {
                         ? this.formatMoney(t.costo) 
                         : ((parseFloat(t.precioKilo) || 0) > 0 ? '$0.00' : '-');
                       return `
-                        <tr class="fila-conteo-clickeable ${editableGeneral ? 'fila-activa' : ''}" data-fila-tort="${idx}" title="${editableGeneral ? 'Clic para registrar nuevas, cambios y precio' : 'Consulta de conteo de tortilla'}">
+                        <tr class="fila-conteo-clickeable ${editableGeneral ? 'fila-activa' : ''}" data-fila-tort="${idx}" tabindex="0" role="button" title="${editableGeneral ? 'Clic o Enter para registrar nuevas, cambios y precio' : 'Consulta de conteo de tortilla'}">
                           <td>
                             <div class="prov-celda-fija">
                               <span class="prov-nombre-fijo">${t.proveedor}</span>
@@ -445,7 +445,7 @@ export class HojaDiariaModule {
                     <tr>
                       <td class="font-bold">TARJETAS</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td class="text-right font-bold cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; padding: 6px 8px;" title="Clic para abrir captura">
+                        <td class="text-right font-bold cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" tabindex="0" role="button" style="cursor: pointer; padding: 6px 8px;" title="Clic o Enter para abrir captura">
                           ${parseFloat(col.tarjetas) > 0 ? this.formatMoney(col.tarjetas) : '<span style="color:#94a3b8; font-weight: normal;">$0.00</span>'}
                         </td>
                       `).join('')}
@@ -509,7 +509,7 @@ export class HojaDiariaModule {
                     <tr style="background: #f8fafc;">
                       <td class="font-bold">MORRALLA</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td class="text-right font-bold cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; color: #0284c7; padding: 7px 8px;" title="Clic para abrir captura">
+                        <td class="text-right font-bold cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" tabindex="0" role="button" style="cursor: pointer; color: #0284c7; padding: 7px 8px;" title="Clic o Enter para abrir captura">
                           ${this.formatMoney(col.morralla)}
                         </td>
                       `).join('')}
@@ -704,18 +704,35 @@ export class HojaDiariaModule {
       if (!inputCant) return;
       stateManager.updateCantidadInicial(inputCant.value);
       this.render();
+      setTimeout(() => {
+        const btnSiguiente = document.getElementById('btnPlusProveedor') || document.querySelector('[data-fila-pan]');
+        btnSiguiente?.focus();
+      }, 50);
     };
     inputCant?.addEventListener('change', guardarCantidadInicial);
-    inputCant?.addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') guardarCantidadInicial();
+    inputCant?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        guardarCantidadInicial();
+      }
     });
+
+    // Autoenfoque en cantidad inicial si es el día de hoy y aún no está definida
+    const esHoy = stateManager.data.fecha === new Date().toISOString().split('T')[0];
+    const tieneMontoInicial = parseFloat(stateManager.data.cantidadInicial) > 0;
+    if (esHoy && !tieneMontoInicial && inputCant && !document.querySelector('.modal-overlay.active')) {
+      setTimeout(() => {
+        inputCant.focus();
+        inputCant.select();
+      }, 100);
+    }
 
     // Botón Imprimir
     document.getElementById('btnImprimirHoja')?.addEventListener('click', () => {
       window.print();
     });
 
-    // Panaderos: Abrir modal al dar clic en la fila o en el botón 'i'
+    // Panaderos: Abrir modal al dar clic en la fila o en el botón 'i' o pulsar Enter
     const abrirModalPan = (idx) => {
       if (window.adminFenixApp?.modalManager) {
         window.adminFenixApp.modalManager.openCostoPanaderoModal(idx, () => {
@@ -733,6 +750,13 @@ export class HojaDiariaModule {
         e.preventDefault();
         const idx = parseInt(tr.getAttribute('data-fila-pan'));
         abrirModalPan(idx);
+      });
+      tr.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const idx = parseInt(tr.getAttribute('data-fila-pan'));
+          abrirModalPan(idx);
+        }
       });
     });
 
@@ -764,6 +788,13 @@ export class HojaDiariaModule {
         const idx = parseInt(tr.getAttribute('data-fila-tort'));
         abrirModalTort(idx);
       });
+      tr.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const idx = parseInt(tr.getAttribute('data-fila-tort'));
+          abrirModalTort(idx);
+        }
+      });
     });
 
     this.container.querySelectorAll('[data-info-tort]').forEach(btn => {
@@ -777,13 +808,22 @@ export class HojaDiariaModule {
 
     // 1. Clic en Renglón Guardado de Proveedores (Abre Modal de Detalles con Hora, Tipo de Pago, etc.)
     this.container.querySelectorAll('[data-ver-detalle-prov]').forEach(rowEl => {
-      rowEl.addEventListener('click', (e) => {
-        e.preventDefault();
+      const abrirDetalle = () => {
         const idx = parseInt(rowEl.getAttribute('data-ver-detalle-prov'));
         const comprasReg = (stateManager.data.comprasProveedores || []).filter(r => (r.proveedor && r.proveedor.trim() !== '') || (parseFloat(r.pagado) > 0));
         const compra = comprasReg[idx];
         if (compra && window.adminFenixApp?.modalManager) {
           window.adminFenixApp.modalManager.openDetallesProveedorModal(compra, stateManager.data.fecha);
+        }
+      };
+      rowEl.addEventListener('click', (e) => {
+        e.preventDefault();
+        abrirDetalle();
+      });
+      rowEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          abrirDetalle();
         }
       });
     });
@@ -873,23 +913,41 @@ export class HojaDiariaModule {
       }
     });
 
-    // 6. Conteo y Arqueo por Columnas (Abre Modal de Captura Segura / Bloqueo)
+    // 6. Conteo y Arqueo por Columnas (Abre Modal de Captura Segura / Bloqueo con Clic o Enter)
     this.container.querySelectorAll('[data-col-arq]').forEach(el => {
-      el.addEventListener('click', (e) => {
-        e.preventDefault();
+      const abrirArqueo = () => {
         const colIdx = parseInt(el.getAttribute('data-col-arq'));
         if (window.adminFenixApp?.modalManager) {
           window.adminFenixApp.modalManager.openCapturaArqueoColumnaModal(colIdx, () => {
             this.render();
           });
         }
+      };
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        abrirArqueo();
+      });
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          abrirArqueo();
+        }
       });
     });
 
-
-    // Muñecos
-    document.getElementById('munecosMonedas')?.addEventListener('change', (e) => {
+    // 7. Navegación fluida con Enter en Máquinas de Peluches e Individuales
+    const inpMun = document.getElementById('munecosMonedas');
+    inpMun?.addEventListener('change', (e) => {
       stateManager.updateMaquinaMunecos({ monedas: e.target.value });
+    });
+    inpMun?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        stateManager.updateMaquinaMunecos({ monedas: e.target.value });
+        const m1 = document.getElementById('indivMaq1');
+        m1?.focus();
+        m1?.select();
+      }
     });
 
     // Máquinas individuales
@@ -902,6 +960,44 @@ export class HojaDiariaModule {
     };
     ['indivMaq1', 'indivMaq2', 'indivMaq3', 'indivNota'].forEach(id => {
       document.getElementById(id)?.addEventListener('change', saveIndiv);
+    });
+
+    document.getElementById('indivMaq1')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveIndiv();
+        const m2 = document.getElementById('indivMaq2');
+        m2?.focus();
+        m2?.select();
+      }
+    });
+
+    document.getElementById('indivMaq2')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveIndiv();
+        const m3 = document.getElementById('indivMaq3');
+        m3?.focus();
+        m3?.select();
+      }
+    });
+
+    document.getElementById('indivMaq3')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveIndiv();
+        const nota = document.getElementById('indivNota');
+        nota?.focus();
+        nota?.select();
+      }
+    });
+
+    document.getElementById('indivNota')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveIndiv();
+        document.getElementById('indivNota')?.blur();
+      }
     });
   }
 

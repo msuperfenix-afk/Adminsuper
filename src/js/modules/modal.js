@@ -35,6 +35,7 @@ export class ModalManager {
   }
 
   open(title, bodyHtml, footerButtonsHtml = '') {
+    this.lastFocusedElement = document.activeElement;
     this.container.innerHTML = `
       <div class="modal-header">
         <h3 class="modal-title">${title}</h3>
@@ -48,11 +49,122 @@ export class ModalManager {
 
     document.getElementById('modalCloseBtn')?.addEventListener('click', () => this.close());
     this.overlay.classList.add('active');
+
+    // Inicializar autoenfoque y navegación ergonómica de teclado (Enter / Shift+Enter)
+    this.setupKeyboardNavigation();
   }
 
   close() {
     this.overlay.classList.remove('active');
     this.container.innerHTML = '';
+    // Restaurar foco al elemento previo si continúa disponible
+    if (this.lastFocusedElement && typeof this.lastFocusedElement.focus === 'function') {
+      try {
+        this.lastFocusedElement.focus();
+      } catch (err) {
+        // Ignorar si el elemento ya no está en el DOM
+      }
+    }
+  }
+
+  setupKeyboardNavigation() {
+    // 1. Posicionar el cursor en el lugar correcto al abrir el modal
+    setTimeout(() => {
+      if (!this.isOpen()) return;
+
+      // Prioridad 1: Campo con autofocus o data-autofocus
+      const conAutofocus = this.container.querySelector('[autofocus], [data-autofocus]');
+      if (conAutofocus && typeof conAutofocus.focus === 'function' && !conAutofocus.disabled && !conAutofocus.readOnly) {
+        conAutofocus.focus();
+        if (typeof conAutofocus.select === 'function' && conAutofocus.type !== 'checkbox' && conAutofocus.type !== 'radio' && conAutofocus.type !== 'date') {
+          conAutofocus.select();
+        }
+        return;
+      }
+
+      // Prioridad 2: Primer campo editable visible de tipo input o select
+      const campos = this.getCamposEditables();
+      if (campos.length > 0) {
+        const primerCampo = campos[0];
+        primerCampo.focus();
+        if (typeof primerCampo.select === 'function' && primerCampo.type !== 'checkbox' && primerCampo.type !== 'radio' && primerCampo.type !== 'date') {
+          primerCampo.select();
+        }
+      }
+    }, 60);
+
+    // 2. Navegación fluida con tecla Enter y Shift+Enter entre casillas
+    this.container.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        const target = e.target;
+        if (!target) return;
+
+        // Si se pulsa Enter sobre un botón explícito, dejar actuar el comportamiento natural
+        if (target.tagName === 'BUTTON') return;
+
+        // En un textarea permitir salto de línea normal, salvo que se presione con Ctrl
+        if (target.tagName === 'TEXTAREA' && !e.ctrlKey) return;
+
+        // Interceptar inputs y selects para avanzar de casilla
+        if (target.matches('input, select, textarea')) {
+          e.preventDefault();
+
+          const campos = this.getCamposEditables();
+          const currentIndex = campos.indexOf(target);
+
+          // Si presiona Shift+Enter: regresar a la casilla anterior
+          if (e.shiftKey) {
+            if (currentIndex > 0) {
+              const prev = campos[currentIndex - 1];
+              prev.focus();
+              if (typeof prev.select === 'function' && prev.type !== 'checkbox' && prev.type !== 'radio' && prev.type !== 'date') {
+                prev.select();
+              }
+            }
+            return;
+          }
+
+          // Si hay una siguiente casilla editable: enfocarla y seleccionar su texto
+          if (currentIndex >= 0 && currentIndex < campos.length - 1) {
+            const next = campos[currentIndex + 1];
+            next.focus();
+            if (typeof next.select === 'function' && next.type !== 'checkbox' && next.type !== 'radio' && next.type !== 'date') {
+              next.select();
+            }
+          } else {
+            // Es la última casilla -> disparar el guardado de datos
+            this.triggerPrimaryModalAction();
+          }
+        }
+      }
+    };
+  }
+
+  getCamposEditables() {
+    return Array.from(this.container.querySelectorAll(
+      '.modal-body input:not([type="hidden"]):not([disabled]):not([readonly]), .modal-body select:not([disabled]), .modal-body textarea:not([disabled]):not([readonly])'
+    )).filter(el => {
+      // Filtrar sólo elementos visibles y computados en pantalla
+      return el.offsetParent !== null && window.getComputedStyle(el).display !== 'none' && window.getComputedStyle(el).visibility !== 'hidden';
+    });
+  }
+
+  triggerPrimaryModalAction() {
+    // Si hay un recuadro de confirmación de la interfaz visible (ej. sellado de arqueo)
+    const btnConfirmar = this.container.querySelector('#btnConfirmarSellarInterfaz');
+    if (btnConfirmar && btnConfirmar.offsetParent !== null && !btnConfirmar.disabled) {
+      btnConfirmar.click();
+      return;
+    }
+
+    // Buscar el botón de guardado o acción primaria del modal actual
+    const btnGuardar = this.container.querySelector(
+      '#btnConfirmarSellarInterfaz, #btnSaveArqCol, #btnGuardarProvSeguro, #btnGuardarCostoPanadero, #btnGuardarCostoTortilleria, #btnGuardarPrestamo, #btnGuardarRetiro, #btnGuardarProveedorDb, #modalSaveBtn, #modalSaveArqueoBtn, #btnGuardarPedidoModal, #btnGuardarListaPedido, #btnGuardarPreventa, #btnGuardarConfigFirebase, .modal-footer .btn-primary, button[type="submit"]'
+    );
+
+    if (btnGuardar && !btnGuardar.disabled && btnGuardar.offsetParent !== null) {
+      btnGuardar.click();
+    }
   }
 
   // ==========================================
@@ -1043,6 +1155,9 @@ export class ModalManager {
       if (boxConfirm) {
         boxConfirm.style.display = 'block';
         boxConfirm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        setTimeout(() => {
+          document.getElementById('btnConfirmarSellarInterfaz')?.focus();
+        }, 60);
       }
       if (footerBtns) {
         footerBtns.style.display = 'none';
@@ -1054,6 +1169,10 @@ export class ModalManager {
       const footerBtns = document.getElementById('footerBotonesNormales');
       if (boxConfirm) boxConfirm.style.display = 'none';
       if (footerBtns) footerBtns.style.display = 'flex';
+      setTimeout(() => {
+        inpMorralla?.focus();
+        inpMorralla?.select();
+      }, 60);
     });
 
     document.getElementById('btnConfirmarSellarInterfaz')?.addEventListener('click', () => {
