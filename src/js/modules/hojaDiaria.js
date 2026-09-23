@@ -4,7 +4,6 @@
  */
 
 import { stateManager, NOMBRES_DIAS, NOMBRES_MESES } from '../state.js';
-import { isFirebaseConectado, getFirebaseConfigActual } from '../firebaseClient.js';
 
 export class HojaDiariaModule {
   constructor(containerId) {
@@ -25,8 +24,6 @@ export class HojaDiariaModule {
     if (!this.container) return;
     const d = stateManager.data;
     const totales = stateManager.getTotalesHoja();
-    const conectadoFirebase = isFirebaseConectado();
-    const configFirebase = getFirebaseConfigActual();
     const hoyISO = stateManager.getFechaHoy();
     const esHoy = stateManager.esHojaEditable();
     const tieneMontoInicial = stateManager.tieneCantidadInicial();
@@ -95,10 +92,11 @@ export class HojaDiariaModule {
               <input type="date" class="input-fecha-picker" id="inputFechaSelector" value="${d.fecha || ''}">
             </div>
 
-            <!-- Botón de Conexión a Firebase -->
-            <button class="btn-firebase-badge ${conectadoFirebase ? 'conectado' : 'desconectado'}" id="btnFirebaseConfig" title="Configurar conexión con Firebase Firestore">
-              ${conectadoFirebase ? `🟢 Firebase: ${configFirebase.projectId || 'conectado'}` : '🔥 Conectar Firebase'}
-            </button>
+            <!-- Indicador Verde de Guardado Automático (No editable) -->
+            <div class="badge-guardado-verde" id="btnGuardadoIndicador" title="Guardado automáticamente en la nube">
+              <span class="punto-verde-guardado"></span>
+              <span class="texto-guardado-label" id="textoGuardadoLabel">Guardado</span>
+            </div>
           </div>
         </div>
 
@@ -672,15 +670,7 @@ export class HojaDiariaModule {
       stateManager.cambiarFechaHoja(stateManager.getFechaHoy());
     });
 
-    // 3. Botón de Conexión a Firebase
-    document.getElementById('btnFirebaseConfig')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (window.adminFenixApp?.modalManager) {
-        window.adminFenixApp.modalManager.openFirebaseConfigModal(() => {
-          this.render();
-        });
-      }
-    });
+
 
     // Encabezado: Cantidad inicial de caja
     const inputCant = document.getElementById('inputCantidadInicial');

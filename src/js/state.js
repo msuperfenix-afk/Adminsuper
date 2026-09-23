@@ -491,8 +491,26 @@ class StateManager {
     return JSON.parse(JSON.stringify(SEED_DATA));
   }
 
+  actualizarIndicadorGuardado(estado) {
+    const label = document.getElementById('textoGuardadoLabel');
+    const badge = document.getElementById('btnGuardadoIndicador');
+    if (!label || !badge) return;
+
+    if (estado === 'guardando') {
+      badge.classList.add('guardando');
+      label.textContent = 'Guardando...';
+    } else {
+      setTimeout(() => {
+        badge.classList.remove('guardando');
+        label.textContent = 'Guardado';
+      }, 350);
+    }
+  }
+
   saveState(data = this.data) {
     try {
+      this.actualizarIndicadorGuardado('guardando');
+
       // Guardar snapshot de la hoja actual indexada por su fecha
       if (!data.hojasPorFecha) data.hojasPorFecha = {};
       if (data.fecha) {
@@ -504,12 +522,20 @@ class StateManager {
 
       // Sincronización en segundo plano con Firestore
       if (isFirebaseConectado() && data.fecha) {
-        guardarHojaEnFirestore(data.fecha, data.hojasPorFecha[data.fecha]).catch(err => {
-          console.warn('Sincronización en segundo plano con Firestore pendiente:', err);
-        });
+        guardarHojaEnFirestore(data.fecha, data.hojasPorFecha[data.fecha])
+          .then(() => {
+            this.actualizarIndicadorGuardado('guardado');
+          })
+          .catch(err => {
+            console.warn('Sincronización en segundo plano con Firestore pendiente:', err);
+            this.actualizarIndicadorGuardado('guardado');
+          });
+      } else {
+        this.actualizarIndicadorGuardado('guardado');
       }
     } catch (e) {
       console.error('Error al guardar datos:', e);
+      this.actualizarIndicadorGuardado('guardado');
     }
   }
 
