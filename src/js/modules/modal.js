@@ -443,7 +443,7 @@ export class ModalManager {
 
     const footer = `
       <button type="button" class="btn-secondary" id="btnCancelarVinoPrev">Cancelar</button>
-      <button type="button" class="btn-primary" id="btnGuardarVinoPrev" style="min-width: 170px; background: #0f172a;">
+      <button type="button" class="btn-primary" id="btnGuardarVinoPrev" style="min-width: 170px;">
         ✓ Guardar Preventa y Agendar
       </button>
     `;
@@ -457,13 +457,6 @@ export class ModalManager {
       const diaEntrega = document.getElementById('selectDiaEntregaPrev')?.value || diaSiguiente;
       const agendarAuto = !!document.getElementById('checkAgendarEntregaAuto')?.checked;
       const notas = document.getElementById('inputNotasVinoPrev')?.value.trim() || '';
-
-      if (costo <= 0) {
-        if (!confirm('¿Deseas registrar la preventa sin costo de orden definido ($0)?')) {
-          document.getElementById('inputCostoVinoPrev')?.focus();
-          return;
-        }
-      }
 
       stateManager.updateProveedor(p.id, { notas });
       stateManager.registrarVinoPreventa(p.id, {
@@ -919,7 +912,7 @@ export class ModalManager {
       `;
 
       const footer = `
-        <button type="button" class="btn-primary" id="btnCerrarModalArqBloq" style="background: #0f172a; min-width: 100px;">Cerrar</button>
+        <button type="button" class="btn-primary" id="btnCerrarModalArqBloq" style="min-width: 110px;">Cerrar</button>
       `;
 
       this.open(`🔒 ${colNombre}`, body, footer);
@@ -927,13 +920,13 @@ export class ModalManager {
       return;
     }
 
-    // MODO EDICIÓN / CAPTURA: AÚN NO GUARDADO
+    // MODO EDICIÓN / CAPTURA: RECUADRO CON LA PROPIA INTERFAZ (SIN ALERTAS NEGRAS DEL SISTEMA)
     const body = `
       <form id="formCapturaArqueoCol" style="display: flex; flex-direction: column; gap: 14px;">
         <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; color: #1e3a8a;">
           <strong>🏦 Captura de Arqueo y Corte: ${colNombre}</strong>
           <p style="margin: 3px 0 0; color: #475569; font-size: 0.74rem;">
-            Ingresa las cantidades de cada concepto solicitado. Al presionar <strong>"Guardar y Cerrar Arqueo"</strong>, los valores quedarán registrados y la columna ya no se podrá modificar.
+            Ingresa las cantidades de cada concepto solicitado. Al guardar, el arqueo se sellará y ya no se podrá modificar.
           </p>
         </div>
 
@@ -999,17 +992,38 @@ export class ModalManager {
           </div>
         </div>
 
-        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 12px; font-size: 0.74rem; color: #92400e;">
-          ⚠️ <strong>Nota:</strong> Al hacer clic en <em>"Guardar y Cerrar Arqueo"</em>, esta columna se sellará contablemente y ya no se podrá modificar.
+        <!-- RECUADRO DE CONFIRMACIÓN CON EL DISEÑO DE LA INTERFAZ (SIN CUADROS NEGROS DE SISTEMA) -->
+        <div id="recuadroConfirmacionInterfaz" style="display: none; background: #f8fafc; border: 1.5px solid #94a3b8; border-radius: 8px; padding: 14px 16px; margin-top: 4px;">
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <div style="font-size: 1.3rem; line-height: 1;">🔒</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a;">
+                ¿Deseas confirmar y sellar el arqueo de ${colNombre}?
+              </div>
+              <p style="margin: 4px 0 12px 0; font-size: 0.77rem; color: #475569; line-height: 1.4;">
+                Una vez guardado, los importes quedarán registrados contablemente y ya no se podrán modificar.
+              </p>
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-secondary" id="btnVolverAEditar" style="padding: 6px 14px; font-size: 0.8rem;">
+                  Volver a revisar
+                </button>
+                <button type="button" class="btn-primary" id="btnConfirmarSellarInterfaz" style="padding: 6px 16px; font-size: 0.8rem; background: #0284c7; border-color: #0284c7;">
+                  ✓ Sí, Guardar y Sellar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </form>
     `;
 
     const footer = `
-      <button type="button" class="btn-secondary" id="btnCancelArqCol">Cancelar</button>
-      <button type="button" class="btn-primary" id="btnSaveArqCol" style="min-width: 180px; background: #0f172a;">
-        ✓ Guardar y Cerrar Arqueo
-      </button>
+      <div id="footerBotonesNormales" style="display: flex; gap: 8px; width: 100%; justify-content: flex-end;">
+        <button type="button" class="btn-secondary" id="btnCancelArqCol">Cancelar</button>
+        <button type="button" class="btn-primary" id="btnSaveArqCol" style="min-width: 170px;">
+          ✓ Guardar Arqueo
+        </button>
+      </div>
     `;
 
     this.open(`🏦 ${colNombre}`, body, footer);
@@ -1036,11 +1050,28 @@ export class ModalManager {
     });
 
     document.getElementById('btnCancelArqCol')?.addEventListener('click', () => this.close());
+    
+    // Al presionar Guardar, desplegamos el recuadro con la interfaz en lugar del confirm del sistema
     document.getElementById('btnSaveArqCol')?.addEventListener('click', () => {
-      if (!confirm(`¿Confirmas cerrar y guardar el arqueo de ${colNombre}? Una vez guardado ya no se podrá modificar.`)) {
-        return;
+      const boxConfirm = document.getElementById('recuadroConfirmacionInterfaz');
+      const footerBtns = document.getElementById('footerBotonesNormales');
+      if (boxConfirm) {
+        boxConfirm.style.display = 'block';
+        boxConfirm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
+      if (footerBtns) {
+        footerBtns.style.display = 'none';
+      }
+    });
 
+    document.getElementById('btnVolverAEditar')?.addEventListener('click', () => {
+      const boxConfirm = document.getElementById('recuadroConfirmacionInterfaz');
+      const footerBtns = document.getElementById('footerBotonesNormales');
+      if (boxConfirm) boxConfirm.style.display = 'none';
+      if (footerBtns) footerBtns.style.display = 'flex';
+    });
+
+    document.getElementById('btnConfirmarSellarInterfaz')?.addEventListener('click', () => {
       const datos = {
         tarjetas: parseFloat(document.getElementById('inpColTarjetas')?.value) || 0,
         tarjetaYomp: parseFloat(document.getElementById('inpColTarjetaYomp')?.value) || 0,
@@ -1801,7 +1832,7 @@ export class ModalManager {
     `;
 
     const footer = `
-      <button type="button" class="btn-primary" id="btnCerrarDetallesProv" style="background: #0f172a; min-width: 90px; border-radius: 6px;">Cerrar</button>
+      <button type="button" class="btn-primary" id="btnCerrarDetallesProv" style="min-width: 90px; border-radius: 6px;">Cerrar</button>
     `;
 
     this.open(`Detalle del Proveedor: ${proveedor}`, body, footer);
@@ -2461,7 +2492,7 @@ export class ModalManager {
               <button type="button" id="btnCargarPedidoAnterior" class="btn-secondary" style="font-size: 0.78rem; padding: 5px 12px; cursor: pointer; background: #ffffff; border: 1.5px solid #cbd5e1; color: #0f172a; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;" title="Cargar y desplegar la lista del pedido anterior para basarse de ahí">
                 <span>↺</span> Cargar Lista Anterior
               </button>
-              <button type="button" id="btnAgregarFilaPedido" class="btn-secondary" style="font-size: 0.78rem; padding: 5px 12px; cursor: pointer; background: #0f172a; color: #ffffff; border: none; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+              <button type="button" id="btnAgregarFilaPedido" class="btn-primary" style="font-size: 0.78rem; padding: 5px 12px; cursor: pointer; background: #0284c7; border: none; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
                 <span>+</span> Agregar Producto
               </button>
             </div>
