@@ -78,7 +78,7 @@ export class ProveedoresDbModule {
         <!-- RESUMEN SUPERIOR KPI SOBRIO -->
         <div class="provdb-kpi-grid">
           <div class="provdb-kpi-card">
-            <div class="kpi-icon-pill icon-blue">🗄️</div>
+            <div class="kpi-icon-pill icon-blue" style="font-weight: 800; font-size: 0.75rem;">CAT</div>
             <div class="kpi-info">
               <span class="kpi-label">Proveedores Registrados</span>
               <strong class="kpi-value">${totalProveedores}</strong>
@@ -87,7 +87,7 @@ export class ProveedoresDbModule {
           </div>
 
           <div class="provdb-kpi-card">
-            <div class="kpi-icon-pill icon-green">💵</div>
+            <div class="kpi-icon-pill icon-green" style="font-weight: 800; font-size: 0.75rem;">PAG</div>
             <div class="kpi-info">
               <span class="kpi-label">Forma de Pago</span>
               <strong class="kpi-value">${pagoEfectivo} <small style="font-size: 0.8rem; font-weight: normal; color: #64748b;">Efec</small> • ${pagoTransferencia} <small style="font-size: 0.8rem; font-weight: normal; color: #64748b;">Transf</small></strong>
@@ -96,7 +96,7 @@ export class ProveedoresDbModule {
           </div>
 
           <div class="provdb-kpi-card">
-            <div class="kpi-icon-pill icon-purple">🏷️</div>
+            <div class="kpi-icon-pill icon-purple" style="font-weight: 800; font-size: 0.75rem;">PRE</div>
             <div class="kpi-info">
               <span class="kpi-label">Presupuesto Habitual Total</span>
               <strong class="kpi-value">${this.formatMoney(presupuestoTotal)}</strong>
@@ -105,7 +105,7 @@ export class ProveedoresDbModule {
           </div>
 
           <div class="provdb-kpi-card">
-            <div class="kpi-icon-pill icon-amber">🗓️</div>
+            <div class="kpi-icon-pill icon-amber" style="font-weight: 800; font-size: 0.75rem;">SYNC</div>
             <div class="kpi-info">
               <span class="kpi-label">Alimentación Automática</span>
               <strong class="kpi-value" style="font-size: 1.05rem; color: #0284c7;">Hoja Diaria & Agenda</strong>
@@ -142,8 +142,8 @@ export class ProveedoresDbModule {
             <!-- Filtro Forma de Pago -->
             <select id="selectFiltroPagoDb" class="provdb-filter-select">
               <option value="todos" ${this.filtroPago === 'todos' ? 'selected' : ''}>Todo tipo de pago</option>
-              <option value="efectivo" ${this.filtroPago === 'efectivo' ? 'selected' : ''}>💵 Efectivo</option>
-              <option value="transferencia" ${this.filtroPago === 'transferencia' ? 'selected' : ''}>🏦 Transferencia</option>
+              <option value="efectivo" ${this.filtroPago === 'efectivo' ? 'selected' : ''}>Efectivo</option>
+              <option value="transferencia" ${this.filtroPago === 'transferencia' ? 'selected' : ''}>Transferencia</option>
             </select>
           </div>
 
@@ -181,7 +181,9 @@ export class ProveedoresDbModule {
                   <tr>
                     <td colspan="9" class="provdb-empty-td">
                       <div class="provdb-empty-box">
-                        <span class="empty-icon">🔍</span>
+                        <span class="empty-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; color: #64748b; margin: 0 auto 8px;">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </span>
                         <strong>No se encontraron proveedores</strong>
                         <p>Intenta con otro término de búsqueda o añade un nuevo proveedor.</p>
                       </div>
@@ -205,8 +207,8 @@ export class ProveedoresDbModule {
                       <td>
                         <div class="provdb-name-cell fila-clickeable-compras" data-nombre-prov="${p.nombre}" style="cursor: pointer;" title="Clic para ver o registrar compras de ${p.nombre}">
                           <strong class="provdb-name-title" style="color: #0284c7;">${p.nombre}</strong>
-                          ${p.contacto ? `<span class="provdb-contact-info">📞 ${p.contacto}</span>` : ''}
-                          ${p.notas ? `<span class="provdb-notes-info">📝 ${p.notas}</span>` : ''}
+                          ${p.contacto ? `<span class="provdb-contact-info">Tel: ${p.contacto}</span>` : ''}
+                          ${p.notas ? `<span class="provdb-notes-info">Nota: ${p.notas}</span>` : ''}
                         </div>
                       </td>
                       <td>
@@ -223,15 +225,15 @@ export class ProveedoresDbModule {
                             const textoDias = diasList.map(dId => DIAS_SEMANA.find(d => d.id === dId)?.corto || dId).join(', ');
                             return `
                               <span class="dia-nombre font-bold" title="${diasList.join(', ')}">${textoDias}</span>
-                              ${p.tienePreventa ? '<span style="font-size:0.65rem; background:#fef3c7; color:#92400e; border:1px solid #fde68a; padding:1px 5px; border-radius:3px; display:inline-block; margin-top:2px; font-weight:700;">📝 Preventa</span>' : ''}
-                              ${p.horaHabitual ? `<span class="dia-hora">⏰ ${p.horaHabitual}</span>` : ''}
+                              ${p.tienePreventa ? '<span style="font-size:0.65rem; background:#fef3c7; color:#92400e; border:1px solid #fde68a; padding:1px 5px; border-radius:3px; display:inline-block; margin-top:2px; font-weight:700;">PREVENTA</span>' : ''}
+                              ${p.horaHabitual ? `<span class="dia-hora">${p.horaHabitual}</span>` : ''}
                             `;
                           })()}
                         </div>
                       </td>
                       <td>
                         <span class="badge-tipo-pago ${esTransf ? 'badge-pago-transf' : 'badge-pago-efec'}">
-                          ${esTransf ? '🏦 Transferencia' : '💵 Efectivo'}
+                          ${esTransf ? 'Transferencia' : 'Efectivo'}
                         </span>
                       </td>
                       <td class="text-right font-bold" style="color: #1e293b;">
@@ -249,13 +251,13 @@ export class ProveedoresDbModule {
                       <td class="text-center">
                         <div class="provdb-actions-wrap">
                           <button type="button" class="btn-act-icon btn-compras-action btn-ver-compras" data-nombre-prov="${p.nombre}" title="Registro de Compras">
-                            🧾
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                           </button>
                           <button type="button" class="btn-act-icon btn-edit-prov" data-id="${p.id}" title="Editar Proveedor">
-                            ✏️
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                           </button>
                           <button type="button" class="btn-act-icon btn-del-prov" data-id="${p.id}" data-nombre="${p.nombre}" title="Eliminar del catálogo">
-                            🗑️
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                           </button>
                         </div>
                       </td>

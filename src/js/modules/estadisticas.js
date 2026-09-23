@@ -43,11 +43,11 @@ export class EstadisticasModule {
         <div class="stats-tab-nav">
           <button type="button" class="stats-tab-btn ${this.vistaActiva === 'generales' ? 'active' : ''}" id="btnTabStatsGenerales">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
-            <span>📊 Estadísticas Generales</span>
+            <span>Estadísticas Generales</span>
           </button>
           <button type="button" class="stats-tab-btn ${this.vistaActiva === 'proveedor' ? 'active' : ''}" id="btnTabStatsProveedor">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            <span>🏢 Estadísticas por Proveedor</span>
+            <span>Estadísticas por Proveedor</span>
           </button>
         </div>
 
@@ -75,7 +75,7 @@ export class EstadisticasModule {
         <!-- KPI METRICS GRID -->
         <div class="stats-kpi-grid">
           <div class="stats-kpi-card highlight-card">
-            <div class="kpi-icon-pill icon-blue">💰</div>
+            <div class="kpi-icon-pill icon-blue" style="font-weight: 800; font-size: 0.75rem;">TOTAL</div>
             <div class="kpi-info">
               <span class="kpi-label">Total Pagado a Proveedores</span>
               <strong class="kpi-value text-blue">${this.formatMoney(stats.totalPagado)}</strong>
@@ -84,7 +84,7 @@ export class EstadisticasModule {
           </div>
 
           <div class="stats-kpi-card">
-            <div class="kpi-icon-pill icon-green">💵</div>
+            <div class="kpi-icon-pill icon-green" style="font-weight: 800; font-size: 0.75rem;">EFEC</div>
             <div class="kpi-info">
               <span class="kpi-label">Total en Efectivo</span>
               <strong class="kpi-value text-green">${this.formatMoney(stats.totalEfectivo)}</strong>
@@ -93,7 +93,7 @@ export class EstadisticasModule {
           </div>
 
           <div class="stats-kpi-card">
-            <div class="kpi-icon-pill icon-purple">🏦</div>
+            <div class="kpi-icon-pill icon-purple" style="font-weight: 800; font-size: 0.75rem;">TR</div>
             <div class="kpi-info">
               <span class="kpi-label">Total por Transferencia</span>
               <strong class="kpi-value text-purple">${this.formatMoney(stats.totalTransferencia)}</strong>
@@ -102,7 +102,7 @@ export class EstadisticasModule {
           </div>
 
           <div class="stats-kpi-card">
-            <div class="kpi-icon-pill icon-amber">📝</div>
+            <div class="kpi-icon-pill icon-amber" style="font-weight: 800; font-size: 0.75rem;">NOTAS</div>
             <div class="kpi-info">
               <span class="kpi-label">Compras Realizadas</span>
               <strong class="kpi-value">${stats.totalNotas} <small style="font-size: 0.8rem; font-weight: normal; color:#64748b;">notas</small></strong>
@@ -115,7 +115,7 @@ export class EstadisticasModule {
         <div class="stats-section-card">
           <div class="stats-card-header">
             <div>
-              <h3 class="stats-card-title">⚖️ Proporción de Métodos de Pago</h3>
+              <h3 class="stats-card-title">Proporción de Métodos de Pago</h3>
               <p class="stats-card-subtitle">Desglose de Efectivo vs Transferencia en todas las compras registradas</p>
             </div>
           </div>
@@ -123,10 +123,10 @@ export class EstadisticasModule {
           <div class="stats-pago-bar-container">
             <div class="stats-pago-bar">
               <div class="pago-bar-fill bar-efectivo" style="width: ${Math.max(5, stats.pctEfectivo)}%;" title="Efectivo: ${this.formatMoney(stats.totalEfectivo)} (${this.formatPercent(stats.pctEfectivo)})">
-                ${stats.pctEfectivo > 15 ? `<span>💵 Efectivo ${this.formatPercent(stats.pctEfectivo)}</span>` : ''}
+                ${stats.pctEfectivo > 15 ? `<span>Efectivo ${this.formatPercent(stats.pctEfectivo)}</span>` : ''}
               </div>
               <div class="pago-bar-fill bar-transferencia" style="width: ${Math.max(5, stats.pctTransferencia)}%;" title="Transferencia: ${this.formatMoney(stats.totalTransferencia)} (${this.formatPercent(stats.pctTransferencia)})">
-                ${stats.pctTransferencia > 15 ? `<span>🏦 Transferencia ${this.formatPercent(stats.pctTransferencia)}</span>` : ''}
+                ${stats.pctTransferencia > 15 ? `<span>Transferencia ${this.formatPercent(stats.pctTransferencia)}</span>` : ''}
               </div>
             </div>
 
@@ -149,7 +149,7 @@ export class EstadisticasModule {
           <!-- Columna 1: Desembolso por Día de la Semana -->
           <div class="stats-section-card">
             <div class="stats-card-header">
-              <h3 class="stats-card-title">🗓️ Desembolso por Día de la Semana</h3>
+              <h3 class="stats-card-title">Desembolso por Día de la Semana</h3>
               <p class="stats-card-subtitle">Total acumulado pagado según el día de visita</p>
             </div>
             <div class="dias-semana-chart">
@@ -172,7 +172,7 @@ export class EstadisticasModule {
           <!-- Columna 2: Distribución por Categorías de Producto -->
           <div class="stats-section-card">
             <div class="stats-card-header">
-              <h3 class="stats-card-title">📦 Gastos por Categoría</h3>
+              <h3 class="stats-card-title">Gastos por Categoría</h3>
               <p class="stats-card-subtitle">Distribución del gasto según el rubro de productos</p>
             </div>
             <div class="categorias-chart-wrap">
@@ -200,7 +200,7 @@ export class EstadisticasModule {
         <div class="stats-section-card" style="margin-top: 18px;">
           <div class="stats-card-header">
             <div>
-              <h3 class="stats-card-title">🏆 Top Proveedores con Mayor Desembolso</h3>
+              <h3 class="stats-card-title">Top Proveedores con Mayor Desembolso</h3>
               <p class="stats-card-subtitle">Empresas con mayor volumen de compras acumulado</p>
             </div>
           </div>
@@ -219,12 +219,12 @@ export class EstadisticasModule {
               </thead>
               <tbody>
                 ${topProveedores.map((p, idx) => {
-                  const medallas = ['🥇 1°', '🥈 2°', '🥉 3°', '4°', '5°', '6°', '7°', '8°'];
+                  const medallas = ['1°', '2°', '3°', '4°', '5°', '6°', '7°', '8°'];
                   const catInfo = CATEGORIAS_PROVEEDOR[p.categoria] || { nombre: p.categoria || 'Abarrotes', color: '#334155', bg: '#f1f5f9' };
                   const esTransf = (p.tipoPago || '').toLowerCase().includes('transferencia');
                   return `
                     <tr>
-                      <td class="text-center font-bold" style="color: ${idx < 3 ? '#d97706' : '#64748b'};">${medallas[idx]}</td>
+                      <td class="text-center font-bold" style="color: ${idx < 3 ? '#1e40af' : '#64748b'};">${medallas[idx]}</td>
                       <td>
                         <strong style="color: #0f172a; font-size: 0.95rem;">${p.nombre}</strong>
                       </td>
@@ -235,7 +235,7 @@ export class EstadisticasModule {
                       </td>
                       <td class="text-center">
                         <span class="badge-tipo-pago ${esTransf ? 'badge-pago-transf' : 'badge-pago-efec'}">
-                          ${esTransf ? '🏦 Transferencia' : '💵 Efectivo'}
+                          ${esTransf ? 'Transferencia' : 'Efectivo'}
                         </span>
                       </td>
                       <td class="text-center font-bold" style="color: #475569;">${p.totalCompras}</td>
@@ -284,7 +284,7 @@ export class EstadisticasModule {
           <!-- TARJETAS DE MÉTRICAS DEL PROVEEDOR SELECCIONADO -->
           <div class="stats-kpi-grid" style="margin-top: 16px;">
             <div class="stats-kpi-card highlight-card">
-              <div class="kpi-icon-pill icon-blue">🏢</div>
+              <div class="kpi-icon-pill icon-blue" style="font-weight: 800; font-size: 0.75rem;">PROV</div>
               <div class="kpi-info">
                 <span class="kpi-label">Proveedor</span>
                 <strong class="kpi-value" style="font-size: 1.18rem;">${stats.nombre}</strong>
@@ -293,7 +293,7 @@ export class EstadisticasModule {
             </div>
 
             <div class="stats-kpi-card">
-              <div class="kpi-icon-pill icon-green">💰</div>
+              <div class="kpi-icon-pill icon-green" style="font-weight: 800; font-size: 0.75rem;">TOTAL</div>
               <div class="kpi-info">
                 <span class="kpi-label">Total Histórico Pagado</span>
                 <strong class="kpi-value text-green">${this.formatMoney(stats.totalPagado)}</strong>
@@ -302,7 +302,7 @@ export class EstadisticasModule {
             </div>
 
             <div class="stats-kpi-card">
-              <div class="kpi-icon-pill icon-purple">📊</div>
+              <div class="kpi-icon-pill icon-purple" style="font-weight: 800; font-size: 0.75rem;">PROM</div>
               <div class="kpi-info">
                 <span class="kpi-label">Gasto Promedio por Compra</span>
                 <strong class="kpi-value text-purple">${this.formatMoney(stats.promedioPorCompra)}</strong>
@@ -311,7 +311,7 @@ export class EstadisticasModule {
             </div>
 
             <div class="stats-kpi-card">
-              <div class="kpi-icon-pill icon-amber">💳</div>
+              <div class="kpi-icon-pill icon-amber" style="font-weight: 800; font-size: 0.75rem;">PAGO</div>
               <div class="kpi-info">
                 <span class="kpi-label">Forma de Pago Habitual</span>
                 <strong class="kpi-value" style="font-size: 1.05rem;">${stats.tipoPagoHabitual}</strong>
@@ -323,7 +323,7 @@ export class EstadisticasModule {
           <!-- COMPARATIVA DE PRESUPUESTO VS GASTO REAL PROMEDIO -->
           <div class="stats-section-card" style="margin-top: 16px;">
             <div class="stats-card-header">
-              <h3 class="stats-card-title">📈 Análisis de Desempeño: ${stats.nombre}</h3>
+              <h3 class="stats-card-title">Análisis de Desempeño: ${stats.nombre}</h3>
             </div>
             
             <div class="prov-analisis-grid">
@@ -359,7 +359,7 @@ export class EstadisticasModule {
           <div class="stats-section-card" style="margin-top: 16px;">
             <div class="stats-card-header">
               <div>
-                <h3 class="stats-card-title">📋 Historial de Compras y Pagos Realizados</h3>
+                <h3 class="stats-card-title">Historial de Compras y Pagos Realizados</h3>
                 <p class="stats-card-subtitle">Relación detallada de todas las notas liquidadas a este proveedor</p>
               </div>
               <span class="provdb-table-count">${stats.comprasHistorial.length} registros</span>
@@ -394,7 +394,7 @@ export class EstadisticasModule {
                         <td style="color: #64748b;">${c.hora || '-'}</td>
                         <td class="text-center">
                           <span class="badge-tipo-pago ${esTransf ? 'badge-pago-transf' : 'badge-pago-efec'}">
-                            ${esTransf ? '🏦 Transf' : '💵 Efectivo'}
+                            ${esTransf ? 'Transferencia' : 'Efectivo'}
                           </span>
                         </td>
                         <td class="text-right font-bold" style="color: #0f172a; font-size: 0.95rem;">

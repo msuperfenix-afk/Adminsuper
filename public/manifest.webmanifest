@@ -1,0 +1,32 @@
+{
+  "name": "Minisúper Fénix - Control Administrativo",
+  "short_name": "AdminFénix",
+  "description": "Sistema de administración de proveedores, compras y control operativo de caja para Minisúper Fénix",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#1e3a8a",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "./pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./logo-fenix.png",
+      "sizes": "242x248",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -2,10 +2,19 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minisúper Fénix - Sistema de Administración de Proveedores y Caja</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Minisúper Fénix - Sistema de Administración y Caja</title>
+  
+  <meta name="theme-color" content="#1e3a8a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AdminFénix">
   
   <link rel="icon" type="image/png" href="./logo-fenix.png">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -24,12 +33,12 @@
 
       <nav class="sidebar-nav">
         <!-- 1. Hoja Diaria Fénix (Formato Real Papel) -->
-        <button class="nav-item active" data-view="hoja" data-tooltip="Hoja de Cuadre Diaria (Papel)" id="navBtnHoja">
+        <button class="nav-item active" data-view="hoja" data-tooltip="Hoja de Cuadre Diaria" id="navBtnHoja">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
         </button>
 
         <!-- 2. Agenda Semanal (Lunes a Domingo) -->
-        <button class="nav-item" data-view="pipeline" data-tooltip="Agenda Semanal (L-D)" id="navBtnPipeline">
+        <button class="nav-item" data-view="pipeline" data-tooltip="Agenda Semanal" id="navBtnPipeline">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"></rect><rect x="10" y="3" width="5" height="12" rx="1"></rect><rect x="17" y="3" width="5" height="15" rx="1"></rect></svg>
         </button>
 
@@ -45,8 +54,8 @@
       </nav>
 
       <div class="sidebar-footer">
-        <!-- Respaldo / Base de Datos -->
-        <button class="nav-item" data-tooltip="Copia de Seguridad (JSON)" id="navBtnBackup">
+        <!-- Respaldo / Exportación -->
+        <button class="nav-item" data-tooltip="Exportar y Respaldo" id="navBtnBackup">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
         </button>
       </div>
@@ -61,7 +70,7 @@
           <div class="brand-header-flex">
             <img src="./logo-fenix.png" alt="Fénix" class="header-logo">
             <div class="page-title-group">
-              <h1 id="pageTitle">📄 Hoja Diaria Minisúper Fénix</h1>
+              <h1 id="pageTitle">Hoja Diaria - Minisúper Fénix</h1>
               <span class="page-subtitle" id="pageSubtitle">Control contable de compras, proveedores, corte y arqueo de caja</span>
             </div>
           </div>
@@ -93,6 +102,10 @@
             <span>0 pagados hoy</span>
           </div>
 
+          <!-- Botón de Exportación Rápida para Móviles y Escritorio -->
+          <button class="topbar-action-btn" id="btnTopBarBackup" title="Exportación y Respaldo (Excel, JSON, PDF)" aria-label="Exportar datos">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          </button>
 
           <!-- Perfil y Sucursal -->
           <div class="user-profile">
@@ -133,6 +146,19 @@
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-container" id="modalContainer"></div>
   </div>
+
+  <!-- Registro de Service Worker para PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./sw.js').then(function(reg) {
+          console.log('PWA ServiceWorker activo en:', reg.scope);
+        }).catch(function(err) {
+          console.warn('Registro SW no completado:', err);
+        });
+      });
+    }
+  </script>
 
   <script type="module" src="./src/js/app.js"></script>
 </body>

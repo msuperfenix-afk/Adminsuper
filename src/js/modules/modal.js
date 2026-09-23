@@ -5,6 +5,7 @@
 import { stateManager, CATALOGO_PROVEEDORES_PREDETERMINADOS } from '../state.js';
 import { DIAS_SEMANA, CATEGORIAS_PROVEEDOR } from './pipeline.js';
 import { inicializarFirebase, getFirebaseConfigActual, isFirebaseConectado } from '../firebaseClient.js';
+import { ExportManager } from './exportManager.js';
 
 export class ModalManager {
   constructor(overlayId, containerId) {
@@ -61,7 +62,7 @@ export class ModalManager {
     const isEdit = !!(proveedor && (proveedor.id || proveedor.proveedor));
     const diaDefault = (proveedor && proveedor.dia) ? proveedor.dia : 'lunes';
     const diaNombre = DIAS_SEMANA.find(d => d.id === diaDefault)?.nombre || diaDefault;
-    const title = isEdit ? `✏️ Editar Proveedor: ${proveedor.proveedor}` : `➕ Nuevo Proveedor en Agenda (${diaNombre})`;
+    const title = isEdit ? `Editar Proveedor: ${proveedor.proveedor}` : `Nuevo Proveedor en Agenda (${diaNombre})`;
 
     const p = {
       dia: diaDefault,
@@ -93,13 +94,13 @@ export class ModalManager {
         <!-- SELECTOR DE TIPO DE VISITA (ENTREGA VS PREVENTA) -->
         <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 14px;">
           <label style="display: block; font-weight: 700; font-size: 0.82rem; color: #0f172a; margin-bottom: 6px;">
-            📌 Tipo de Visita en este Día *
+            Tipo de Visita en este Día *
           </label>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <label style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1.5px solid ${p.tipoVisita !== 'preventa' ? '#0284c7' : '#cbd5e1'}; background: ${p.tipoVisita !== 'preventa' ? '#f0f9ff' : '#ffffff'}; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #0f172a;">
               <input type="radio" name="tipoVisita" value="entrega" ${p.tipoVisita !== 'preventa' ? 'checked' : ''} id="radioTipoEntrega">
               <div>
-                <div>📦 Entrega y Cobro</div>
+                <div>Entrega y Cobro</div>
                 <div style="font-size: 0.7rem; font-weight: normal; color: #64748b;">Llega camión repartidor, entrega mercancía y cobra en caja</div>
               </div>
             </label>
@@ -107,7 +108,7 @@ export class ModalManager {
             <label style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1.5px solid ${p.tipoVisita === 'preventa' ? '#d97706' : '#cbd5e1'}; background: ${p.tipoVisita === 'preventa' ? '#fffbeb' : '#ffffff'}; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #0f172a;">
               <input type="radio" name="tipoVisita" value="preventa" ${p.tipoVisita === 'preventa' ? 'checked' : ''} id="radioTipoPreventa">
               <div>
-                <div>📝 Preventa (Toma Pedido)</div>
+                <div>Preventa (Toma Pedido)</div>
                 <div style="font-size: 0.7rem; font-weight: normal; color: #64748b;">Viene preventista un día antes a levantar la orden para mañana</div>
               </div>
             </label>
@@ -118,10 +119,10 @@ export class ModalManager {
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <label class="form-label" style="font-weight: 700; color: #0f172a; margin-bottom: 0;">
-              🏢 Proveedor / Empresa *
+              Proveedor / Empresa *
             </label>
             <span style="font-size: 0.72rem; color: #0284c7; font-weight: 600;">
-              🗄️ Conectado a BD Proveedores (${proveedoresBD.length})
+              Base de Datos Proveedores (${proveedoresBD.length})
             </span>
           </div>
 
@@ -151,13 +152,13 @@ export class ModalManager {
         <!-- BLOQUE 2: DÍA DE VISITA Y CATEGORÍA -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-weight: 700;">🗓️ Día de Visita en Agenda *</label>
+            <label class="form-label" style="font-weight: 700;">Día de Visita en Agenda *</label>
             <select class="form-control font-bold" name="dia" id="selectDiaPrincipalAgenda" required>
               ${diasOptions}
             </select>
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-weight: 700;">🏷️ Categoría de Producto *</label>
+            <label class="form-label" style="font-weight: 700;">Categoría de Producto *</label>
             <select class="form-control" name="categoria" id="selectCatProvAgenda" required>
               ${catsOptions}
             </select>
@@ -167,7 +168,7 @@ export class ModalManager {
         <!-- BLOQUE ESPECÍFICO DE PREVENTA (SI SE MARCA PREVENTA) -->
         <div id="seccionCamposPreventa" style="display: ${p.tipoVisita === 'preventa' ? 'block' : 'none'}; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 12px 14px;">
           <div style="font-weight: 700; font-size: 0.85rem; color: #92400e; margin-bottom: 8px;">
-            📝 Configuración de Preventa
+            Configuración de Preventa
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
@@ -189,30 +190,30 @@ export class ModalManager {
         <div id="seccionCamposEntrega" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700;" id="labelPresupuestoGeneral">💰 Presupuesto Aprox. ($ MXN)</label>
+              <label class="form-label" style="font-weight: 700;" id="labelPresupuestoGeneral">Presupuesto Aprox. ($ MXN)</label>
               <input type="number" step="10" min="0" class="form-control font-bold" id="inputPresupuestoProvAgenda" name="presupuestoAprox" placeholder="0.00" value="${p.presupuestoAprox || p.preventaPresupuesto || ''}" style="font-size: 0.95rem;">
               <small style="color: #64748b; font-size: 0.72rem;">Estimado a pagar al proveedor</small>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700;">⏰ Hora Estimada de Llegada</label>
+              <label class="form-label" style="font-weight: 700;">Hora Estimada de Llegada</label>
               <input type="time" class="form-control" id="inputHoraProvAgenda" name="hora" value="${p.hora || '10:00'}">
             </div>
           </div>
 
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-weight: 700; margin-bottom: 6px;">💳 Forma de Pago *</label>
+            <label class="form-label" style="font-weight: 700; margin-bottom: 6px;">Forma de Pago *</label>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
               <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #f8fafc;">
                 <input type="radio" name="tipoPago" value="Efectivo" ${(!p.tipoPago || p.tipoPago.toLowerCase().includes('efectivo')) ? 'checked' : ''}>
-                <span>💵 Efectivo de Caja</span>
+                <span>Efectivo de Caja</span>
               </label>
               <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #f8fafc;">
                 <input type="radio" name="tipoPago" value="Transferencia" ${(p.tipoPago && p.tipoPago.toLowerCase().includes('transferencia')) ? 'checked' : ''}>
-                <span>🏦 Transferencia Bancaria</span>
+                <span>Transferencia Bancaria</span>
               </label>
               <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #f8fafc;">
                 <input type="radio" name="tipoPago" value="Cheque" ${(p.tipoPago && p.tipoPago.toLowerCase().includes('cheque')) ? 'checked' : ''}>
-                <span>📄 Cheque / Otro</span>
+                <span>Cheque / Otro</span>
               </label>
             </div>
           </div>
@@ -222,7 +223,7 @@ export class ModalManager {
         ${!isEdit ? `
           <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px 14px;">
             <div style="font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
-              🔄 Frecuencia múltiple (proveedores que vienen 2 o 3 veces por semana)
+              Frecuencia múltiple (proveedores que vienen 2 o 3 veces por semana)
             </div>
             <p style="font-size: 0.72rem; color: #64748b; margin: 0 0 8px 0;">
               Si este proveedor visita varios días a la semana, marca los días adicionales y se agendarán juntos:
@@ -386,7 +387,7 @@ export class ModalManager {
         <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 12px 14px;">
           <div style="display: flex; justify-content: space-between; align-items: baseline;">
             <div>
-              <span style="font-size: 0.7rem; font-weight: 800; background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px;">📝 LEVANTAMIENTO DE PREVENTA</span>
+              <span style="font-size: 0.7rem; font-weight: 800; background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px;">LEVANTAMIENTO DE PREVENTA</span>
               <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 4px 0 0;">${p.proveedor}</h3>
             </div>
             <div style="text-align: right; font-size: 0.78rem; color: #475569;">
@@ -402,19 +403,19 @@ export class ModalManager {
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
           <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; margin-bottom: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700; color: #0f172a;">⏰ Hora en que Vino</label>
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">Hora en que Vino</label>
               <input type="time" class="form-control font-bold" id="inputHoraVinoPrev" value="${p.horaVinoPreventa || horaActual}">
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700; color: #0f172a;">💰 Costo de Venta / Pedido ($ MXN) *</label>
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">Costo de Venta / Pedido ($ MXN) *</label>
               <input type="number" step="10" min="0" class="form-control font-bold" id="inputCostoVinoPrev" placeholder="0.00" value="${p.costoPreventa || p.presupuestoAprox || ''}" style="font-size: 1rem; color: #047857;" autofocus required>
               <small style="color: #64748b; font-size: 0.72rem;">Monto a pagar en caja en la entrega</small>
             </div>
           </div>
 
           <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label" style="font-weight: 700; color: #0f172a;">🗓️ Día en que se Realizará la Entrega</label>
+            <label class="form-label" style="font-weight: 700; color: #0f172a;">Día en que se Realizará la Entrega</label>
             <select class="form-control font-bold" id="selectDiaEntregaPrev">
               ${diasEntregaOptions}
             </select>
@@ -424,7 +425,7 @@ export class ModalManager {
             <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #166534; margin: 0;">
               <input type="checkbox" id="checkAgendarEntregaAuto" checked style="margin-top: 3px;">
               <div>
-                <div>📅 Agendar entrega automáticamente para ese día</div>
+                <div>Agendar entrega automáticamente para ese día</div>
                 <div style="font-weight: normal; font-size: 0.72rem; color: #15803d; margin-top: 2px;">
                   Crea en la agenda del día siguiente el registro de entrega con este costo exacto y la lista de pedido para el cajero.
                 </div>
@@ -444,11 +445,11 @@ export class ModalManager {
     const footer = `
       <button type="button" class="btn-secondary" id="btnCancelarVinoPrev">Cancelar</button>
       <button type="button" class="btn-primary" id="btnGuardarVinoPrev" style="min-width: 170px;">
-        ✓ Guardar Preventa y Agendar
+        Guardar Preventa y Agendar
       </button>
     `;
 
-    this.open(`📝 Registrar Preventa: ${p.proveedor}`, body, footer);
+    this.open(`Registrar Preventa: ${p.proveedor}`, body, footer);
 
     document.getElementById('btnCancelarVinoPrev')?.addEventListener('click', () => this.close());
     document.getElementById('btnGuardarVinoPrev')?.addEventListener('click', () => {
@@ -523,7 +524,7 @@ export class ModalManager {
       <button type="button" class="btn-primary" id="modalSavePagoBtn">Registrar Pago</button>
     `;
 
-    this.open('💵 Registrar Pago a Proveedor', body, footer);
+    this.open('Registrar Pago a Proveedor', body, footer);
 
     document.getElementById('modalCancelBtn')?.addEventListener('click', () => this.close());
     document.getElementById('modalSavePagoBtn')?.addEventListener('click', () => {
@@ -597,7 +598,7 @@ export class ModalManager {
       <button type="button" class="btn-primary" id="modalSavePanBtn">Guardar Panadería</button>
     `;
 
-    this.open('🥖 Conteo y Registro de Panaderos', body, footer);
+    this.open('Conteo y Registro de Panaderos', body, footer);
 
     const recomputePan = () => {
       const d = parseFloat(document.getElementById('panDulces')?.value) || 0;
@@ -676,7 +677,7 @@ export class ModalManager {
       <button type="button" class="btn-primary" id="modalSaveTortBtn">Guardar Registro</button>
     `;
 
-    this.open('🌽 Conteo y Registro de Tortillería', body, footer);
+    this.open('Conteo y Registro de Tortillería', body, footer);
 
     const recomputeTort = () => {
       const n = parseFloat(document.getElementById('tortNuevo')?.value) || 0;
@@ -797,7 +798,7 @@ export class ModalManager {
       <button type="button" class="btn-primary" id="modalSaveArqueoBtn">Generar Arqueo</button>
     `;
 
-    this.open('🏦 Nuevo Corte y Arqueo de Caja', body, footer);
+    this.open('Nuevo Corte y Arqueo de Caja', body, footer);
 
     const recomputeCoins = () => {
       const c1 = parseInt(document.getElementById('m1')?.value) || 0;
@@ -915,7 +916,7 @@ export class ModalManager {
         <button type="button" class="btn-primary" id="btnCerrarModalArqBloq" style="min-width: 110px;">Cerrar</button>
       `;
 
-      this.open(`🔒 ${colNombre}`, body, footer);
+      this.open(`Arqueo Cerrado: ${colNombre}`, body, footer);
       document.getElementById('btnCerrarModalArqBloq')?.addEventListener('click', () => this.close());
       return;
     }
@@ -924,7 +925,7 @@ export class ModalManager {
     const body = `
       <form id="formCapturaArqueoCol" style="display: flex; flex-direction: column; gap: 14px;">
         <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; color: #1e3a8a;">
-          <strong>🏦 Captura de Arqueo y Corte: ${colNombre}</strong>
+          <strong>Captura de Arqueo y Corte: ${colNombre}</strong>
           <p style="margin: 3px 0 0; color: #475569; font-size: 0.74rem;">
             Ingresa las cantidades de cada concepto solicitado. Al guardar, el arqueo se sellará y ya no se podrá modificar.
           </p>
@@ -934,12 +935,12 @@ export class ModalManager {
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700; color: #0f172a;">💳 TARJETAS ($ MXN)</label>
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">TARJETAS ($ MXN)</label>
               <input type="number" step="0.5" class="form-control font-bold" id="inpColTarjetas" placeholder="0.00" value="${col.tarjetas || ''}" style="font-size: 0.95rem;">
               <small style="color: #64748b; font-size: 0.72rem;">Terminal bancaria</small>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700; color: #0f172a;">📱 TARJETA YOMP ($ MXN)</label>
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">TARJETA YOMP ($ MXN)</label>
               <input type="number" step="0.5" class="form-control font-bold" id="inpColTarjetaYomp" placeholder="0.00" value="${col.tarjetaYomp || ''}" style="font-size: 0.95rem; border-color: #93c5fd;">
               <small style="color: #64748b; font-size: 0.72rem;">Terminal / cobros Yomp</small>
             </div>
@@ -947,12 +948,12 @@ export class ModalManager {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700; color: #0f172a;">🖥️ SISTEMA (POS) ($ MXN)</label>
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">SISTEMA (POS) ($ MXN)</label>
               <input type="number" step="0.5" class="form-control font-bold" id="inpColSistema" placeholder="0.00" value="${col.sistema || ''}" style="font-size: 0.95rem;">
               <small style="color: #64748b; font-size: 0.72rem;">Venta registrada en software</small>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700; color: #0f172a;">💵 BILLETES EN CAJA ($ MXN)</label>
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">BILLETES EN CAJA ($ MXN)</label>
               <input type="number" step="10" class="form-control font-bold" id="inpColBilletes" placeholder="0.00" value="${col.billetes || ''}" style="font-size: 0.95rem;">
               <small style="color: #64748b; font-size: 0.72rem;">Total acumulado en billetes</small>
             </div>
@@ -962,7 +963,7 @@ export class ModalManager {
         <!-- CONTEO DE MONEDAS (CANTIDAD TOTAL EN PESOS) -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
           <div style="font-weight: 700; font-size: 0.84rem; color: #0f172a; margin-bottom: 8px;">
-            🪙 MONEDAS (Monto total en pesos)
+            MONEDAS (Monto total en pesos)
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
@@ -995,7 +996,7 @@ export class ModalManager {
         <!-- RECUADRO DE CONFIRMACIÓN CON EL DISEÑO DE LA INTERFAZ (SIN CUADROS NEGROS DE SISTEMA) -->
         <div id="recuadroConfirmacionInterfaz" style="display: none; background: #f8fafc; border: 1.5px solid #94a3b8; border-radius: 8px; padding: 14px 16px; margin-top: 4px;">
           <div style="display: flex; align-items: flex-start; gap: 10px;">
-            <div style="font-size: 1.3rem; line-height: 1;">🔒</div>
+            <div style="font-size: 0.8rem; font-weight: 800; background: #e2e8f0; padding: 3px 6px; border-radius: 4px;">CONFIRMAR</div>
             <div style="flex: 1;">
               <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a;">
                 ¿Deseas confirmar y sellar el arqueo de ${colNombre}?
@@ -1026,7 +1027,7 @@ export class ModalManager {
       </div>
     `;
 
-    this.open(`🏦 ${colNombre}`, body, footer);
+    this.open(`Arqueo y Corte: ${colNombre}`, body, footer);
 
     // Cálculo dinámico de morralla en vivo
     const inpM1 = document.getElementById('inpColMon1');
@@ -1190,7 +1191,7 @@ export class ModalManager {
       <button type="button" class="btn-primary" id="modalSaveRetiroBtn">Registrar Retiro</button>
     `;
 
-    this.open('📤 Registrar Retiro de Efectivo', body, footer);
+    this.open('Registrar Retiro de Efectivo', body, footer);
 
     document.getElementById('modalCancelBtn')?.addEventListener('click', () => this.close());
     document.getElementById('modalSaveRetiroBtn')?.addEventListener('click', () => {
@@ -1266,7 +1267,7 @@ export class ModalManager {
       <button type="button" class="btn-primary" id="modalSaveMaqBtn">Guardar Recaudación</button>
     `;
 
-    this.open('🎰 Recaudación de Tragamonedas y Peluches', body, footer);
+    this.open('Recaudación de Tragamonedas y Peluches', body, footer);
 
     const recomputeMaq = () => {
       const total = parseFloat(document.getElementById('maqMonto')?.value) || 0;
@@ -1367,10 +1368,10 @@ export class ModalManager {
 
     const footer = `
       <button type="button" class="btn-secondary" id="modalCancelBtn">Cerrar</button>
-      <button type="button" class="btn-primary" id="btnImprimirTicketWindow">🖨️ Imprimir Ticket</button>
+      <button type="button" class="btn-primary" id="btnImprimirTicketWindow">Imprimir Ticket</button>
     `;
 
-    this.open('🖨️ Vista Previa de Ticket de Arqueo', body, footer);
+    this.open('Vista Previa de Ticket de Arqueo', body, footer);
 
     document.getElementById('modalCancelBtn')?.addEventListener('click', () => this.close());
     document.getElementById('btnImprimirTicketWindow')?.addEventListener('click', () => {
@@ -1379,32 +1380,113 @@ export class ModalManager {
   }
 
   // ==========================================
-  // 10. MODAL: RESPALDO Y RESTAURACIÓN JSON
+  // 10. MODAL: GUARDADO, EXPORTACIÓN Y RESPALDO (FILTRADO POR PERÍODO)
   // ==========================================
   openBackupModal() {
-    const jsonStr = stateManager.exportarJSON();
+    const hoyStr = stateManager.getFechaHoy();
+    const [anoActual, mesActual] = hoyStr.split('-');
 
     const body = `
-      <div class="form-group">
-        <label class="form-label">Respaldo Actual en Formato JSON</label>
-        <textarea class="form-control" style="height: 180px; font-family: monospace; font-size: 0.75rem;" id="txtBackupJson" readonly>${jsonStr}</textarea>
-      </div>
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Cabecera Informativa Sobria -->
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px;">
+          <div style="font-weight: 700; font-size: 0.9rem; color: #0f172a;">Exportación y Respaldo de Datos</div>
+          <p style="margin: 4px 0 0; font-size: 0.76rem; color: #475569; line-height: 1.4;">
+            Selecciona el período a consultar y exportar. La descarga se procesa internamente para evitar sobrecargas del sistema.
+          </p>
+        </div>
 
-      <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="btn-secondary" id="btnDescargarJSON">💾 Descargar Archivo JSON</button>
-        <button class="btn-secondary" id="btnCopiarJSON">📋 Copiar al Portapapeles</button>
-      </div>
+        <!-- Filtro por Período -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+          <label style="display: block; font-weight: 700; font-size: 0.82rem; color: #0f172a; margin-bottom: 8px;">
+            Período de Exportación:
+          </label>
 
-      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 16px;">
+          <div style="display: flex; gap: 16px; margin-bottom: 12px;">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #334155; cursor: pointer;">
+              <input type="radio" name="tipoPeriodoExport" id="radioExportDia" value="dia" checked>
+              <span>Día Específico</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #334155; cursor: pointer;">
+              <input type="radio" name="tipoPeriodoExport" id="radioExportMes" value="mes">
+              <span>Mes Completo</span>
+            </label>
+          </div>
 
-      <div class="form-group">
-        <label class="form-label">Restaurar Datos desde un Respaldo JSON</label>
-        <textarea class="form-control" style="height: 100px; font-family: monospace; font-size: 0.75rem;" id="txtImportJson" placeholder="Pega aquí el contenido JSON a restaurar..."></textarea>
-      </div>
+          <!-- Selector Día -->
+          <div id="contenedorFiltroDia" style="margin-bottom: 4px;">
+            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #475569;">Fecha a exportar:</label>
+            <input type="date" id="inputExportFecha" class="form-control" value="${hoyStr}" style="max-width: 240px; font-size: 0.85rem;">
+          </div>
 
-      <div style="display: flex; gap: 10px;">
-        <button class="btn-primary" id="btnRestaurarJSON" style="background: #2563eb;">🔄 Restaurar Datos</button>
-        <button class="btn-secondary" id="btnResetSeed" style="color: #dc2626;">⚠️ Restaurar Datos Demo</button>
+          <!-- Selector Mes (Oculto por default) -->
+          <div id="contenedorFiltroMes" style="display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px;">
+            <div>
+              <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #475569;">Mes:</label>
+              <select id="selectExportMes" class="form-control" style="font-size: 0.85rem;">
+                <option value="1" ${mesActual === '01' ? 'selected' : ''}>Enero</option>
+                <option value="2" ${mesActual === '02' ? 'selected' : ''}>Febrero</option>
+                <option value="3" ${mesActual === '03' ? 'selected' : ''}>Marzo</option>
+                <option value="4" ${mesActual === '04' ? 'selected' : ''}>Abril</option>
+                <option value="5" ${mesActual === '05' ? 'selected' : ''}>Mayo</option>
+                <option value="6" ${mesActual === '06' ? 'selected' : ''}>Junio</option>
+                <option value="7" ${mesActual === '07' ? 'selected' : ''}>Julio</option>
+                <option value="8" ${mesActual === '08' ? 'selected' : ''}>Agosto</option>
+                <option value="9" ${mesActual === '09' ? 'selected' : ''}>Septiembre</option>
+                <option value="10" ${mesActual === '10' ? 'selected' : ''}>Octubre</option>
+                <option value="11" ${mesActual === '11' ? 'selected' : ''}>Noviembre</option>
+                <option value="12" ${mesActual === '12' ? 'selected' : ''}>Diciembre</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #475569;">Año:</label>
+              <input type="number" id="inputExportAno" class="form-control" value="${anoActual}" min="2024" max="2035" style="font-size: 0.85rem;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de Descarga y Exportación Directa -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+          <label style="display: block; font-weight: 700; font-size: 0.82rem; color: #0f172a; margin-bottom: 10px;">
+            Opciones de Descarga:
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+            <button type="button" class="btn-primary" id="btnDescargarJSONFiltrado" style="background: #0284c7; border: none; font-size: 0.82rem; padding: 9px 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>Descargar Archivo JSON</span>
+            </button>
+            <button type="button" class="btn-primary" id="btnDescargarExcelFiltrado" style="background: #16a34a; border: none; font-size: 0.82rem; padding: 9px 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>Exportar a Excel (.csv)</span>
+            </button>
+            <button type="button" class="btn-primary" id="btnExportarPDFFiltrado" style="background: #475569; border: none; font-size: 0.82rem; padding: 9px 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>Imprimir / Guardar PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sección de Restauración de Respaldo -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 0.82rem; color: #334155;">Restauración de Base de Datos</span>
+            <button type="button" id="btnToggleRestaurar" class="btn-secondary" style="font-size: 0.72rem; padding: 3px 8px;">
+              Opciones de Restauración
+            </button>
+          </div>
+
+          <div id="cajaOpcionesRestaurar" style="display: none; margin-top: 12px; border-top: 1px solid #cbd5e1; padding-top: 12px;">
+            <p style="font-size: 0.74rem; color: #64748b; margin: 0 0 10px 0;">
+              Sube un archivo de respaldo JSON generado previamente para restablecer el sistema.
+            </p>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <input type="file" id="inputFileBackup" accept=".json" style="font-size: 0.78rem;">
+              <button type="button" class="btn-primary" id="btnSubirArchivoJSON" style="font-size: 0.78rem; padding: 6px 12px; background: #2563eb;">
+                Cargar Archivo
+              </button>
+              <button type="button" class="btn-secondary" id="btnResetSeed" style="color: #dc2626; font-size: 0.78rem; margin-left: auto;">
+                Restablecer Datos Demo
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
 
@@ -1412,44 +1494,90 @@ export class ModalManager {
       <button type="button" class="btn-secondary" id="modalCancelBtn">Cerrar</button>
     `;
 
-    this.open('💾 Respaldo y Mantenimiento de Base de Datos', body, footer);
+    this.open('Gestión y Exportación de Datos', body, footer);
 
     document.getElementById('modalCancelBtn')?.addEventListener('click', () => this.close());
 
-    document.getElementById('btnDescargarJSON')?.addEventListener('click', () => {
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `AdminFenix_Respaldo_${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+    // Conmutador Día / Mes
+    const rDia = document.getElementById('radioExportDia');
+    const rMes = document.getElementById('radioExportMes');
+    const cDia = document.getElementById('contenedorFiltroDia');
+    const cMes = document.getElementById('contenedorFiltroMes');
+
+    rDia?.addEventListener('change', () => {
+      if (cDia) cDia.style.display = 'block';
+      if (cMes) cMes.style.display = 'none';
     });
 
-    document.getElementById('btnCopiarJSON')?.addEventListener('click', () => {
-      navigator.clipboard.writeText(jsonStr);
-      alert('¡JSON copiado con éxito al portapapeles!');
+    rMes?.addEventListener('change', () => {
+      if (cDia) cDia.style.display = 'none';
+      if (cMes) cMes.style.display = 'grid';
     });
 
-    document.getElementById('btnRestaurarJSON')?.addEventListener('click', () => {
-      const inputVal = document.getElementById('txtImportJson')?.value.trim();
-      if (!inputVal) {
-        alert('Por favor pega el código JSON.');
+    // Helper para obtener parámetros activos
+    const getParametrosActivos = () => {
+      const tipo = rMes?.checked ? 'mes' : 'dia';
+      const fecha = document.getElementById('inputExportFecha')?.value || hoyStr;
+      const ano = document.getElementById('inputExportAno')?.value || anoActual;
+      const mes = document.getElementById('selectExportMes')?.value || mesActual;
+      return { tipo, fecha, ano, mes };
+    };
+
+    // 1. Descarga directa de JSON
+    document.getElementById('btnDescargarJSONFiltrado')?.addEventListener('click', () => {
+      const { tipo, fecha, ano, mes } = getParametrosActivos();
+      ExportManager.exportarJSON(tipo, fecha, ano, mes);
+    });
+
+    // 2. Exportación a Excel (.csv)
+    document.getElementById('btnDescargarExcelFiltrado')?.addEventListener('click', () => {
+      const { tipo, fecha, ano, mes } = getParametrosActivos();
+      ExportManager.exportarExcel(tipo, fecha, ano, mes);
+    });
+
+    // 3. Exportación a PDF / Vista de Impresión
+    document.getElementById('btnExportarPDFFiltrado')?.addEventListener('click', () => {
+      const { tipo, fecha, ano, mes } = getParametrosActivos();
+      ExportManager.exportarPDF(tipo, fecha, ano, mes);
+    });
+
+    // Toggle de sección de restauración
+    const btnToggle = document.getElementById('btnToggleRestaurar');
+    const boxRestaurar = document.getElementById('cajaOpcionesRestaurar');
+    btnToggle?.addEventListener('click', () => {
+      if (boxRestaurar) {
+        boxRestaurar.style.display = boxRestaurar.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
+    // Restaurar desde archivo
+    document.getElementById('btnSubirArchivoJSON')?.addEventListener('click', () => {
+      const fileInput = document.getElementById('inputFileBackup');
+      const file = fileInput?.files?.[0];
+      if (!file) {
+        alert('Por favor selecciona un archivo JSON de respaldo.');
         return;
       }
-      if (confirm('¿Deseas sobreescribir los datos actuales con este respaldo?')) {
-        const ok = stateManager.importarJSON(inputVal);
-        if (ok) {
-          alert('¡Base de datos restaurada correctamente!');
-          this.close();
-        } else {
-          alert('El archivo o formato JSON no es válido.');
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target.result;
+          const ok = stateManager.importarJSON(content);
+          if (ok) {
+            alert('¡Base de datos restaurada correctamente!');
+            this.close();
+          } else {
+            alert('El archivo no contiene un formato de respaldo válido de AdminFénix.');
+          }
+        } catch (err) {
+          alert('Error al leer el archivo JSON: ' + err.message);
         }
-      }
+      };
+      reader.readAsText(file);
     });
 
     document.getElementById('btnResetSeed')?.addEventListener('click', () => {
-      if (confirm('¿Restablecer el sistema con los datos de demostración originales? Se perderán las modificaciones locales.')) {
+      if (confirm('¿Restablecer el sistema con los datos de demostración originales?')) {
         stateManager.resetearDatosDemo();
         alert('¡Datos de demostración restablecidos!');
         this.close();
@@ -1470,7 +1598,7 @@ export class ModalManager {
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: ${conectado ? '#ecfdf5' : '#fff7ed'}; border: 1.5px solid ${conectado ? '#10b981' : '#f97316'}; border-radius: 6px; margin-bottom: 14px;">
           <div>
             <strong style="color: ${conectado ? '#065f46' : '#9a3412'}; font-size: 0.9rem;">
-              ${conectado ? '🟢 Cloud Firestore Conectado' : '🟠 Firebase No Conectado'}
+              ${conectado ? 'Cloud Firestore Conectado' : 'Firebase No Conectado'}
             </strong>
             <div style="font-size: 0.75rem; color: #475569;">
               ${conectado ? `Proyecto: <strong>${configActual.projectId}</strong>` : 'Conecta tu proyecto adminsuper para sincronizar las hojas diarias.'}
@@ -1491,10 +1619,10 @@ export class ModalManager {
 
     const footer = `
       <button type="button" class="btn-secondary" id="modalCancelBtn">Cerrar</button>
-      <button type="button" class="btn-primary" id="btnGuardarFirebase" style="background: #1e3a8a;">💾 Conectar y Guardar</button>
+      <button type="button" class="btn-primary" id="btnGuardarFirebase" style="background: #1e3a8a;">Conectar y Guardar</button>
     `;
 
-    this.open('🔥 Conectar Firebase Cloud Firestore', body, footer);
+    this.open('Conectar Firebase Cloud Firestore', body, footer);
 
     document.getElementById('modalCancelBtn')?.addEventListener('click', () => this.close());
     document.getElementById('btnGuardarFirebase')?.addEventListener('click', () => {
@@ -1555,7 +1683,7 @@ export class ModalManager {
     const body = `
       <form id="formCapturaProveedorSeguro">
         <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 0.8rem; color: #1e3a8a;">
-          <strong>🔒 Registro Contable Seguro (Nota #${numNota})</strong>
+          <strong>Registro Contable Protegido (Nota #${numNota})</strong>
           <p style="margin: 4px 0 0; color: #475569; font-size: 0.75rem;">
             Selecciona un proveedor de la lista o escribe uno nuevo. Una vez guardado, el renglón quedará protegido para evitar modificaciones accidentales.
           </p>
@@ -1575,11 +1703,11 @@ export class ModalManager {
           <div style="display: flex; gap: 12px; margin-top: 4px;">
             <label style="display: flex; align-items: center; gap: 6px; font-weight: 700; cursor: pointer; background: #f8fafc; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 4px;">
               <input type="radio" name="modalTipoPago" value="Efectivo" ${tipoPago !== 'Transferencia' ? 'checked' : ''}>
-              <span>💵 Efectivo</span>
+              <span>Efectivo</span>
             </label>
             <label style="display: flex; align-items: center; gap: 6px; font-weight: 700; cursor: pointer; background: #f8fafc; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 4px;">
               <input type="radio" name="modalTipoPago" value="Transferencia" ${tipoPago === 'Transferencia' ? 'checked' : ''}>
-              <span>🏦 Transferencia</span>
+              <span>Transferencia</span>
             </label>
           </div>
         </div>
@@ -1593,10 +1721,10 @@ export class ModalManager {
 
     const footer = `
       <button type="button" class="btn-secondary" id="modalCancelProvSeguro">Cancelar</button>
-      <button type="button" class="btn-primary" id="btnGuardarProvSeguro" style="background: #1e3a8a;">💾 Guardar Registro</button>
+      <button type="button" class="btn-primary" id="btnGuardarProvSeguro" style="background: #1e3a8a;">Guardar Registro</button>
     `;
 
-    this.open(`➕ Registro de Proveedor Pagado (Nota #${numNota})`, body, footer);
+    this.open(`Registro de Proveedor Pagado (Nota #${numNota})`, body, footer);
 
     document.getElementById('modalCancelProvSeguro')?.addEventListener('click', () => this.close());
     document.getElementById('btnGuardarProvSeguro')?.addEventListener('click', () => {
@@ -1642,7 +1770,7 @@ export class ModalManager {
     const body = `
       <form id="formCapturaPrestamoSeguro">
         <div style="background: #fff7ed; border: 1.5px solid #fed7aa; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 0.8rem; color: #9a3412;">
-          <strong>🔒 Préstamo o Pendiente de Pago Seguro</strong>
+          <strong>Registro de Préstamo o Pendiente de Pago</strong>
           <p style="margin: 4px 0 0; color: #475569; font-size: 0.75rem;">
             Una vez guardado, el pendiente quedará registrado. Cuando sea liquidado, podrás marcar la casilla en la hoja para tacharlo y descontarlo del adeudo activo.
           </p>
@@ -1670,10 +1798,10 @@ export class ModalManager {
 
     const footer = `
       <button type="button" class="btn-secondary" id="modalCancelPresSeguro">Cancelar</button>
-      <button type="button" class="btn-primary" id="btnGuardarPresSeguro" style="background: #1e3a8a;">💾 Guardar Pendiente</button>
+      <button type="button" class="btn-primary" id="btnGuardarPresSeguro" style="background: #1e3a8a;">Guardar Pendiente</button>
     `;
 
-    this.open('➕ Registrar Préstamo o Pendiente de Pago', body, footer);
+    this.open('Registrar Préstamo o Pendiente de Pago', body, footer);
 
     document.getElementById('modalCancelPresSeguro')?.addEventListener('click', () => this.close());
     document.getElementById('btnGuardarPresSeguro')?.addEventListener('click', () => {
@@ -1714,7 +1842,7 @@ export class ModalManager {
     const body = `
       <form id="formCapturaRetiroSeguro">
         <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 0.8rem; color: #1e3a8a;">
-          <strong>🔒 Retiro de Efectivo de Caja</strong>
+          <strong>Retiro de Efectivo de Caja</strong>
           <p style="margin: 4px 0 0; color: #475569; font-size: 0.75rem;">
             Registra los retiros que se realizan durante el turno. Al guardar, quedará registrado y bloqueado.
           </p>
@@ -1742,10 +1870,10 @@ export class ModalManager {
 
     const footer = `
       <button type="button" class="btn-secondary" id="modalCancelRetSeguro">Cancelar</button>
-      <button type="button" class="btn-primary" id="btnGuardarRetSeguro" style="background: #1e3a8a;">💾 Guardar Retiro</button>
+      <button type="button" class="btn-primary" id="btnGuardarRetSeguro" style="background: #1e3a8a;">Guardar Retiro</button>
     `;
 
-    this.open('➕ Registrar Retiro de Efectivo', body, footer);
+    this.open('Registrar Retiro de Efectivo', body, footer);
 
     document.getElementById('modalCancelRetSeguro')?.addEventListener('click', () => this.close());
     document.getElementById('btnGuardarRetSeguro')?.addEventListener('click', () => {
@@ -1885,7 +2013,7 @@ export class ModalManager {
         if (tieneRegistros) {
           badgeHistorial = `
             <div class="cal-badge-pagado" title="Total Pagado: ${formatMoney(hist.totalPagado)}">
-              💵 ${formatMoney(hist.totalPagado)}
+              ${formatMoney(hist.totalPagado)}
             </div>
           `;
         }
@@ -1909,7 +2037,7 @@ export class ModalManager {
       return `
         <div class="calendario-historial-wrap">
           <div style="background: #f8fafc; border-left: 3px solid #64748b; padding: 10px 14px; border-radius: 4px; margin-bottom: 14px; font-size: 0.76rem; color: #334155;">
-            <strong>📅 Historial de Hojas Contables Diarias</strong>
+            <strong>Historial de Hojas Contables Diarias</strong>
             <p style="margin: 4px 0 0; color: #64748b;">
               Selecciona cualquier fecha para consultar su hoja contable. Solo el día de <em>HOY</em> es editable; las fechas pasadas se abren en modo de solo lectura.
             </p>
@@ -1980,7 +2108,7 @@ export class ModalManager {
       }
     };
 
-    this.open('📅 Historial Contable y Calendario de Días', renderCalendarioDOM(), `
+    this.open('Historial Contable y Calendario de Días', renderCalendarioDOM(), `
       <button type="button" class="btn-secondary" id="btnCerrarModalCal">Cerrar Calendario</button>
     `);
 
@@ -2027,7 +2155,7 @@ export class ModalManager {
         <!-- FORMULARIO DE CAPTURA DE CANTIDADES -->
         <div class="costo-captura-card">
           <div class="costo-formula-header">
-            <span>📦 SURTIDO DE PIEZAS (ENTREGA Y CAMBIOS)</span>
+            <span>SURTIDO DE PIEZAS (ENTREGA Y CAMBIOS)</span>
           </div>
           <div class="grid-tres-campos" style="padding: 12px; gap: 10px;">
             <div class="form-group" style="margin-bottom: 0;">
@@ -2078,7 +2206,7 @@ export class ModalManager {
         <!-- TARJETA DE FÓRMULA CONTABLE VISUALIZADA EN VIVO -->
         <div class="costo-formula-card">
           <div class="costo-formula-header">
-            <span>📐 OPERACIÓN MATEMÁTICA</span>
+            <span>OPERACIÓN CONTABLE</span>
             <span class="costo-tag-formula">bolillos + dulces - cambios</span>
           </div>
           <div class="costo-formula-grid">
@@ -2146,7 +2274,7 @@ export class ModalManager {
       ${esEditable ? '<button type="button" class="btn-primary" id="btnGuardarModalPanCosto" style="min-width: 150px;">Guardar Registro</button>' : ''}
     `;
 
-    this.open(`ℹ️ Conteo y Costo: ${proveedor}`, body, footer);
+    this.open(`Conteo y Costo: ${proveedor}`, body, footer);
 
     const inputBol = document.getElementById('inputModalBol');
     const inputDul = document.getElementById('inputModalDul');
@@ -2245,7 +2373,7 @@ export class ModalManager {
         <!-- FORMULARIO DE CAPTURA DE KILOS -->
         <div class="costo-captura-card">
           <div class="costo-formula-header">
-            <span>📦 KILOS RECIBIDOS Y DEVOLUCIONES</span>
+            <span>KILOS RECIBIDOS Y DEVOLUCIONES</span>
           </div>
           <div class="grid-dos-campos" style="padding: 12px; gap: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
@@ -2284,7 +2412,7 @@ export class ModalManager {
         <!-- TARJETA DE FÓRMULA CONTABLE VISUALIZADA EN VIVO -->
         <div class="costo-formula-card">
           <div class="costo-formula-header">
-            <span>📐 OPERACIÓN MATEMÁTICA</span>
+            <span>OPERACIÓN CONTABLE</span>
             <span class="costo-tag-formula">nuevas - cambios</span>
           </div>
           <div class="costo-formula-grid" style="grid-template-columns: 1fr auto 1fr auto 1.3fr;">
@@ -2347,7 +2475,7 @@ export class ModalManager {
       ${esEditable ? '<button type="button" class="btn-primary" id="btnGuardarModalTortCosto" style="min-width: 150px;">Guardar Registro</button>' : ''}
     `;
 
-    this.open(`ℹ️ Conteo y Costo: ${proveedor}`, body, footer);
+    this.open(`Conteo y Costo: ${proveedor}`, body, footer);
 
     const inputNuev = document.getElementById('inputModalNuev');
     const inputCamb = document.getElementById('inputModalCambTort');
@@ -2416,7 +2544,7 @@ export class ModalManager {
 
     const badgeEstado = p.yaVino 
       ? `<span class="badge badge-success" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; font-size:0.8rem; padding: 4px 10px; border-radius: 9999px;">✓ Llegó hoy a las ${p.horaVino || 'hora no registrada'}${p.montoPagadoReal ? ` (${fmt(p.montoPagadoReal)} pagados)` : ''}</span>`
-      : `<span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-size:0.8rem; padding: 4px 10px; border-radius: 9999px;">⏳ Pendiente de visita (${p.dia ? p.dia.toUpperCase() : 'PROGRAMADO'})</span>`;
+      : `<span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-size:0.8rem; padding: 4px 10px; border-radius: 9999px;">Pendiente de visita (${p.dia ? p.dia.toUpperCase() : 'PROGRAMADO'})</span>`;
 
     const renderFilas = () => {
       if (itemsPedido.length === 0) {
@@ -2484,7 +2612,7 @@ export class ModalManager {
         <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
             <div style="font-size: 0.88rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px;">
-              <span>📋 Lista de lo que se va a pedir</span>
+              <span>Lista de Productos a Solicitar</span>
               <span id="spanTotalArticulos" style="background: #e2e8f0; color: #334155; font-size: 0.75rem; padding: 2px 8px; border-radius: 9999px; font-weight: 700;">${itemsPedido.length}</span>
             </div>
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
@@ -2531,7 +2659,7 @@ export class ModalManager {
       <button type="button" class="btn-primary" id="btnGuardarPedidoModal" style="min-width: 150px;">Guardar Pedido</button>
     `;
 
-    this.open(`📋 Pedido: ${p.proveedor}`, body, footer);
+    this.open(`Lista de Pedido: ${p.proveedor}`, body, footer);
 
     const tbody = document.getElementById('tbodyPedidoItems');
     const spanTotal = document.getElementById('spanTotalArticulos');
@@ -2608,7 +2736,7 @@ export class ModalManager {
           alerta.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
               <div>
-                ⚠️ <strong>Sin lista anterior:</strong> No hay un pedido anterior registrado para <strong>"${p.proveedor}"</strong>. Registra los productos de este pedido y quedarán guardados automáticamente como base para tus próximos pedidos.
+                <strong>Sin lista anterior:</strong> No hay un pedido anterior registrado para <strong>"${p.proveedor}"</strong>. Registra los productos de este pedido y quedarán guardados automáticamente como base para tus próximos pedidos.
               </div>
               <button type="button" id="btnCerrarAlertaPedido" style="background: none; border: none; font-weight: bold; color: #92400e; cursor: pointer; font-size: 1.1rem; line-height: 1;">✕</button>
             </div>
@@ -2689,7 +2817,7 @@ export class ModalManager {
         
         <!-- AVISO DE SINCRONIZACIÓN -->
         <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; color: #1e3a8a;">
-          <strong>🗄️ Catálogo Maestro de Proveedores</strong>
+          <strong>Catálogo Maestro de Proveedores</strong>
           <p style="margin: 3px 0 0; color: #475569; font-size: 0.74rem;">
             Los datos aquí registrados alimentarán automáticamente el autocompletado en las 30 líneas de la <strong>Hoja Diaria</strong> y los registros de la <strong>Agenda Semanal</strong>.
           </p>
@@ -2703,7 +2831,7 @@ export class ModalManager {
           </div>
 
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-weight: 700;">🏷️ Categoría de Producto *</label>
+            <label class="form-label" style="font-weight: 700;">Categoría de Producto *</label>
             <select class="form-control font-bold" name="categoria" required>
               ${catsOptions}
             </select>
@@ -2713,7 +2841,7 @@ export class ModalManager {
         <!-- BLOQUE 2: FRECUENCIA SEMANAL (HASTA 3 VECES POR SEMANA) -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
           <label class="form-label" style="font-weight: 700; margin-bottom: 4px; color: #0f172a;">
-            🗓️ Días Habituales de Visita a la Semana (hasta 3 o más días) *
+            Días Habituales de Visita a la Semana (hasta 3 o más días) *
           </label>
           <p style="font-size: 0.72rem; color: #64748b; margin: 0 0 8px 0;">
             Selecciona todos los días en que el proveedor asiste a la tienda (ej: Lunes, Miércoles y Viernes):
@@ -2734,7 +2862,7 @@ export class ModalManager {
           <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; margin-top: 10px;">
             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #0f172a; margin: 0;">
               <input type="checkbox" id="checkTienePreventaCat" name="tienePreventa" ${p.tienePreventa ? 'checked' : ''}>
-              <span>📝 ¿Este proveedor maneja preventa un día antes de la entrega?</span>
+              <span>¿Este proveedor maneja preventa un día antes de la entrega?</span>
             </label>
             <p style="margin: 3px 0 0 24px; font-size: 0.72rem; color: #64748b;">
               Al marcar esta opción, la agenda sabrá que primero asiste un preventista a levantar pedido y la entrega se agenda con ese costo.
@@ -2746,30 +2874,30 @@ export class ModalManager {
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
           <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; margin-bottom: 12px;">
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700;">💰 Presupuesto Habitual ($ MXN)</label>
+              <label class="form-label" style="font-weight: 700;">Presupuesto Habitual ($ MXN)</label>
               <input type="number" step="10" min="0" class="form-control font-bold" name="presupuestoHabitual" placeholder="0.00" value="${p.presupuestoHabitual || ''}" style="font-size: 0.95rem;">
               <small style="color: #64748b; font-size: 0.72rem;">Gasto promedio habitual por visita</small>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-weight: 700;">⏰ Hora Estimada</label>
+              <label class="form-label" style="font-weight: 700;">Hora Estimada</label>
               <input type="time" class="form-control" name="horaHabitual" value="${p.horaHabitual || '10:00'}">
             </div>
           </div>
 
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-weight: 700; margin-bottom: 6px;">💳 Forma de Pago Preferida *</label>
+            <label class="form-label" style="font-weight: 700; margin-bottom: 6px;">Forma de Pago Preferida *</label>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
               <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #ffffff;">
                 <input type="radio" name="tipoPago" value="Efectivo" ${(!p.tipoPago || p.tipoPago.toLowerCase().includes('efectivo')) ? 'checked' : ''}>
-                <span>💵 Efectivo de Caja</span>
+                <span>Efectivo de Caja</span>
               </label>
               <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #ffffff;">
                 <input type="radio" name="tipoPago" value="Transferencia" ${(p.tipoPago && p.tipoPago.toLowerCase().includes('transferencia')) ? 'checked' : ''}>
-                <span>🏦 Transferencia Bancaria</span>
+                <span>Transferencia Bancaria</span>
               </label>
               <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #ffffff;">
                 <input type="radio" name="tipoPago" value="Cheque" ${(p.tipoPago && p.tipoPago.toLowerCase().includes('cheque')) ? 'checked' : ''}>
-                <span>📄 Cheque</span>
+                <span>Cheque</span>
               </label>
             </div>
           </div>
@@ -2778,12 +2906,12 @@ export class ModalManager {
         <!-- BLOQUE 4: CONTACTO Y NOTAS -->
         <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569;">📞 Teléfono / Preventista</label>
+            <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569;">Teléfono / Preventista</label>
             <input type="text" class="form-control" name="contacto" placeholder="Ej. Juan Pérez / 449-123-4567" value="${p.contacto || ''}" style="font-size: 0.86rem;">
           </div>
 
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569;">📝 Observaciones / Instrucciones</label>
+            <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569;">Observaciones / Instrucciones</label>
             <textarea class="form-control" name="notas" placeholder="Requerimientos de recibo, días alternos, productos especiales..." style="font-size: 0.85rem; height: 50px;">${p.notas || ''}</textarea>
           </div>
         </div>
@@ -2792,7 +2920,7 @@ export class ModalManager {
         <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 8px 12px;">
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 700; color: #166534; margin: 0;">
             <input type="checkbox" id="checkSyncAgenda" ${!isEdit ? 'checked' : ''}>
-            <span>🗓️ Generar / sincronizar automáticamente registros en la Agenda Semanal para los días seleccionados</span>
+            <span>Generar / sincronizar automáticamente registros en la Agenda Semanal para los días seleccionados</span>
           </label>
         </div>
       </form>
@@ -2803,7 +2931,7 @@ export class ModalManager {
       <button type="button" class="btn-primary" id="btnSaveProvCat">${isEdit ? 'Guardar Cambios' : 'Registrar en Catálogo'}</button>
     `;
 
-    this.open(isEdit ? `✏️ Editar Proveedor: ${p.nombre}` : '➕ Nuevo Proveedor en Base de Datos', body, footer);
+    this.open(isEdit ? `Editar Proveedor: ${p.nombre}` : 'Nuevo Proveedor en Catálogo', body, footer);
 
     document.getElementById('btnCancelProvCat')?.addEventListener('click', () => this.close());
     document.getElementById('btnSaveProvCat')?.addEventListener('click', () => {
@@ -2912,7 +3040,7 @@ export class ModalManager {
           <!-- FORMULARIO: REGISTRAR NUEVA COMPRA A ESTE PROVEEDOR -->
           <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-              <strong style="font-size: 0.9rem; color: #0f172a;">➕ Registrar Nueva Compra a ${nombreProveedor}</strong>
+              <strong style="font-size: 0.9rem; color: #0f172a;">Registrar Nueva Compra a ${nombreProveedor}</strong>
               <span style="font-size: 0.75rem; color: #64748b;">Se añade al historial y a la hoja contable</span>
             </div>
             
@@ -2926,8 +3054,8 @@ export class ModalManager {
                 <div class="form-group" style="margin-bottom: 0;">
                   <label class="form-label" style="font-size: 0.75rem;">Forma de Pago *</label>
                   <select id="selectTipoPagoCompraBD" class="form-control" style="font-size: 0.85rem; font-weight: 600;">
-                    <option value="Efectivo" selected>💵 Efectivo</option>
-                    <option value="Transferencia">🏦 Transferencia</option>
+                    <option value="Efectivo" selected>Efectivo</option>
+                    <option value="Transferencia">Transferencia</option>
                   </select>
                 </div>
 
@@ -2953,7 +3081,7 @@ export class ModalManager {
           <!-- TABLA HISTORIAL DE COMPRAS -->
           <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-              <strong style="font-size: 0.88rem; color: #1e293b;">📋 Historial de Compras Realizadas (${stats ? stats.comprasHistorial.length : 0})</strong>
+              <strong style="font-size: 0.88rem; color: #1e293b;">Historial de Compras Realizadas (${stats ? stats.comprasHistorial.length : 0})</strong>
             </div>
 
             <div style="max-height: 260px; overflow-y: auto;">
@@ -2983,7 +3111,7 @@ export class ModalManager {
                         <td style="padding: 8px 12px; color: #64748b;">${c.hora || '-'}</td>
                         <td style="padding: 8px 12px; text-align: center;">
                           <span class="badge-tipo-pago ${esTransf ? 'badge-pago-transf' : 'badge-pago-efec'}">
-                            ${esTransf ? '🏦 Transf' : '💵 Efectivo'}
+                            ${esTransf ? 'TR Transf' : 'EF Efectivo'}
                           </span>
                         </td>
                         <td style="padding: 8px 12px; text-align: right; font-weight: 800; color: #0f172a;">
@@ -3035,7 +3163,7 @@ export class ModalManager {
       });
     };
 
-    this.open(`🧾 Registro de Compras: ${nombreProveedor}`, renderContenido(), `
+    this.open(`Registro de Compras: ${nombreProveedor}`, renderContenido(), `
       <button type="button" class="btn-secondary" id="btnCerrarModalCompras">Cerrar</button>
     `);
 

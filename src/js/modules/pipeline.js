@@ -178,10 +178,10 @@ export class PipelineModule {
                 const cant = Array.isArray(p.listaPedido) ? p.listaPedido.length : 0;
                 return `
                   <button type="button" class="btn-chip-proveedor-hoy" data-id="${p.id}" style="background: ${esPreventa ? '#fffbeb' : (p.yaVino ? '#f0fdf4' : '#ffffff')}; border: 1px solid ${esPreventa ? '#fde68a' : (p.yaVino ? '#bbf7d0' : '#e2e8f0')}; border-radius: 4px; padding: 3px 8px; font-size: 0.74rem; font-weight: 600; color: ${esPreventa ? '#92400e' : (p.yaVino ? '#166534' : '#1e293b')}; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                    ${esPreventa ? '<span style="font-size: 0.65rem; background:#fef3c7; color:#92400e; padding:1px 4px; border-radius:3px;">📝 PREV</span>' : ''}
+                    ${esPreventa ? '<span style="font-size: 0.65rem; background:#fef3c7; color:#92400e; padding:1px 4px; border-radius:3px; font-weight:700;">PREV</span>' : ''}
                     <span class="${p.yaVino ? 'nombre-prov-tachado' : ''}">${p.proveedor}</span>
                     <span style="color: #64748b; font-size: 0.7rem;">${this.formatCurrency(esPreventa ? (p.costoPreventa || p.presupuestoAprox) : (p.presupuestoAprox || p.preventaPresupuesto))}</span>
-                    ${cant > 0 ? `<span style="color: #0284c7; font-size: 0.68rem;">📋 ${cant}</span>` : ''}
+                    ${cant > 0 ? `<span style="color: #0284c7; font-size: 0.68rem; font-weight:600;">(Ped: ${cant})</span>` : ''}
                     ${esPreventa && p.vinoPreventa ? `<span style="color:#166534; font-size:0.68rem; font-weight:700;">✓ Vino ${p.horaVinoPreventa}</span>` : ''}
                     ${!esPreventa && p.yaVino ? `<span style="color:#047857; font-size:0.68rem; font-weight:700;">✓ ${p.horaVino}</span>` : ''}
                   </button>
@@ -253,7 +253,7 @@ export class PipelineModule {
             </div>
             ${preventasDia.length > 0 ? `
               <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #92400e; margin-top: 2px;">
-                <span>📝 Preventas (${preventasDia.length}):</span>
+                <span>Preventas (${preventasDia.length}):</span>
                 <span style="font-weight: 700;">${this.formatCurrency(totalCostoPreventas)}</span>
               </div>
             ` : ''}
@@ -301,7 +301,7 @@ export class PipelineModule {
           const diaDestino = p.diaEntregaProgramada ? p.diaEntregaProgramada.toUpperCase() : 'MAÑANA';
           bloqueAccionPreventa = `
             <button type="button" class="btn-agendar-entrega" data-action="agendar-entrega" data-id="${p.id}" style="width: 100%; margin-top: 6px; background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #15803d; border-radius: 5px; padding: 4px 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 4px;" title="Agendar entrega para ${diaDestino} con el costo acordado">
-              <span>📅</span> Agendar Entrega (${diaDestino})
+              Agendar Entrega (${diaDestino})
             </button>
           `;
         } else {
@@ -329,16 +329,16 @@ export class PipelineModule {
         <div style="font-size: 0.7rem; color: #64748b;">
           ${esVino 
             ? `<span class="badge-vino-hora">✓ Vino ${p.horaVino || ''}</span>` 
-            : `<span>⏰ ${p.hora || '10:00'}</span>`
+            : `<span>${p.hora || '10:00'}</span>`
           }
         </div>
       `;
     }
 
     const badgeTipo = esPreventa 
-      ? `<span style="font-size: 0.65rem; font-weight: 800; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 1px 6px; border-radius: 4px; letter-spacing: 0.3px;">📝 PREVENTA</span>`
+      ? `<span style="font-size: 0.65rem; font-weight: 800; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 1px 6px; border-radius: 4px; letter-spacing: 0.3px;">PREVENTA</span>`
       : (p.idPreventaOrigen 
-          ? `<span style="font-size: 0.65rem; font-weight: 700; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 4px;">📦 ENTREGA PREVENTA</span>` 
+          ? `<span style="font-size: 0.65rem; font-weight: 700; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 4px;">ENTREGA AGENDADA</span>` 
           : '');
 
     const montoMostrar = esPreventa 
@@ -369,20 +369,20 @@ export class PipelineModule {
           ${subtituloEstado}
 
           <div style="display: flex; align-items: center; gap: 4px;" class="card-action-bar">
-            <!-- Botón Lista de Pedido con Logo -->
+            <!-- Botón Lista de Pedido con Icono SVG -->
             <button type="button" class="btn-card-accion" data-action="ver-pedido" data-id="${p.id}" title="Ver/Editar lista de pedido">
-              <span>📋</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
               <span style="font-size: 0.68rem; font-weight: 700;">${cantArticulos}</span>
             </button>
 
-            <!-- Botón Editar con Logo -->
+            <!-- Botón Editar con Icono SVG -->
             <button type="button" class="btn-card-accion" data-action="edit" data-id="${p.id}" title="Editar datos del proveedor">
-              <span>✏️</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             </button>
 
-            <!-- Botón Eliminar con Logo -->
+            <!-- Botón Eliminar con Icono SVG -->
             <button type="button" class="btn-card-accion btn-card-delete" data-action="delete" data-id="${p.id}" title="Eliminar proveedor">
-              <span>🗑️</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             </button>
           </div>
         </div>
@@ -423,8 +423,8 @@ export class PipelineModule {
                   <td>${p.hora || '-'}</td>
                   <td style="text-align: right; font-weight: 700;">${this.formatCurrency(p.presupuestoAprox || p.preventaPresupuesto)}</td>
                   <td style="text-align: center;">
-                    <button class="btn-card-accion" data-action="ver-pedido" data-id="${p.id}">
-                      <span>📋</span> ${cant} art.
+                    <button class="btn-card-accion" data-action="ver-pedido" data-id="${p.id}" title="Ver lista de pedido">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg> ${cant} art.
                     </button>
                   </td>
                   <td>
@@ -434,8 +434,12 @@ export class PipelineModule {
                     }
                   </td>
                   <td>
-                    <button class="btn-card-accion" data-action="edit" data-id="${p.id}" title="Editar">✏️</button>
-                    <button class="btn-card-accion btn-card-delete" data-action="delete" data-id="${p.id}" title="Eliminar">🗑️</button>
+                    <button class="btn-card-accion" data-action="edit" data-id="${p.id}" title="Editar">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    </button>
+                    <button class="btn-card-accion btn-card-delete" data-action="delete" data-id="${p.id}" title="Eliminar">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
                   </td>
                 </tr>
               `;

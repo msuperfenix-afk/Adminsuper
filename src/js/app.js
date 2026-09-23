@@ -95,8 +95,14 @@ class App {
       });
     });
 
-    // Botón de Respaldo / Base de Datos JSON
+    // Botón de Respaldo / Exportación en barra lateral
     document.getElementById('navBtnBackup')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.modalManager.openBackupModal();
+    });
+
+    // Botón de Respaldo / Exportación en barra superior (móvil y tablet)
+    document.getElementById('btnTopBarBackup')?.addEventListener('click', (e) => {
       e.preventDefault();
       this.modalManager.openBackupModal();
     });
@@ -120,25 +126,25 @@ class App {
 
     if (view === 'hoja') {
       if (hojaContainer) hojaContainer.classList.add('active');
-      if (pageTitle) pageTitle.innerHTML = '📄 Hoja Diaria Minisúper Fénix';
-      if (pageSubtitle) pageSubtitle.innerText = 'Formato físico digitalizado: Compras, Conteo Pan/Tortilla, Arqueo, Retiros y Máquinas';
+      if (pageTitle) pageTitle.innerHTML = 'Hoja Diaria - Minisúper Fénix';
+      if (pageSubtitle) pageSubtitle.innerText = 'Formato contable digitalizado: Compras, Conteo Pan/Tortilla, Arqueo, Retiros y Máquinas';
       if (viewSwitcher) viewSwitcher.style.display = 'none';
       if (this.hojaDiariaModule) this.hojaDiariaModule.render();
     } else if (view === 'pipeline') {
       if (pipeContainer) pipeContainer.classList.add('active');
-      if (pageTitle) pageTitle.innerHTML = '🗓️ Agenda Semanal de Proveedores';
+      if (pageTitle) pageTitle.innerHTML = 'Agenda Semanal de Proveedores';
       if (pageSubtitle) pageSubtitle.innerText = 'Organización de visitas y presupuestos de Lunes a Domingo';
       if (viewSwitcher) viewSwitcher.style.display = 'flex';
       if (this.pipelineModule) this.pipelineModule.render();
     } else if (view === 'proveedores') {
       if (provDbContainer) provDbContainer.classList.add('active');
-      if (pageTitle) pageTitle.innerHTML = '🗄️ Base de Datos de Proveedores';
+      if (pageTitle) pageTitle.innerHTML = 'Base de Datos de Proveedores';
       if (pageSubtitle) pageSubtitle.innerText = 'Catálogo maestro oficial: Gestión de proveedores, visitas, formas de pago y presupuestos';
       if (viewSwitcher) viewSwitcher.style.display = 'none';
       if (this.proveedoresDbModule) this.proveedoresDbModule.render();
     } else if (view === 'estadisticas') {
       if (statsContainer) statsContainer.classList.add('active');
-      if (pageTitle) pageTitle.innerHTML = '📊 Centro de Estadísticas y Métricas';
+      if (pageTitle) pageTitle.innerHTML = 'Estadísticas y Reportes Generales';
       if (pageSubtitle) pageSubtitle.innerText = 'Desglose de compras, análisis por proveedor, proporciones de efectivo vs transferencia y promedios';
       if (viewSwitcher) viewSwitcher.style.display = 'none';
       if (this.estadisticasModule) this.estadisticasModule.render();
@@ -191,6 +197,20 @@ class App {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  window.adminFenixApp = new App();
-});
+// Inicialización segura con verificación de estado para compatibilidad total en Android
+function inicializarAppFenix() {
+  if (!window.adminFenixApp) {
+    try {
+      window.adminFenixApp = new App();
+    } catch (err) {
+      console.error('Error crítico al inicializar AdminFénix:', err);
+    }
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', inicializarAppFenix);
+} else {
+  inicializarAppFenix();
+}
+

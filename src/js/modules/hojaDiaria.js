@@ -104,30 +104,30 @@ export class HojaDiariaModule {
           <!-- BANNER DE AVISO: MODO HISTORIAL (SOLO LECTURA) -->
           <div class="banner-aviso-historial">
             <div class="banner-aviso-contenido">
-              <span class="icono-candado-aviso">🔒</span>
+              <span class="icono-candado-aviso" style="font-weight: 800; font-size: 0.8rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">HISTORIAL</span>
               <div>
                 <div class="banner-titulo-historial">MODO HISTORIAL • CONSULTA DE DÍA PASADO</div>
                 <div class="banner-sub-historial">
                   Estás revisando la hoja histórica del <strong>${d.dia || ''} ${d.diaNum || ''} de ${d.mes || ''} de ${d.ano || ''}</strong>.
                   Por integridad contable, solo se permite editar la hoja del <strong>día de hoy (${hoyISO})</strong>.
-                  <em>(La sección de Corte y Arqueo se mantiene siempre desbloqueada para conteos físicos).</em>
+                  <em>(La sección de Corte y Arqueo se mantiene disponible para conteos físicos).</em>
                 </div>
               </div>
             </div>
             <button type="button" class="btn-regresar-hoy" id="btnIrAHoy" title="Volver a la hoja editable del día de hoy">
-              📅 Ir a Hoja de Hoy (${hoyISO})
+              Ir a Hoja de Hoy (${hoyISO})
             </button>
           </div>
         ` : (!tieneMontoInicial ? `
           <!-- BANNER DE AVISO: FALTA MONTO INICIAL -->
           <div class="banner-aviso-monto-inicial">
             <div class="banner-aviso-contenido">
-              <span class="icono-alerta-inicial">⚠️</span>
+              <span class="icono-alerta-inicial" style="font-weight: 800; font-size: 0.8rem; background: #fef08a; padding: 2px 6px; border-radius: 4px; color: #854d0e;">ATENCIÓN</span>
               <div>
                 <div class="banner-titulo-inicial">PASO REQUERIDO: INGRESA LA CANTIDAD INICIAL DE CAJA</div>
                 <div class="banner-sub-inicial">
                   Para comenzar a registrar proveedores, préstamos, retiros y conteos del día, ingresa el monto en el campo <strong>CANTIDAD INICIAL</strong>.
-                  <em>(La sección de Corte y Arqueo está siempre disponible).</em>
+                  <em>(La sección de Corte y Arqueo está disponible).</em>
                 </div>
               </div>
             </div>
@@ -183,7 +183,7 @@ export class HojaDiariaModule {
             <div class="hoja-subcuadro">
               <div class="subcuadro-titulo-flex">
                 <span>CONTEO PAN Y TORTILLA</span>
-                <span class="badge-hint-click-info" title="Haz clic en cualquier renglón o en el botón de info para capturar cantidades y precio">💡 Clic en renglón o (i) para capturar</span>
+                <span class="badge-hint-click-info" title="Haz clic en cualquier renglón o en el botón de info para capturar cantidades y precio">Clic en renglón o botón (i) para capturar</span>
               </div>
               
               <div class="tabla-responsive-wrap">
@@ -279,8 +279,8 @@ export class HojaDiariaModule {
               <div class="subcuadro-titulo-flex">
                 <span>RELACIÓN DE PROVEEDORES PAGADOS</span>
                 <div class="badge-desglose-pagos">
-                  <span class="badge-item-pago" title="Total pagado en efectivo">💵 Efec: <strong>${this.formatMoney(totales.totalEfectivoProveedores)}</strong></span>
-                  <span class="badge-item-pago" title="Total pagado por transferencia">🏦 Transf: <strong>${this.formatMoney(totales.totalTransferenciaProveedores)}</strong></span>
+                  <span class="badge-item-pago" title="Total pagado en efectivo">Efectivo: <strong>${this.formatMoney(totales.totalEfectivoProveedores)}</strong></span>
+                  <span class="badge-item-pago" title="Total pagado por transferencia">Transf: <strong>${this.formatMoney(totales.totalTransferenciaProveedores)}</strong></span>
                   <span class="badge-total-pagado">Total: ${this.formatMoney(totales.totalPagadoProveedores)}</span>
                 </div>
               </div>
@@ -291,7 +291,7 @@ export class HojaDiariaModule {
                     <tr>
                       <th style="width: 38px; text-align: center;">NOTA</th>
                       <th>PROVEEDOR</th>
-                      <th style="width: 44px; text-align: center;" title="Tipo de Pago: Efectivo o Transferencia">PAGO</th>
+                      <th style="width: 44px; text-align: center;" title="Tipo de Pago: Efectivo (EF) o Transferencia (TR)">PAGO</th>
                       <th style="width: 120px; text-align: right;">PAGADO ($)</th>
                     </tr>
                   </thead>
@@ -311,19 +311,19 @@ export class HojaDiariaModule {
                         <tr class="fila-bloqueada ${row.pagado > 0 ? 'fila-con-pago' : ''}" 
                           data-ver-detalle-prov="${idx}" 
                           style="cursor: pointer;" 
-                          title="Clic para ver hora de registro (⏰ ${row.hora || 'Registrado'}) y detalles">
+                          title="Clic para ver hora de registro (${row.hora || 'Registrado'}) y detalles">
                           <td class="text-center font-bold" style="color: #64748b;">${idx + 1}</td>
                           <td class="celda-bloqueada-prov">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                               <span class="prov-texto-fijo font-bold">${row.proveedor}</span>
-                              <span class="badge-hora-hint" title="Hora de registro: ${row.hora || 'Guardada'}">ℹ️</span>
+                              <span class="badge-hora-hint" title="Hora de registro: ${row.hora || 'Guardada'}" style="font-size: 0.72rem; color: #64748b; font-weight: 700;">(i)</span>
                             </div>
                           </td>
                           <td style="text-align: center; padding: 2px;">
                             <span class="btn-logo-pago ${(row.tipoPago || 'Efectivo') === 'Transferencia' ? 'es-transf' : 'es-efec'}" 
-                              style="cursor: pointer;" 
+                              style="cursor: pointer; font-size: 0.7rem; font-weight: 800; padding: 2px 5px; border-radius: 4px;" 
                               title="${(row.tipoPago || 'Efectivo') === 'Transferencia' ? 'Transferencia Bancaria' : 'Efectivo de Caja'} (Clic para detalles)">
-                              ${(row.tipoPago || 'Efectivo') === 'Transferencia' ? '🏦' : '💵'}
+                              ${(row.tipoPago || 'Efectivo') === 'Transferencia' ? 'TR' : 'EF'}
                             </span>
                           </td>
                           <td style="text-align: right;">
@@ -430,7 +430,7 @@ export class HojaDiariaModule {
                           <div style="font-size: 0.78rem; font-weight: 700;">CANTIDAD ${idx + 1}</div>
                           ${col.bloqueado ? `
                             <span style="display: inline-block; font-size: 0.65rem; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-top: 3px;">
-                              🔒 Cerrado ${col.horaCierre || ''}
+                              Cerrado ${col.horaCierre || ''}
                             </span>
                           ` : `
                             <span style="display: inline-block; font-size: 0.65rem; background: #eff6ff; color: #1d4ed8; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-top: 3px;">

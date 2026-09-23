@@ -42,7 +42,7 @@ export class CajaOperacionesModule {
         <!-- Tarjetas de Resumen Rápido Superior -->
         <div class="summary-cards-grid">
           <div class="summary-card">
-            <div class="summary-icon-box icon-box-green">💵</div>
+            <div class="summary-icon-box icon-box-green">PAG</div>
             <div class="summary-details">
               <span class="summary-label">Pagos del Día</span>
               <span class="summary-value">${this.formatCurrency(metricas.totalPagosHoy)}</span>
@@ -51,7 +51,7 @@ export class CajaOperacionesModule {
           </div>
 
           <div class="summary-card">
-            <div class="summary-icon-box icon-box-blue">🏦</div>
+            <div class="summary-icon-box icon-box-blue">ARQ</div>
             <div class="summary-details">
               <span class="summary-label">Arqueos Registrados</span>
               <span class="summary-value">${data.arqueos.length}</span>
@@ -60,7 +60,7 @@ export class CajaOperacionesModule {
           </div>
 
           <div class="summary-card">
-            <div class="summary-icon-box icon-box-red">📤</div>
+            <div class="summary-icon-box icon-box-red">RET</div>
             <div class="summary-details">
               <span class="summary-label">Retiros de Efectivo</span>
               <span class="summary-value">${this.formatCurrency(metricas.totalRetirosHoy)}</span>
@@ -69,7 +69,7 @@ export class CajaOperacionesModule {
           </div>
 
           <div class="summary-card">
-            <div class="summary-icon-box icon-box-amber">⏳</div>
+            <div class="summary-icon-box icon-box-amber">PEN</div>
             <div class="summary-details">
               <span class="summary-label">Cuentas por Pagar</span>
               <span class="summary-value">${this.formatCurrency(metricas.totalPendientes)}</span>
@@ -78,7 +78,7 @@ export class CajaOperacionesModule {
           </div>
 
           <div class="summary-card">
-            <div class="summary-icon-box icon-box-purple">🎰</div>
+            <div class="summary-icon-box icon-box-purple">MAQ</div>
             <div class="summary-details">
               <span class="summary-label">Ganancia Máquinas</span>
               <span class="summary-value">${this.formatCurrency(metricas.totalGananciaMaquinas)}</span>
@@ -90,31 +90,31 @@ export class CajaOperacionesModule {
         <!-- Pestañas de Navegación Secundaria de Fase 2 -->
         <div class="ops-tabs">
           <button class="ops-tab-btn ${this.subtabActiva === 'arqueos' ? 'active' : ''}" data-subtab="arqueos">
-            <span>🏦 Corte y Arqueo de Caja</span>
+            <span>Corte y Arqueo de Caja</span>
             <span class="ops-tab-badge">${data.arqueos.length}</span>
           </button>
           <button class="ops-tab-btn ${this.subtabActiva === 'pagos' ? 'active' : ''}" data-subtab="pagos">
-            <span>💵 Pagos a Proveedores</span>
+            <span>Pagos a Proveedores</span>
             <span class="ops-tab-badge">${data.pagosDia.length}</span>
           </button>
           <button class="ops-tab-btn ${this.subtabActiva === 'panaderos' ? 'active' : ''}" data-subtab="panaderos">
-            <span>🥖 Panaderos (Cambios & Nuevo)</span>
+            <span>Panaderos (Cambios & Nuevo)</span>
             <span class="ops-tab-badge">${data.panaderos.length}</span>
           </button>
           <button class="ops-tab-btn ${this.subtabActiva === 'tortillerias' ? 'active' : ''}" data-subtab="tortillerias">
-            <span>🌽 Tortillerías</span>
+            <span>Tortillerías</span>
             <span class="ops-tab-badge">${data.tortillerias.length}</span>
           </button>
           <button class="ops-tab-btn ${this.subtabActiva === 'pendientes' ? 'active' : ''}" data-subtab="pendientes">
-            <span>⏳ Pendientes de Pago</span>
+            <span>Pendientes de Pago</span>
             <span class="ops-tab-badge">${data.pendientesPago.filter(p => p.estado !== 'liquidado').length}</span>
           </button>
           <button class="ops-tab-btn ${this.subtabActiva === 'retiros' ? 'active' : ''}" data-subtab="retiros">
-            <span>📤 Retiros de Efectivo</span>
+            <span>Retiros de Efectivo</span>
             <span class="ops-tab-badge">${data.retiros.length}</span>
           </button>
           <button class="ops-tab-btn ${this.subtabActiva === 'maquinas' ? 'active' : ''}" data-subtab="maquinas">
-            <span>🎰 Tragamonedas & Peluches</span>
+            <span>Tragamonedas & Peluches</span>
             <span class="ops-tab-badge">${data.maquinas.length}</span>
           </button>
         </div>
@@ -163,7 +163,7 @@ export class CajaOperacionesModule {
       <div class="content-panel">
         <div class="panel-header">
           <div class="panel-title-group">
-            <h2>🏦 Arqueos y Cuadre de Caja (Multi-Turnos)</h2>
+            <h2>Arqueos y Cuadre de Caja (Multi-Turnos)</h2>
             <p>Conteo detallado de monedas ($1, $2, $5, $10), morralla, billetes, tarjetas, Yomp y comparativa con el Sistema</p>
           </div>
           <div class="panel-actions">
@@ -184,9 +184,9 @@ export class CajaOperacionesModule {
                 <div class="arqueo-header">
                   <div>
                     <div class="arqueo-title">${arq.turno}</div>
-                    <div class="arqueo-time">📅 ${arq.fecha} • 👤 ${arq.cajero}</div>
+                    <div class="arqueo-time">${arq.fecha} • ${arq.cajero}</div>
                   </div>
-                  <button class="card-action-btn" data-action="delete-arqueo" data-id="${arq.id}" title="Eliminar arqueo">🗑️</button>
+                  <button class="card-action-btn" data-action="delete-arqueo" data-id="${arq.id}" title="Eliminar arqueo">✕</button>
                 </div>
 
                 <div class="arqueo-body">
@@ -227,7 +227,7 @@ export class CajaOperacionesModule {
 
                   <!-- Billetes -->
                   <div class="arqueo-row">
-                    <span class="arqueo-label">💵 Total Billetes ($)</span>
+                    <span class="arqueo-label">Total Billetes ($)</span>
                     <input type="number" step="10" class="arqueo-input" data-arq="${arq.id}" data-field="billetes" value="${arq.billetes}">
                   </div>
 
@@ -239,29 +239,29 @@ export class CajaOperacionesModule {
 
                   <!-- Terminales y Medios de Pago Electrónico -->
                   <div class="arqueo-row">
-                    <span class="arqueo-label">💳 Tarjetas Bancarias ($)</span>
+                    <span class="arqueo-label">Tarjetas Bancarias ($)</span>
                     <input type="number" step="0.5" class="arqueo-input" data-arq="${arq.id}" data-field="tarjetas" value="${arq.tarjetas}">
                   </div>
 
                   <div class="arqueo-row">
-                    <span class="arqueo-label">📲 Yomp Tarjetas / QR ($)</span>
+                    <span class="arqueo-label">Yomp Tarjetas / QR ($)</span>
                     <input type="number" step="0.5" class="arqueo-input" data-arq="${arq.id}" data-field="yompTarjetas" value="${arq.yompTarjetas}">
                   </div>
 
                   <!-- Retiros y Pagos del Turno (Para cuadre exacto) -->
                   <div class="arqueo-row">
-                    <span class="arqueo-label" title="Dinero que salió de caja en este turno">📤 Retiros del Turno ($)</span>
+                    <span class="arqueo-label" title="Dinero que salió de caja en este turno">Retiros del Turno ($)</span>
                     <input type="number" step="10" class="arqueo-input" data-arq="${arq.id}" data-field="retirosTurno" value="${arq.retirosTurno}">
                   </div>
 
                   <div class="arqueo-row">
-                    <span class="arqueo-label" title="Pagos a proveedores pagados desde caja">🧾 Pagos a Proveedores ($)</span>
+                    <span class="arqueo-label" title="Pagos a proveedores pagados desde caja">Pagos a Proveedores ($)</span>
                     <input type="number" step="10" class="arqueo-input" data-arq="${arq.id}" data-field="pagosTurno" value="${arq.pagosTurno}">
                   </div>
 
                   <!-- Venta Registrada en Sistema POS -->
                   <div class="arqueo-row" style="background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px dashed #cbd5e1;">
-                    <span class="arqueo-label" style="font-weight: 700; color: #1e293b;">🖥️ Venta Según Sistema ($)</span>
+                    <span class="arqueo-label" style="font-weight: 700; color: #1e293b;">Venta Según Sistema ($)</span>
                     <input type="number" step="0.5" class="arqueo-input" style="border-color: #3b82f6; font-weight: 800;" data-arq="${arq.id}" data-field="sistema" value="${arq.sistema}">
                   </div>
 
@@ -283,13 +283,13 @@ export class CajaOperacionesModule {
 
                   <!-- Resultado de Balance (Faltante / Sobrante / Cuadrado) -->
                   <div class="arqueo-difference-badge ${isBalanced ? 'difference-balanced' : (isSobrante ? 'difference-sobrante' : 'difference-faltante')}">
-                    <span>${isBalanced ? '✅ CAJA CUADRADA' : (isSobrante ? '🟢 SOBRANTE EN CAJA' : '🔴 FALTANTE EN CAJA')}</span>
+                    <span>${isBalanced ? 'CAJA CUADRADA' : (isSobrante ? 'SOBRANTE EN CAJA' : 'FALTANTE EN CAJA')}</span>
                     <span>${this.formatCurrency(Math.abs(arq.diferencia))}</span>
                   </div>
 
                   ${arq.notas ? `
                     <div style="font-size: 0.74rem; color: #64748b; font-style: italic;">
-                      💬 ${arq.notas}
+                      Nota: ${arq.notas}
                     </div>
                   ` : ''}
 
@@ -297,7 +297,7 @@ export class CajaOperacionesModule {
 
                 <div class="arqueo-footer">
                   <button class="btn-secondary" data-action="print-ticket" data-id="${arq.id}">
-                    🖨️ Imprimir Ticket de Corte
+                    Imprimir Ticket de Corte
                   </button>
                 </div>
               </div>
@@ -318,7 +318,7 @@ export class CajaOperacionesModule {
       <div class="content-panel">
         <div class="panel-header">
           <div class="panel-title-group">
-            <h2>💵 Registro de Pagos del Día</h2>
+            <h2>Registro de Pagos del Día</h2>
             <p>Control exacto de todo el dinero entregado hoy a repartidores y proveedores</p>
           </div>
           <div class="panel-actions">
@@ -351,12 +351,12 @@ export class CajaOperacionesModule {
                   <td><strong>${p.hora}</strong></td>
                   <td><div style="font-weight: 700; color: #0f172a;">${p.proveedor}</div></td>
                   <td><span class="table-tag" style="background: #f1f5f9; color: #334155;">${p.comprobante || 'Sin folio'}</span></td>
-                  <td>💳 ${p.metodo}</td>
-                  <td>👤 ${p.cajero || 'Caja Central'}</td>
+                  <td>${p.metodo}</td>
+                  <td>${p.cajero || 'Caja Central'}</td>
                   <td class="table-amount" style="color: #dc2626; font-size: 0.95rem;">${this.formatCurrency(p.monto)}</td>
                   <td><small style="color: #64748b;">${p.notas || '-'}</small></td>
                   <td>
-                    <button class="card-action-btn" data-action="delete-pago" data-id="${p.id}" title="Eliminar pago">🗑️</button>
+                    <button class="card-action-btn" data-action="delete-pago" data-id="${p.id}" title="Eliminar pago">✕</button>
                   </td>
                 </tr>
               `).join('')}
@@ -377,7 +377,7 @@ export class CajaOperacionesModule {
       <div class="content-panel">
         <div class="panel-header">
           <div class="panel-title-group">
-            <h2>🥖 Control y Liquidación de Panaderos</h2>
+            <h2>Control y Liquidación de Panaderos</h2>
             <p>Cálculo automático: Total a Pagar = (Pan Dulce + Bolillo) - Cambios / Merma devuelta</p>
           </div>
           <div class="panel-actions">
@@ -416,12 +416,12 @@ export class CajaOperacionesModule {
                   <td class="table-amount" style="font-size: 1rem; color: #00aa44;">${this.formatCurrency(pan.total)}</td>
                   <td>
                     <button class="deal-status-pill ${pan.pagado ? 'status-pagado' : 'status-en-tienda'}" data-action="toggle-pan-pagado" data-id="${pan.id}">
-                      ${pan.pagado ? '✅ PAGADO' : '⏳ PENDIENTE'}
+                      ${pan.pagado ? 'PAGADO' : 'PENDIENTE'}
                     </button>
                   </td>
                   <td><small style="color: #64748b;">${pan.notas || '-'}</small></td>
                   <td>
-                    <button class="card-action-btn" data-action="delete-pan" data-id="${pan.id}" title="Eliminar registro">🗑️</button>
+                    <button class="card-action-btn" data-action="delete-pan" data-id="${pan.id}" title="Eliminar registro">✕</button>
                   </td>
                 </tr>
               `).join('')}
@@ -442,7 +442,7 @@ export class CajaOperacionesModule {
       <div class="content-panel">
         <div class="panel-header">
           <div class="panel-title-group">
-            <h2>🌽 Control y Conteo de Tortillerías</h2>
+            <h2>Control y Conteo de Tortillerías</h2>
             <p>Cálculo automático: Total a Pagar = Producto Nuevo - Cambio (Merma devuelta)</p>
           </div>
           <div class="panel-actions">
@@ -479,12 +479,12 @@ export class CajaOperacionesModule {
                   <td class="table-amount" style="font-size: 1rem; color: #00aa44;">${this.formatCurrency(tort.total)}</td>
                   <td>
                     <button class="deal-status-pill ${tort.pagado ? 'status-pagado' : 'status-en-tienda'}" data-action="toggle-tort-pagada" data-id="${tort.id}">
-                      ${tort.pagado ? '✅ PAGADO' : '⏳ PENDIENTE'}
+                      ${tort.pagado ? 'PAGADO' : 'PENDIENTE'}
                     </button>
                   </td>
                   <td><small style="color: #64748b;">${tort.notas || '-'}</small></td>
                   <td>
-                    <button class="card-action-btn" data-action="delete-tort" data-id="${tort.id}" title="Eliminar registro">🗑️</button>
+                    <button class="card-action-btn" data-action="delete-tort" data-id="${tort.id}" title="Eliminar registro">✕</button>
                   </td>
                 </tr>
               `).join('')}
@@ -535,7 +535,7 @@ export class CajaOperacionesModule {
                 <tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 24px;">No hay cuentas pendientes registradas</td></tr>
               ` : pendientes.map(pend => `
                 <tr style="${pend.estado === 'liquidado' ? 'opacity: 0.6;' : ''}">
-                  <td><strong>📅 ${pend.fechaVencimiento}</strong></td>
+                  <td><strong>${pend.fechaVencimiento}</strong></td>
                   <td><div style="font-weight: 700; color: #0f172a;">${pend.proveedor}</div></td>
                   <td><span class="table-tag" style="background: #f1f5f9; color: #334155;">${pend.concepto}</span></td>
                   <td class="table-amount" style="color: #dc2626; font-size: 0.95rem;">${this.formatCurrency(pend.monto)}</td>
@@ -552,7 +552,7 @@ export class CajaOperacionesModule {
                           Liquidar a Caja
                         </button>
                       ` : ''}
-                      <button class="card-action-btn" data-action="delete-pendiente" data-id="${pend.id}" title="Eliminar">🗑️</button>
+                      <button class="card-action-btn" data-action="delete-pendiente" data-id="${pend.id}" title="Eliminar">✕</button>
                     </div>
                   </td>
                 </tr>
@@ -574,7 +574,7 @@ export class CajaOperacionesModule {
       <div class="content-panel">
         <div class="panel-header">
           <div class="panel-title-group">
-            <h2>📤 Retiros de Efectivo de Caja</h2>
+            <h2>Retiros de Efectivo de Caja</h2>
             <p>Salidas de efectivo autorizadas para resguardo de seguridad, depósitos bancarios o gastos mayores</p>
           </div>
           <div class="panel-actions">
@@ -604,11 +604,11 @@ export class CajaOperacionesModule {
                 <tr>
                   <td><strong>${ret.hora}</strong></td>
                   <td class="table-amount" style="color: #dc2626; font-size: 1rem;">${this.formatCurrency(ret.monto)}</td>
-                  <td><div style="font-weight: 700; color: #0f172a;">👤 ${ret.responsable}</div></td>
+                  <td><div style="font-weight: 700; color: #0f172a;">${ret.responsable}</div></td>
                   <td>${ret.motivo}</td>
                   <td><span class="table-tag" style="background: #e0f2fe; color: #0369a1;">${ret.autorizo || 'Gerencia'}</span></td>
                   <td>
-                    <button class="card-action-btn" data-action="delete-retiro" data-id="${ret.id}" title="Eliminar retiro">🗑️</button>
+                    <button class="card-action-btn" data-action="delete-retiro" data-id="${ret.id}" title="Eliminar retiro">✕</button>
                   </td>
                 </tr>
               `).join('')}
@@ -631,7 +631,7 @@ export class CajaOperacionesModule {
       <div class="content-panel">
         <div class="panel-header">
           <div class="panel-title-group">
-            <h2>🎰 Recaudación de Máquinas Tragamonedas y Peluches</h2>
+            <h2>Recaudación de Máquinas Tragamonedas y Peluches</h2>
             <p>Cálculo de recaudación total, porcentaje para la tienda y reparto para el dueño de la máquina</p>
           </div>
           <div class="panel-actions">
@@ -669,9 +669,9 @@ export class CajaOperacionesModule {
                   <td><span class="table-tag" style="background: #fef3c7; color: #b45309;">${m.porcentajeTienda}%</span></td>
                   <td class="table-amount positive">${this.formatCurrency(m.gananciaTienda)}</td>
                   <td class="table-amount" style="color: #64748b;">${this.formatCurrency(m.pagoProveedor)}</td>
-                  <td>👤 ${m.responsable}</td>
+                  <td>${m.responsable}</td>
                   <td>
-                    <button class="card-action-btn" data-action="delete-maquina" data-id="${m.id}" title="Eliminar registro">🗑️</button>
+                    <button class="card-action-btn" data-action="delete-maquina" data-id="${m.id}" title="Eliminar registro">✕</button>
                   </td>
                 </tr>
               `).join('')}
