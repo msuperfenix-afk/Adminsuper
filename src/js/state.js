@@ -2042,6 +2042,67 @@ class StateManager {
     this.saveState();
   }
 
+  registrarCompraDesdeBD({ proveedor, monto, tipoPago, fecha, hora, notas }) {
+    const pNom = (proveedor || '').trim();
+    const pMonto = parseFloat(monto) || 0;
+    const pTipo = tipoPago || 'Efectivo';
+    const fStr = fecha || this.data.fecha || this.getFechaHoy();
+    const pHora = hora || new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    if (!pNom || pMonto <= 0) return false;
+
+    // Si la fecha corresponde a la hoja activa actual:
+    if (fStr === this.data.fecha) {
+      if (!Array.isArray(this.data.comprasProveedores)) this.data.comprasProveedores = [];
+      const numNota = this.data.comprasProveedores.length + 1;
+      const obj = {
+        nota: numNota,
+        proveedor: pNom,
+        pagado: pMonto,
+        tipoPago: pTipo,
+        hora: pHora,
+        fechaRegistro: fStr,
+        bloqueado: true
+      };
+      this.data.comprasProveedores.push(obj);
+      this.data.comprasProveedores.forEach((r, i) => { r.nota = i + 1; });
+      this.sincronizarLlegadaProveedor(pNom, pHora, pMonto, fStr);
+    } else {
+      // Registrar en hojasPorFecha
+      if (!this.data.hojasPorFecha) this.data.hojasPorFecha = {};
+      if (!this.data.hojasPorFecha[fStr]) {
+        this.data.hojasPorFecha[fStr] = this.crearPlantillaLimpia(fStr);
+      }
+      const hojaTarget = this.data.hojasPorFecha[fStr];
+      if (!Array.isArray(hojaTarget.comprasProveedores)) hojaTarget.comprasProveedores = [];
+      const numNota = hojaTarget.comprasProveedores.length + 1;
+      hojaTarget.comprasProveedores.push({
+        nota: numNota,
+        proveedor: pNom,
+        pagado: pMonto,
+        tipoPago: pTipo,
+        hora: pHora,
+        fechaRegistro: fStr,
+        bloqueado: true
+      });
+      hojaTarget.comprasProveedores.forEach((r, i) => { r.nota = i + 1; });
+    }
+
+    // Registrar en pagosDia para histórico
+    this.addPagoDia({
+      proveedor: pNom,
+      monto: pMonto,
+      metodo: pTipo === 'Transferencia' ? 'Transferencia' : 'Efectivo de Caja',
+      comprobante: 'Registro BD Proveedor',
+      hora: pHora,
+      cajero: this.data.cajeroActual,
+      notas: notas || 'Compra registrada desde Base de Datos'
+    });
+
+    this.saveState();
+    return true;
+  }
+
   // 14. MÉTODOS DE ESTADÍSTICAS GENERALES Y POR PROVEEDOR
   getHojasUnificadas() {
     const hojasMap = new Map();

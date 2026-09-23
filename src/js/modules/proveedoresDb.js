@@ -167,18 +167,19 @@ export class ProveedoresDbModule {
                 <tr>
                   <th style="width: 44px; text-align: center;">#</th>
                   <th>PROVEEDOR / EMPRESA</th>
-                  <th style="width: 170px;">CATEGORÍA</th>
-                  <th style="width: 140px;">DÍA HABITUAL</th>
-                  <th style="width: 150px;">FORMA DE PAGO</th>
-                  <th style="width: 140px; text-align: right;">PRESUPUESTO</th>
-                  <th style="width: 160px; text-align: right;">TOTAL PAGADO</th>
-                  <th style="width: 110px; text-align: center;">ACCIONES</th>
+                  <th style="width: 160px;">CATEGORÍA</th>
+                  <th style="width: 130px;">DÍA HABITUAL</th>
+                  <th style="width: 140px;">FORMA DE PAGO</th>
+                  <th style="width: 130px; text-align: right;">PRESUPUESTO</th>
+                  <th style="width: 160px; text-align: center;">CANTIDAD COMPRAS</th>
+                  <th style="width: 150px; text-align: right;">TOTAL COMPRADO</th>
+                  <th style="width: 130px; text-align: center;">ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
                 ${proveedoresFiltrados.length === 0 ? `
                   <tr>
-                    <td colspan="8" class="provdb-empty-td">
+                    <td colspan="9" class="provdb-empty-td">
                       <div class="provdb-empty-box">
                         <span class="empty-icon">🔍</span>
                         <strong>No se encontraron proveedores</strong>
@@ -192,17 +193,18 @@ export class ProveedoresDbModule {
                   const diaNombre = diaObj ? diaObj.nombre : (p.diaHabitual ? p.diaHabitual : 'Variable');
                   const esTransf = (p.tipoPago || '').toLowerCase().includes('transferencia');
                   
-                  // Obtener total pagado en compras
+                  // Obtener total pagado y cantidad de compras
                   const statsProv = stateManager.getEstadisticasProveedor(p.nombre);
                   const totalPagado = statsProv ? statsProv.totalPagado : 0;
                   const totalNotas = statsProv ? statsProv.totalCompras : 0;
+                  const promCompra = statsProv ? statsProv.promedioPorCompra : 0;
 
                   return `
                     <tr class="provdb-row">
                       <td class="text-center font-bold" style="color: #94a3b8;">${idx + 1}</td>
                       <td>
-                        <div class="provdb-name-cell">
-                          <strong class="provdb-name-title">${p.nombre}</strong>
+                        <div class="provdb-name-cell fila-clickeable-compras" data-nombre-prov="${p.nombre}" style="cursor: pointer;" title="Clic para ver o registrar compras de ${p.nombre}">
+                          <strong class="provdb-name-title" style="color: #0284c7;">${p.nombre}</strong>
                           ${p.contacto ? `<span class="provdb-contact-info">📞 ${p.contacto}</span>` : ''}
                           ${p.notas ? `<span class="provdb-notes-info">📝 ${p.notas}</span>` : ''}
                         </div>
@@ -226,14 +228,20 @@ export class ProveedoresDbModule {
                       <td class="text-right font-bold" style="color: #1e293b;">
                         ${p.presupuestoHabitual > 0 ? this.formatMoney(p.presupuestoHabitual) : '<span style="color:#94a3b8; font-weight:normal;">-</span>'}
                       </td>
-                      <td class="text-right">
-                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
-                          <strong style="color: #0f172a; font-size: 0.9rem;">${this.formatMoney(totalPagado)}</strong>
-                          <small style="color: #64748b; font-size: 0.72rem;">${totalNotas} compras registradas</small>
-                        </div>
+                      <td class="text-center">
+                        <button type="button" class="btn-badge-compras btn-ver-compras" data-nombre-prov="${p.nombre}" title="Clic para ver o registrar compras">
+                          <strong>${totalNotas} ${totalNotas === 1 ? 'compra' : 'compras'}</strong>
+                          ${totalNotas > 0 ? `<small>Prom: ${this.formatMoney(promCompra)}</small>` : '<small>+ Registrar</small>'}
+                        </button>
+                      </td>
+                      <td class="text-right font-bold" style="color: #0f172a; font-size: 0.95rem;">
+                        ${this.formatMoney(totalPagado)}
                       </td>
                       <td class="text-center">
                         <div class="provdb-actions-wrap">
+                          <button type="button" class="btn-act-icon btn-compras-action btn-ver-compras" data-nombre-prov="${p.nombre}" title="Registro de Compras">
+                            🧾
+                          </button>
                           <button type="button" class="btn-act-icon btn-edit-prov" data-id="${p.id}" title="Editar Proveedor">
                             ✏️
                           </button>
@@ -319,12 +327,39 @@ export class ProveedoresDbModule {
     this.container.querySelectorAll('.btn-del-prov').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         const id = btn.getAttribute('data-id');
         const nombre = btn.getAttribute('data-nombre') || 'este proveedor';
         if (confirm(`¿Estás seguro de eliminar a "${nombre}" de la Base de Datos de Proveedores?`)) {
           stateManager.deleteProveedorCatalogo(id);
           this.render();
         }
+      });
+    });
+
+    // 6. Clic para ver o registrar compras del proveedor
+    const abrirCompras = (nombre) => {
+      if (nombre && window.adminFenixApp?.modalManager) {
+        window.adminFenixApp.modalManager.openRegistroComprasProveedorModal(nombre, () => {
+          this.render();
+        });
+      }
+    };
+
+    this.container.querySelectorAll('.btn-ver-compras').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const nombre = btn.getAttribute('data-nombre-prov');
+        abrirCompras(nombre);
+      });
+    });
+
+    this.container.querySelectorAll('.fila-clickeable-compras').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const nombre = el.getAttribute('data-nombre-prov');
+        abrirCompras(nombre);
       });
     });
   }

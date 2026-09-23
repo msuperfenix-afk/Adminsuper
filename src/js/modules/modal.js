@@ -2169,5 +2169,183 @@ export class ModalManager {
       if (onGuardado) onGuardado();
     });
   }
+
+  // ==========================================
+  // 20. MODAL: REGISTRO DE COMPRAS Y CANTIDADES POR PROVEEDOR
+  // ==========================================
+  openRegistroComprasProveedorModal(nombreProveedor, onActualizado = null) {
+    if (!nombreProveedor) return;
+
+    const renderContenido = () => {
+      const stats = stateManager.getEstadisticasProveedor(nombreProveedor);
+      const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(v || 0);
+      const fechaHoy = stateManager.getFechaHoy();
+
+      return `
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          
+          <!-- RESUMEN SUPERIOR DE CANTIDADES DE COMPRA -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
+              <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Cantidad de Compras</span>
+              <div style="font-size: 1.3rem; font-weight: 800; color: #0f172a; margin-top: 2px;">
+                ${stats ? stats.totalCompras : 0} <small style="font-size: 0.8rem; font-weight: normal; color: #64748b;">notas</small>
+              </div>
+            </div>
+
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 12px;">
+              <span style="font-size: 0.72rem; font-weight: 700; color: #166534; text-transform: uppercase;">Total Comprado</span>
+              <div style="font-size: 1.3rem; font-weight: 800; color: #15803d; margin-top: 2px;">
+                ${stats ? fmt(stats.totalPagado) : '$0'}
+              </div>
+            </div>
+
+            <div style="background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 8px; padding: 10px 12px;">
+              <span style="font-size: 0.72rem; font-weight: 700; color: #5b21b6; text-transform: uppercase;">Promedio / Compra</span>
+              <div style="font-size: 1.3rem; font-weight: 800; color: #6d28d9; margin-top: 2px;">
+                ${stats ? fmt(stats.promedioPorCompra) : '$0'}
+              </div>
+            </div>
+
+            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 12px;">
+              <span style="font-size: 0.72rem; font-weight: 700; color: #92400e; text-transform: uppercase;">Presupuesto Base</span>
+              <div style="font-size: 1.3rem; font-weight: 800; color: #b45309; margin-top: 2px;">
+                ${stats && stats.presupuestoHabitual > 0 ? fmt(stats.presupuestoHabitual) : '-'}
+              </div>
+            </div>
+          </div>
+
+          <!-- FORMULARIO: REGISTRAR NUEVA COMPRA A ESTE PROVEEDOR -->
+          <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <strong style="font-size: 0.9rem; color: #0f172a;">➕ Registrar Nueva Compra a ${nombreProveedor}</strong>
+              <span style="font-size: 0.75rem; color: #64748b;">Se añade al historial y a la hoja contable</span>
+            </div>
+            
+            <form id="formNuevaCompraBD">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; align-items: flex-end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 0.75rem;">Monto a Pagar ($ MXN) *</label>
+                  <input type="number" step="1" min="1" id="inputMontoCompraBD" class="form-control" placeholder="0.00" required autofocus style="font-size: 0.95rem; font-weight: 700;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 0.75rem;">Forma de Pago *</label>
+                  <select id="selectTipoPagoCompraBD" class="form-control" style="font-size: 0.85rem; font-weight: 600;">
+                    <option value="Efectivo" selected>💵 Efectivo</option>
+                    <option value="Transferencia">🏦 Transferencia</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 0.75rem;">Fecha *</label>
+                  <input type="date" id="inputFechaCompraBD" class="form-control" value="${fechaHoy}" required style="font-size: 0.85rem;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 0.75rem;">Folio / Nota</label>
+                  <input type="text" id="inputNotaFolioBD" class="form-control" placeholder="Ej. Factura 128" style="font-size: 0.85rem;">
+                </div>
+
+                <div>
+                  <button type="submit" class="btn-primary" style="width: 100%; height: 38px; justify-content: center; font-size: 0.88rem;">
+                    Guardar Compra
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- TABLA HISTORIAL DE COMPRAS -->
+          <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+              <strong style="font-size: 0.88rem; color: #1e293b;">📋 Historial de Compras Realizadas (${stats ? stats.comprasHistorial.length : 0})</strong>
+            </div>
+
+            <div style="max-height: 260px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.86rem;">
+                <thead>
+                  <tr style="background: #f1f5f9; text-align: left; color: #475569; font-size: 0.73rem; text-transform: uppercase;">
+                    <th style="padding: 8px 12px; width: 50px; text-align: center;">NOTA</th>
+                    <th style="padding: 8px 12px; width: 120px;">FECHA</th>
+                    <th style="padding: 8px 12px; width: 100px;">HORA</th>
+                    <th style="padding: 8px 12px; width: 130px; text-align: center;">MÉTODO</th>
+                    <th style="padding: 8px 12px; text-align: right;">CANTIDAD ($)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(!stats || stats.comprasHistorial.length === 0) ? `
+                    <tr>
+                      <td colspan="5" style="text-align: center; padding: 24px; color: #94a3b8; font-style: italic;">
+                        Sin compras registradas aún para este proveedor.
+                      </td>
+                    </tr>
+                  ` : stats.comprasHistorial.map((c, i) => {
+                    const esTransf = (c.tipoPago === 'Transferencia');
+                    return `
+                      <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 12px; text-align: center; font-weight: 700; color: #64748b;">#${c.nota || (i + 1)}</td>
+                        <td style="padding: 8px 12px; font-weight: 700; color: #0f172a;">${c.fecha || '-'}</td>
+                        <td style="padding: 8px 12px; color: #64748b;">${c.hora || '-'}</td>
+                        <td style="padding: 8px 12px; text-align: center;">
+                          <span class="badge-tipo-pago ${esTransf ? 'badge-pago-transf' : 'badge-pago-efec'}">
+                            ${esTransf ? '🏦 Transf' : '💵 Efectivo'}
+                          </span>
+                        </td>
+                        <td style="padding: 8px 12px; text-align: right; font-weight: 800; color: #0f172a;">
+                          ${fmt(c.monto)}
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      `;
+    };
+
+    const attachListeners = () => {
+      document.getElementById('btnCerrarModalCompras')?.addEventListener('click', () => this.close());
+
+      document.getElementById('formNuevaCompraBD')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const monto = parseFloat(document.getElementById('inputMontoCompraBD')?.value) || 0;
+        const tipoPago = document.getElementById('selectTipoPagoCompraBD')?.value || 'Efectivo';
+        const fecha = document.getElementById('inputFechaCompraBD')?.value;
+        const nota = document.getElementById('inputNotaFolioBD')?.value.trim();
+
+        if (monto <= 0) {
+          alert('Por favor ingresa un monto válido.');
+          return;
+        }
+
+        const ok = stateManager.registrarCompraDesdeBD({
+          proveedor: nombreProveedor,
+          monto,
+          tipoPago,
+          fecha,
+          notas: nota
+        });
+
+        if (ok) {
+          const bodyEl = this.container.querySelector('.modal-body');
+          if (bodyEl) {
+            bodyEl.innerHTML = renderContenido();
+            attachListeners();
+          }
+          if (onActualizado) onActualizado();
+        }
+      });
+    };
+
+    this.open(`🧾 Registro de Compras: ${nombreProveedor}`, renderContenido(), `
+      <button type="button" class="btn-secondary" id="btnCerrarModalCompras">Cerrar</button>
+    `);
+
+    attachListeners();
+  }
 }
 

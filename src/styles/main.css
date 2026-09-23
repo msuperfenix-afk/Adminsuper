@@ -3243,6 +3243,45 @@ input:disabled {
   border-color: #cbd5e1;
 }
 
+/* Botón interactivo de Cantidad de Compras en la BD */
+.btn-badge-compras {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.btn-badge-compras strong {
+  font-size: 0.82rem;
+  color: #0f172a;
+}
+
+.btn-badge-compras small {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.btn-badge-compras:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.btn-badge-compras:hover strong {
+  color: #1d4ed8;
+}
+
+.fila-clickeable-compras:hover .provdb-name-title {
+  text-decoration: underline;
+}
+
 .provdb-empty-td {
   padding: 40px 16px;
   text-align: center;
