@@ -1597,6 +1597,467 @@ input:disabled {
 }
 
 /* ======================================================
+   RESPONSIVE DESIGN (TABLETS Y CELULARES)
+   ====================================================== */
+
+/* Contenedor fluido con scroll táctil para tablas anchas */
+.tabla-responsive-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 1. TABLETS (Hasta 1024px) */
+@media (max-width: 1024px) {
+  .hoja-papel-container {
+    margin: 12px 10px 30px;
+    width: calc(100% - 20px);
+    max-width: 100%;
+  }
+
+  .hoja-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 0 12px 14px;
+  }
+
+  .hoja-header {
+    gap: 14px;
+    padding: 14px 18px;
+  }
+
+  .top-bar {
+    padding: 0 16px;
+  }
+
+  .search-container {
+    max-width: 260px;
+  }
+
+  .modal-container {
+    width: 92%;
+    max-width: 600px;
+  }
+}
+
+/* 2. CELULARES Y TABLETS PEQUEÑAS (Hasta 768px) */
+@media (max-width: 768px) {
+  /* Layout: Barra de navegación inferior fija para pulgares */
+  .app-layout {
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 56px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 4px;
+    z-index: 1000;
+    background: #0f172a;
+    border-right: none;
+    border-top: 1px solid #1e293b;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar-brand-wrap,
+  .sidebar-footer {
+    display: none !important;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    justify-content: space-around;
+    gap: 0;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+  }
+
+  .nav-item {
+    width: 52px;
+    height: 44px;
+    border-radius: 6px;
+  }
+
+  .nav-item::after {
+    display: none !important;
+  }
+
+  .main-area {
+    width: 100%;
+    flex: 1;
+    height: calc(100vh - 56px);
+    margin-bottom: 56px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Barra Superior de la Aplicación */
+  .top-bar {
+    padding: 8px 12px;
+    height: auto;
+    min-height: 50px;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  .top-bar-left {
+    gap: 8px;
+  }
+
+  .header-logo {
+    height: 30px;
+  }
+
+  .page-title-group h1 {
+    font-size: 0.95rem;
+  }
+
+  .page-subtitle {
+    display: none;
+  }
+
+  .view-switcher {
+    padding: 2px;
+  }
+
+  .view-btn {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+
+  .search-container {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 2px;
+  }
+
+  .top-bar-right {
+    gap: 8px;
+  }
+
+  .stats-pill {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+
+  .btn-primary {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 0.74rem;
+  }
+
+  .user-profile {
+    padding-left: 6px;
+    border-left: none;
+  }
+
+  .user-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  /* Hoja Contable Diaria en Celular */
+  .hoja-papel-container {
+    margin: 6px 4px 20px;
+    border-radius: 4px;
+    width: calc(100% - 8px);
+    max-width: 100%;
+  }
+
+  .barra-navegacion-dias {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .barra-navegacion-dias > div:first-child {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .barra-navegacion-dias > div:last-child {
+    justify-content: space-between;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .barra-navegacion-dias > div:first-child > div:first-of-type {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 3px;
+    width: 100%;
+  }
+
+  .btn-dia-selector {
+    padding: 2px 6px;
+    min-width: 38px;
+    font-size: 0.7rem;
+  }
+
+  .btn-abrir-calendario {
+    width: 100%;
+    justify-content: center;
+    padding: 6px 10px;
+    font-size: 0.76rem;
+  }
+
+  .input-fecha-picker {
+    font-size: 0.74rem;
+    padding: 3px 6px;
+  }
+
+  .btn-firebase-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
+
+  /* Banner de Historial */
+  .banner-aviso-historial {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin: 8px 8px 0;
+    padding: 8px 10px;
+  }
+
+  .btn-regresar-hoy {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    padding: 6px 10px;
+  }
+
+  /* Encabezado de la Hoja Contable */
+  .hoja-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px 10px;
+  }
+
+  .hoja-header-brand {
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .hoja-logo-img {
+    height: 38px;
+  }
+
+  .hoja-titulo-principal {
+    font-size: 1.15rem;
+  }
+
+  .hoja-subtitulo {
+    font-size: 0.62rem;
+  }
+
+  .hoja-header-datos {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .hoja-campo-linea {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .hoja-campo-fecha {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .hoja-campo-inicial {
+    width: 100%;
+    justify-content: space-between;
+    padding: 6px 10px;
+  }
+
+  .hoja-input-money {
+    width: 100px;
+  }
+
+  .btn-fenix-print {
+    width: 100%;
+    justify-content: center;
+    padding: 7px 12px;
+  }
+
+  /* Grilla de Hoja en 1 Columna */
+  .hoja-grid-layout {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+    padding: 0 8px 12px;
+  }
+
+  .subcuadro-titulo-flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .badge-desglose-pagos {
+    flex-wrap: wrap;
+    gap: 4px;
+    width: 100%;
+  }
+
+  /* Scroll de Tablas en Móvil */
+  .tabla-scroll-proveedores {
+    max-height: 420px;
+  }
+
+  .tabla-scroll-pendientes,
+  .tabla-scroll-retiros {
+    max-height: 220px;
+  }
+
+  .cell-input {
+    font-size: 0.85rem;
+    padding: 4px 2px;
+  }
+
+  /* Modales en Móvil */
+  .modal-container {
+    width: 95% !important;
+    max-width: 95% !important;
+    max-height: 94vh;
+    margin: 6px auto;
+  }
+
+  .modal-header {
+    padding: 10px 14px;
+  }
+
+  .modal-title {
+    font-size: 0.95rem;
+  }
+
+  .modal-body {
+    padding: 12px 14px;
+  }
+
+  .modal-footer {
+    padding: 10px 14px;
+  }
+
+  /* Inputs en móvil con font-size de 16px para evitar auto-zoom indeseado en navegadores móviles */
+  .form-control {
+    font-size: 16px !important;
+  }
+
+  /* Calendario Modal en Móvil */
+  .cal-mes-nav {
+    padding: 6px 8px;
+    margin-bottom: 8px;
+  }
+
+  .cal-mes-titulo {
+    font-size: 0.88rem;
+  }
+
+  .cal-grid-dias-semana {
+    gap: 2px;
+    margin-bottom: 4px;
+  }
+
+  .cal-header-dia {
+    font-size: 0.62rem;
+  }
+
+  .cal-grid-celdas {
+    gap: 3px;
+  }
+
+  .cal-celda {
+    min-height: 46px;
+    padding: 2px 3px;
+    border-radius: 3px;
+  }
+
+  .cal-numero-dia {
+    font-size: 0.72rem;
+  }
+
+  .cal-tag-hoy {
+    font-size: 0.5rem;
+    padding: 1px 2px;
+  }
+
+  .cal-badge-pagado {
+    font-size: 0.56rem;
+    padding: 1px;
+  }
+
+  .cal-sub-count {
+    font-size: 0.52rem;
+  }
+}
+
+/* 3. CELULARES PEQUEÑOS (Hasta 480px) */
+@media (max-width: 480px) {
+  .grid-tres-campos {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .grid-dos-campos {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .corte-reparto-box {
+    flex-direction: column;
+  }
+
+  .reparto-item {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .reparto-item:last-child {
+    border-bottom: none;
+  }
+
+  .stats-pill {
+    display: none;
+  }
+
+  .fecha-cajas {
+    gap: 2px;
+  }
+
+  .hoja-box-fijo,
+  .hoja-input-box {
+    width: 42px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+}
+
+/* ======================================================
    MODO IMPRESIÓN (IDÉNTICO A LA HOJA FÍSICA)
    ====================================================== */
 @media print {

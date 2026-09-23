@@ -170,53 +170,57 @@ export class HojaDiariaModule {
             <div class="hoja-subcuadro">
               <div class="subcuadro-titulo">CONTEO PAN Y TORTILLA</div>
               
-              <!-- Panaderos -->
-              <table class="hoja-tabla-conteo">
-                <thead>
-                  <tr>
-                    <th>PROVEEDOR PAN</th>
-                    <th style="width: 50px;">BOL</th>
-                    <th style="width: 50px;">DUL</th>
-                    <th style="width: 55px;">CAMB</th>
-                    <th style="width: 60px;">TOTAL</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${d.conteoPan.map((p, idx) => `
+              <div class="tabla-responsive-wrap">
+                <!-- Panaderos -->
+                <table class="hoja-tabla-conteo">
+                  <thead>
                     <tr>
-                      <td><input type="text" class="cell-input" data-pan="${idx}" data-field="proveedor" value="${p.proveedor}" ${editable ? '' : 'disabled'}></td>
-                      <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="bol" value="${p.bol}" ${editable ? '' : 'disabled'}></td>
-                      <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="dul" value="${p.dul}" ${editable ? '' : 'disabled'}></td>
-                      <td><input type="number" class="cell-input text-center text-red" data-pan="${idx}" data-field="camb" value="${p.camb}" ${editable ? '' : 'disabled'}></td>
-                      <td class="cell-total font-bold">${p.total}</td>
+                      <th>PROVEEDOR PAN</th>
+                      <th style="width: 50px;">BOL</th>
+                      <th style="width: 50px;">DUL</th>
+                      <th style="width: 55px;">CAMB</th>
+                      <th style="width: 60px;">TOTAL</th>
                     </tr>
-                  `).join('')}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    ${d.conteoPan.map((p, idx) => `
+                      <tr>
+                        <td><input type="text" class="cell-input" data-pan="${idx}" data-field="proveedor" value="${p.proveedor}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="bol" value="${p.bol}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="dul" value="${p.dul}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" class="cell-input text-center text-red" data-pan="${idx}" data-field="camb" value="${p.camb}" ${editable ? '' : 'disabled'}></td>
+                        <td class="cell-total font-bold">${p.total}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
 
               <div class="divider-subcuadro"></div>
 
-              <!-- Tortillerías -->
-              <table class="hoja-tabla-conteo">
-                <thead>
-                  <tr>
-                    <th>PROVEEDOR TORTILLA</th>
-                    <th style="width: 65px;">CAMB</th>
-                    <th style="width: 65px;">NUEV</th>
-                    <th style="width: 65px;">TOTAL</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${d.conteoTortilla.map((t, idx) => `
+              <div class="tabla-responsive-wrap">
+                <!-- Tortillerías -->
+                <table class="hoja-tabla-conteo">
+                  <thead>
                     <tr>
-                      <td><input type="text" class="cell-input" data-tort="${idx}" data-field="proveedor" value="${t.proveedor}" ${editable ? '' : 'disabled'}></td>
-                      <td><input type="number" step="0.5" class="cell-input text-center text-red" data-tort="${idx}" data-field="camb" value="${t.camb}" ${editable ? '' : 'disabled'}></td>
-                      <td><input type="number" step="0.5" class="cell-input text-center" data-tort="${idx}" data-field="nuev" value="${t.nuev}" ${editable ? '' : 'disabled'}></td>
-                      <td class="cell-total font-bold">${t.total}</td>
+                      <th>PROVEEDOR TORTILLA</th>
+                      <th style="width: 65px;">CAMB</th>
+                      <th style="width: 65px;">NUEV</th>
+                      <th style="width: 65px;">TOTAL</th>
                     </tr>
-                  `).join('')}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    ${d.conteoTortilla.map((t, idx) => `
+                      <tr>
+                        <td><input type="text" class="cell-input" data-tort="${idx}" data-field="proveedor" value="${t.proveedor}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" step="0.5" class="cell-input text-center text-red" data-tort="${idx}" data-field="camb" value="${t.camb}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" step="0.5" class="cell-input text-center" data-tort="${idx}" data-field="nuev" value="${t.nuev}" ${editable ? '' : 'disabled'}></td>
+                        <td class="cell-total font-bold">${t.total}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <!-- 2. TABLA DE COMPRAS / PROVEEDORES (Renglones 1 al 30) -->
@@ -372,72 +376,74 @@ export class HojaDiariaModule {
                 <span style="font-size: 0.72rem; color: #64748b; font-weight: normal;">* Monedas en cantidad total ($)</span>
               </div>
 
-              <table class="hoja-tabla-arqueo">
-                <thead>
-                  <tr>
-                    <th style="text-align: left;">CONCEPTO</th>
-                    <th style="width: 95px; text-align: center;">CANTIDAD 1</th>
-                    <th style="width: 95px; text-align: center;">CANTIDAD 2</th>
-                    <th style="width: 95px; text-align: center;">CANTIDAD 3</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="font-bold">TARJETAS</td>
-                    ${d.arqueoColumnas.map((col, idx) => `
-                      <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="tarjetas" value="${col.tarjetas || ''}" ${editable ? '' : 'disabled'}></td>
-                    `).join('')}
-                  </tr>
-                  <tr>
-                    <td class="font-bold">SISTEMA (POS)</td>
-                    ${d.arqueoColumnas.map((col, idx) => `
-                      <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="sistema" value="${col.sistema || ''}" ${editable ? '' : 'disabled'}></td>
-                    `).join('')}
-                  </tr>
-                  <tr>
-                    <td class="font-bold">BILLETES</td>
-                    ${d.arqueoColumnas.map((col, idx) => `
-                      <td><input type="number" step="10" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="billetes" value="${col.billetes || ''}" ${editable ? '' : 'disabled'}></td>
-                    `).join('')}
-                  </tr>
-                  <tr>
-                    <td>MON. 1 ($ en monedas)</td>
-                    ${d.arqueoColumnas.map((col, idx) => `
-                      <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon1" value="${col.mon1 || ''}" ${editable ? '' : 'disabled'}></td>
-                    `).join('')}
-                  </tr>
-                  <tr>
-                    <td>MON. 2 ($ en monedas)</td>
-                    ${d.arqueoColumnas.map((col, idx) => `
-                      <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon2" value="${col.mon2 || ''}" ${editable ? '' : 'disabled'}></td>
-                    `).join('')}
-                  </tr>
-                  <tr>
-                    <td>MON. 5 ($ en monedas)</td>
-                    ${d.arqueoColumnas.map((col, idx) => `
-                      <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon5" value="${col.mon5 || ''}" ${editable ? '' : 'disabled'}></td>
-                    `).join('')}
-                  </tr>
-                  <tr>
-                    <td>MON. 10 ($ en monedas)</td>
-                    ${d.arqueoColumnas.map((col, idx) => `
-                      <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon10" value="${col.mon10 || ''}" ${editable ? '' : 'disabled'}></td>
-                    `).join('')}
-                  </tr>
-                  <tr>
-                    <td class="font-bold">MORRALLA (Suma)</td>
-                    ${d.arqueoColumnas.map(col => `
-                      <td class="text-right font-bold" style="color: #0f172a; padding: 6px;">${this.formatMoney(col.morralla)}</td>
-                    `).join('')}
-                  </tr>
-                  <tr class="fila-gran-total">
-                    <td class="font-bold">TOTAL EFECTIVO</td>
-                    ${d.arqueoColumnas.map(col => `
-                      <td class="text-right font-bold" style="color: #0f172a; padding: 6px;">${this.formatMoney((col.billetes || 0) + (col.morralla || 0))}</td>
-                    `).join('')}
-                  </tr>
-                </tbody>
-              </table>
+              <div class="tabla-responsive-wrap">
+                <table class="hoja-tabla-arqueo">
+                  <thead>
+                    <tr>
+                      <th style="text-align: left;">CONCEPTO</th>
+                      <th style="width: 95px; text-align: center;">CANTIDAD 1</th>
+                      <th style="width: 95px; text-align: center;">CANTIDAD 2</th>
+                      <th style="width: 95px; text-align: center;">CANTIDAD 3</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="font-bold">TARJETAS</td>
+                      ${d.arqueoColumnas.map((col, idx) => `
+                        <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="tarjetas" value="${col.tarjetas || ''}" ${editable ? '' : 'disabled'}></td>
+                      `).join('')}
+                    </tr>
+                    <tr>
+                      <td class="font-bold">SISTEMA (POS)</td>
+                      ${d.arqueoColumnas.map((col, idx) => `
+                        <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="sistema" value="${col.sistema || ''}" ${editable ? '' : 'disabled'}></td>
+                      `).join('')}
+                    </tr>
+                    <tr>
+                      <td class="font-bold">BILLETES</td>
+                      ${d.arqueoColumnas.map((col, idx) => `
+                        <td><input type="number" step="10" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="billetes" value="${col.billetes || ''}" ${editable ? '' : 'disabled'}></td>
+                      `).join('')}
+                    </tr>
+                    <tr>
+                      <td>MON. 1 ($ en monedas)</td>
+                      ${d.arqueoColumnas.map((col, idx) => `
+                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon1" value="${col.mon1 || ''}" ${editable ? '' : 'disabled'}></td>
+                      `).join('')}
+                    </tr>
+                    <tr>
+                      <td>MON. 2 ($ en monedas)</td>
+                      ${d.arqueoColumnas.map((col, idx) => `
+                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon2" value="${col.mon2 || ''}" ${editable ? '' : 'disabled'}></td>
+                      `).join('')}
+                    </tr>
+                    <tr>
+                      <td>MON. 5 ($ en monedas)</td>
+                      ${d.arqueoColumnas.map((col, idx) => `
+                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon5" value="${col.mon5 || ''}" ${editable ? '' : 'disabled'}></td>
+                      `).join('')}
+                    </tr>
+                    <tr>
+                      <td>MON. 10 ($ en monedas)</td>
+                      ${d.arqueoColumnas.map((col, idx) => `
+                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon10" value="${col.mon10 || ''}" ${editable ? '' : 'disabled'}></td>
+                      `).join('')}
+                    </tr>
+                    <tr>
+                      <td class="font-bold">MORRALLA (Suma)</td>
+                      ${d.arqueoColumnas.map(col => `
+                        <td class="text-right font-bold" style="color: #0f172a; padding: 6px;">${this.formatMoney(col.morralla)}</td>
+                      `).join('')}
+                    </tr>
+                    <tr class="fila-gran-total">
+                      <td class="font-bold">TOTAL EFECTIVO</td>
+                      ${d.arqueoColumnas.map(col => `
+                        <td class="text-right font-bold" style="color: #0f172a; padding: 6px;">${this.formatMoney((col.billetes || 0) + (col.morralla || 0))}</td>
+                      `).join('')}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <!-- 3. RETIROS (Con scroll y botón + en último renglón) -->
@@ -539,34 +545,36 @@ export class HojaDiariaModule {
             <!-- 6. MAQUINAS MONTO INDIVIDUAL -->
             <div class="hoja-subcuadro" style="margin-top: 14px;">
               <div class="subcuadro-titulo">MAQUINAS INDIVIDUALES</div>
-              <table class="hoja-tabla-conteo">
-                <thead>
-                  <tr>
-                    <th>MAQUINA</th>
-                    <th style="width: 110px; text-align: right;">MONTO ($)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>MAQUINA 1 $1</td>
-                    <td><input type="number" class="cell-input text-right font-bold" id="indivMaq1" value="${d.maquinasIndividuales.maq1_1}" ${editable ? '' : 'disabled'}></td>
-                  </tr>
-                  <tr>
-                    <td>MAQUINA 2 $1</td>
-                    <td><input type="number" class="cell-input text-right font-bold" id="indivMaq2" value="${d.maquinasIndividuales.maq2_1}" ${editable ? '' : 'disabled'}></td>
-                  </tr>
-                  <tr>
-                    <td>MAQUINA 3 $5</td>
-                    <td><input type="number" class="cell-input text-right font-bold" id="indivMaq3" value="${d.maquinasIndividuales.maq3_5}" ${editable ? '' : 'disabled'}></td>
-                  </tr>
-                </tbody>
-                <tfoot>
-                  <tr class="fila-gran-total">
-                    <td style="font-weight: 800;">TOTAL:</td>
-                    <td style="text-align: right; font-weight: 800;">${this.formatMoney(d.maquinasIndividuales.total)}</td>
-                  </tr>
-                </tfoot>
-              </table>
+              <div class="tabla-responsive-wrap">
+                <table class="hoja-tabla-conteo">
+                  <thead>
+                    <tr>
+                      <th>MAQUINA</th>
+                      <th style="width: 110px; text-align: right;">MONTO ($)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>MAQUINA 1 $1</td>
+                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq1" value="${d.maquinasIndividuales.maq1_1}" ${editable ? '' : 'disabled'}></td>
+                    </tr>
+                    <tr>
+                      <td>MAQUINA 2 $1</td>
+                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq2" value="${d.maquinasIndividuales.maq2_1}" ${editable ? '' : 'disabled'}></td>
+                    </tr>
+                    <tr>
+                      <td>MAQUINA 3 $5</td>
+                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq3" value="${d.maquinasIndividuales.maq3_5}" ${editable ? '' : 'disabled'}></td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr class="fila-gran-total">
+                      <td style="font-weight: 800;">TOTAL:</td>
+                      <td style="text-align: right; font-weight: 800;">${this.formatMoney(d.maquinasIndividuales.total)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
 
               <div class="corte-reparto-box" style="margin-top: 8px;">
                 <div class="reparto-item">
