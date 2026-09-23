@@ -185,7 +185,10 @@ export class HojaDiariaModule {
 
             <!-- 1. CONTEO PAN Y TORTILLA -->
             <div class="hoja-subcuadro">
-              <div class="subcuadro-titulo">CONTEO PAN Y TORTILLA</div>
+              <div class="subcuadro-titulo-flex">
+                <span>CONTEO PAN Y TORTILLA</span>
+                <span class="badge-hint-click-info" title="Haz clic en cualquier renglón o en el botón de info para capturar cantidades y precio">💡 Clic en renglón o (i) para capturar</span>
+              </div>
               
               <div class="tabla-responsive-wrap">
                 <!-- Panaderos -->
@@ -210,20 +213,20 @@ export class HojaDiariaModule {
                         ? this.formatMoney(p.costo) 
                         : ((parseFloat(p.precioPieza) || 0) > 0 ? '$0.00' : '-');
                       return `
-                        <tr>
+                        <tr class="fila-conteo-clickeable ${editableGeneral ? 'fila-activa' : ''}" data-fila-pan="${idx}" title="${editableGeneral ? 'Clic para registrar bolillos, dulces, cambios y precio' : 'Consulta de conteo de pan'}">
                           <td>
                             <div class="prov-celda-fija">
                               <span class="prov-nombre-fijo">${p.proveedor}</span>
-                              <button type="button" class="btn-info-costo" data-info-pan="${idx}" title="Configurar precio por pieza y ver costo">
+                              <button type="button" class="btn-info-costo" data-info-pan="${idx}" title="Abrir recuadro de captura y precio">
                                 <span class="icono-i-circulo">i</span>
                               </button>
                             </div>
                           </td>
-                          <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="bol" value="${bolVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
-                          <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="dul" value="${dulVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
-                          <td><input type="number" class="cell-input text-center text-red" data-pan="${idx}" data-field="camb" value="${cambVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
-                          <td class="cell-total font-bold text-center">${totVal}</td>
-                          <td class="cell-costo font-bold text-right" data-costo-pan="${idx}" title="Clic para ver o cambiar precio">${costoVal}</td>
+                          <td class="text-center font-bold celda-conteo-val">${bolVal || '-'}</td>
+                          <td class="text-center font-bold celda-conteo-val">${dulVal || '-'}</td>
+                          <td class="text-center font-bold celda-conteo-val text-red">${cambVal || '-'}</td>
+                          <td class="cell-total font-bold text-center">${totVal || '-'}</td>
+                          <td class="cell-costo font-bold text-right">${costoVal}</td>
                         </tr>
                       `;
                     }).join('')}
@@ -254,19 +257,19 @@ export class HojaDiariaModule {
                         ? this.formatMoney(t.costo) 
                         : ((parseFloat(t.precioKilo) || 0) > 0 ? '$0.00' : '-');
                       return `
-                        <tr>
+                        <tr class="fila-conteo-clickeable ${editableGeneral ? 'fila-activa' : ''}" data-fila-tort="${idx}" title="${editableGeneral ? 'Clic para registrar nuevas, cambios y precio' : 'Consulta de conteo de tortilla'}">
                           <td>
                             <div class="prov-celda-fija">
                               <span class="prov-nombre-fijo">${t.proveedor}</span>
-                              <button type="button" class="btn-info-costo" data-info-tort="${idx}" title="Configurar precio por kilo y ver costo">
+                              <button type="button" class="btn-info-costo" data-info-tort="${idx}" title="Abrir recuadro de captura y precio">
                                 <span class="icono-i-circulo">i</span>
                               </button>
                             </div>
                           </td>
-                          <td><input type="number" step="0.5" class="cell-input text-center text-red" data-tort="${idx}" data-field="camb" value="${cambVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
-                          <td><input type="number" step="0.5" class="cell-input text-center" data-tort="${idx}" data-field="nuev" value="${nuevVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
-                          <td class="cell-total font-bold text-center">${totVal}</td>
-                          <td class="cell-costo font-bold text-right" data-costo-tort="${idx}" title="Clic para ver o cambiar precio">${costoVal}</td>
+                          <td class="text-center font-bold celda-conteo-val text-red">${cambVal || '-'}</td>
+                          <td class="text-center font-bold celda-conteo-val">${nuevVal || '-'}</td>
+                          <td class="cell-total font-bold text-center">${totVal || '-'}</td>
+                          <td class="cell-costo font-bold text-right">${costoVal}</td>
                         </tr>
                       `;
                     }).join('')}
@@ -727,31 +730,7 @@ export class HojaDiariaModule {
       window.print();
     });
 
-    // Panaderos
-    this.container.querySelectorAll('[data-pan]').forEach(input => {
-      const actualizarPan = (e) => {
-        const idx = parseInt(e.target.getAttribute('data-pan'));
-        const field = e.target.getAttribute('data-field');
-        const val = e.target.value;
-        stateManager.updateConteoPan(idx, { [field]: val });
-        const p = stateManager.data.conteoPan[idx];
-        const row = input.closest('tr');
-        if (row && p) {
-          const totalEl = row.querySelector('.cell-total');
-          if (totalEl) totalEl.textContent = (parseFloat(p.total) || 0) > 0 ? p.total : '';
-          const costoEl = row.querySelector('.cell-costo');
-          if (costoEl) {
-            costoEl.textContent = (parseFloat(p.costo) || 0) > 0 
-              ? this.formatMoney(p.costo) 
-              : ((parseFloat(p.precioPieza) || 0) > 0 ? '$0.00' : '-');
-          }
-        }
-      };
-      input.addEventListener('change', actualizarPan);
-      input.addEventListener('input', actualizarPan);
-    });
-
-    // Botón 'i' y clic en celda de costo para Panaderos (Asignar precio por pieza)
+    // Panaderos: Abrir modal al dar clic en la fila o en el botón 'i'
     const abrirModalPan = (idx) => {
       if (window.adminFenixApp?.modalManager) {
         window.adminFenixApp.modalManager.openCostoPanaderoModal(idx, () => {
@@ -759,6 +738,14 @@ export class HojaDiariaModule {
         });
       }
     };
+
+    this.container.querySelectorAll('[data-fila-pan]').forEach(tr => {
+      tr.addEventListener('click', (e) => {
+        e.preventDefault();
+        const idx = parseInt(tr.getAttribute('data-fila-pan'));
+        abrirModalPan(idx);
+      });
+    });
 
     this.container.querySelectorAll('[data-info-pan]').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -769,39 +756,7 @@ export class HojaDiariaModule {
       });
     });
 
-    this.container.querySelectorAll('[data-costo-pan]').forEach(td => {
-      td.addEventListener('click', (e) => {
-        e.preventDefault();
-        const idx = parseInt(td.getAttribute('data-costo-pan'));
-        abrirModalPan(idx);
-      });
-    });
-
-    // Tortillerías
-    this.container.querySelectorAll('[data-tort]').forEach(input => {
-      const actualizarTort = (e) => {
-        const idx = parseInt(e.target.getAttribute('data-tort'));
-        const field = e.target.getAttribute('data-field');
-        const val = e.target.value;
-        stateManager.updateConteoTortilla(idx, { [field]: val });
-        const t = stateManager.data.conteoTortilla[idx];
-        const row = input.closest('tr');
-        if (row && t) {
-          const totalEl = row.querySelector('.cell-total');
-          if (totalEl) totalEl.textContent = (parseFloat(t.total) || 0) > 0 ? t.total : '';
-          const costoEl = row.querySelector('.cell-costo');
-          if (costoEl) {
-            costoEl.textContent = (parseFloat(t.costo) || 0) > 0 
-              ? this.formatMoney(t.costo) 
-              : ((parseFloat(t.precioKilo) || 0) > 0 ? '$0.00' : '-');
-          }
-        }
-      };
-      input.addEventListener('change', actualizarTort);
-      input.addEventListener('input', actualizarTort);
-    });
-
-    // Botón 'i' y clic en celda de costo para Tortillerías (Asignar precio por kilo)
+    // Tortillerías: Abrir modal al dar clic en la fila o en el botón 'i'
     const abrirModalTort = (idx) => {
       if (window.adminFenixApp?.modalManager) {
         window.adminFenixApp.modalManager.openCostoTortilleriaModal(idx, () => {
@@ -810,19 +765,19 @@ export class HojaDiariaModule {
       }
     };
 
+    this.container.querySelectorAll('[data-fila-tort]').forEach(tr => {
+      tr.addEventListener('click', (e) => {
+        e.preventDefault();
+        const idx = parseInt(tr.getAttribute('data-fila-tort'));
+        abrirModalTort(idx);
+      });
+    });
+
     this.container.querySelectorAll('[data-info-tort]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         const idx = parseInt(btn.getAttribute('data-info-tort'));
-        abrirModalTort(idx);
-      });
-    });
-
-    this.container.querySelectorAll('[data-costo-tort]').forEach(td => {
-      td.addEventListener('click', (e) => {
-        e.preventDefault();
-        const idx = parseInt(td.getAttribute('data-costo-tort'));
         abrirModalTort(idx);
       });
     });

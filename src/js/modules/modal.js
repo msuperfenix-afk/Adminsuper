@@ -1461,22 +1461,28 @@ export class ModalManager {
   }
 
   // ==========================================
-  // 17. MODAL: ASIGNAR PRECIO Y CALCULAR COSTO PANADERO (i)
+  // 17. MODAL: CAPTURA COMPLETA Y COSTO PANADERO (i)
+  // Permite ingresar Bolillos, Dulces, Cambios y Precio por Pieza
   // Operación: bolillos + dulces - cambios = piezas a pagar * precio = costo
   // ==========================================
   openCostoPanaderoModal(index, onGuardado = null) {
     const p = stateManager.data.conteoPan?.[index];
     if (!p) return;
 
-    const esEditable = stateManager.esHojaEditable();
+    const esEditable = stateManager.puedeEditarCamposGenerales();
     const proveedor = p.proveedor;
-    const bol = parseFloat(p.bol) || 0;
-    const dul = parseFloat(p.dul) || 0;
-    const camb = parseFloat(p.camb) || 0;
-    const totalPiezas = Math.max(0, bol + dul - camb);
+    const bolActual = (parseFloat(p.bol) || 0) > 0 ? p.bol : '';
+    const dulActual = (parseFloat(p.dul) || 0) > 0 ? p.dul : '';
+    const cambActual = (parseFloat(p.camb) || 0) > 0 ? p.camb : '';
     const precioActual = p.precioPieza || (stateManager.data.preciosGuardadosPan?.[proveedor]) || '';
 
     const formatMoney = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(v || 0);
+
+    const bIni = parseFloat(bolActual) || 0;
+    const dIni = parseFloat(dulActual) || 0;
+    const cIni = parseFloat(cambActual) || 0;
+    const totPiezasIni = Math.max(0, bIni + dIni - cIni);
+    const costoIni = totPiezasIni * (parseFloat(precioActual) || 0);
 
     const body = `
       <div class="costo-info-modal-wrap">
@@ -1486,35 +1492,86 @@ export class ModalManager {
             <strong>${proveedor}</strong>
           </div>
           <div class="costo-info-sub">
-            Cálculo contable por pieza según la fórmula de la libreta física
+            Registra el surtido del día y asigna el precio por pieza.
           </div>
         </div>
 
-        <!-- TARJETA DE FÓRMULA CONTABLE -->
+        <!-- FORMULARIO DE CAPTURA DE CANTIDADES -->
+        <div class="costo-captura-card">
+          <div class="costo-formula-header">
+            <span>📦 SURTIDO DE PIEZAS (ENTREGA Y CAMBIOS)</span>
+          </div>
+          <div class="grid-tres-campos" style="padding: 12px; gap: 10px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="inputModalBol" style="font-size: 0.72rem; font-weight: 700; color: #1e293b;">
+                BOLILLOS (+)
+              </label>
+              <input 
+                type="number" 
+                min="0" 
+                class="form-control text-center font-bold" 
+                id="inputModalBol" 
+                value="${bolActual}" 
+                placeholder="0" 
+                ${esEditable ? 'autofocus' : 'disabled'}>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="inputModalDul" style="font-size: 0.72rem; font-weight: 700; color: #1e293b;">
+                DULCES (+)
+              </label>
+              <input 
+                type="number" 
+                min="0" 
+                class="form-control text-center font-bold" 
+                id="inputModalDul" 
+                value="${dulActual}" 
+                placeholder="0" 
+                ${esEditable ? '' : 'disabled'}>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="inputModalCamb" style="font-size: 0.72rem; font-weight: 700; color: #b91c1c;">
+                CAMBIOS / MERMA (-)
+              </label>
+              <input 
+                type="number" 
+                min="0" 
+                class="form-control text-center font-bold" 
+                id="inputModalCamb" 
+                value="${cambActual}" 
+                placeholder="0" 
+                style="color: #b91c1c;" 
+                ${esEditable ? '' : 'disabled'}>
+            </div>
+          </div>
+        </div>
+
+        <!-- TARJETA DE FÓRMULA CONTABLE VISUALIZADA EN VIVO -->
         <div class="costo-formula-card">
           <div class="costo-formula-header">
-            <span>📐 OPERACIÓN DE PIEZAS</span>
+            <span>📐 OPERACIÓN MATEMÁTICA</span>
             <span class="costo-tag-formula">bolillos + dulces - cambios</span>
           </div>
           <div class="costo-formula-grid">
             <div class="costo-item-col">
-              <span class="costo-item-lbl">Bolillos (+)</span>
-              <strong class="costo-item-num">${bol}</strong>
+              <span class="costo-item-lbl">Bolillos</span>
+              <strong class="costo-item-num" id="displayModalNumBol">${bIni}</strong>
             </div>
             <div class="costo-simbolo-op">+</div>
             <div class="costo-item-col">
-              <span class="costo-item-lbl">Dulces (+)</span>
-              <strong class="costo-item-num">${dul}</strong>
+              <span class="costo-item-lbl">Dulces</span>
+              <strong class="costo-item-num" id="displayModalNumDul">${dIni}</strong>
             </div>
             <div class="costo-simbolo-op">-</div>
             <div class="costo-item-col">
-              <span class="costo-item-lbl">Cambios (-)</span>
-              <strong class="costo-item-num text-red">${camb}</strong>
+              <span class="costo-item-lbl">Cambios</span>
+              <strong class="costo-item-num text-red" id="displayModalNumCamb">${cIni}</strong>
             </div>
             <div class="costo-simbolo-op">=</div>
             <div class="costo-item-col costo-item-resultado">
               <span class="costo-item-lbl">Total Piezas</span>
-              <strong class="costo-item-num-total" id="displayModalTotalPiezas">${totalPiezas}</strong>
+              <strong class="costo-item-num-total" id="displayModalTotalPiezas">${totPiezasIni}</strong>
             </div>
           </div>
         </div>
@@ -1534,12 +1591,12 @@ export class ModalManager {
               id="inputModalPrecioPieza" 
               value="${precioActual}" 
               placeholder="0.00" 
-              ${esEditable ? 'autofocus' : 'disabled'}>
+              ${esEditable ? '' : 'disabled'}>
           </div>
           <p class="ayuda-precio-texto">
             ${esEditable 
-              ? 'Asigna el precio por pieza acordado. El costo se calculará automáticamente multiplicando el total de piezas por este precio.' 
-              : 'Modo solo lectura (hoja histórica).'}
+              ? 'Asigna el precio por pieza acordado. El costo se calculará multiplicando el total de piezas netas por este precio.' 
+              : 'Solo lectura (registrado o fuera de fecha/monto inicial).'}
           </p>
         </div>
 
@@ -1547,72 +1604,103 @@ export class ModalManager {
         <div class="costo-total-destacado-card">
           <div class="costo-total-titulo-sub">COSTO TOTAL DEL PEDIDO:</div>
           <div class="costo-total-numero-grande" id="displayModalCostoPan">
-            ${formatMoney(totalPiezas * (parseFloat(precioActual) || 0))}
+            ${formatMoney(costoIni)}
           </div>
           <div class="costo-total-desglose-linea" id="displayModalDesglosePan">
-            ${totalPiezas} piezas × ${formatMoney(parseFloat(precioActual) || 0)} = ${formatMoney(totalPiezas * (parseFloat(precioActual) || 0))}
+            ${totPiezasIni} piezas × ${formatMoney(parseFloat(precioActual) || 0)} = ${formatMoney(costoIni)}
           </div>
         </div>
       </div>
     `;
 
     const footer = `
-      <button type="button" class="btn-secondary" id="btnCerrarModalPanCosto">Cerrar</button>
-      ${esEditable ? '<button type="button" class="btn-primary" id="btnGuardarModalPanCosto" style="min-width: 140px;">Guardar Precio</button>' : ''}
+      <button type="button" class="btn-secondary" id="btnCerrarModalPanCosto">Cancelar</button>
+      ${esEditable ? '<button type="button" class="btn-primary" id="btnGuardarModalPanCosto" style="min-width: 150px;">Guardar Registro</button>' : ''}
     `;
 
-    this.open(`ℹ️ Cálculo y Costo: ${proveedor}`, body, footer);
+    this.open(`ℹ️ Conteo y Costo: ${proveedor}`, body, footer);
 
-    const inputP = document.getElementById('inputModalPrecioPieza');
+    const inputBol = document.getElementById('inputModalBol');
+    const inputDul = document.getElementById('inputModalDul');
+    const inputCamb = document.getElementById('inputModalCamb');
+    const inputPrecio = document.getElementById('inputModalPrecioPieza');
+
+    const displayNumBol = document.getElementById('displayModalNumBol');
+    const displayNumDul = document.getElementById('displayModalNumDul');
+    const displayNumCamb = document.getElementById('displayModalNumCamb');
+    const displayTotalPiezas = document.getElementById('displayModalTotalPiezas');
     const displayCosto = document.getElementById('displayModalCostoPan');
     const displayDesglose = document.getElementById('displayModalDesglosePan');
 
     const actualizarVistaEnVivo = () => {
-      const precio = parseFloat(inputP?.value) || 0;
-      const costo = totalPiezas * precio;
+      const b = parseFloat(inputBol?.value) || 0;
+      const d = parseFloat(inputDul?.value) || 0;
+      const c = parseFloat(inputCamb?.value) || 0;
+      const precio = parseFloat(inputPrecio?.value) || 0;
+
+      const totalP = Math.max(0, b + d - c);
+      const costo = totalP * precio;
+
+      if (displayNumBol) displayNumBol.textContent = b;
+      if (displayNumDul) displayNumDul.textContent = d;
+      if (displayNumCamb) displayNumCamb.textContent = c;
+      if (displayTotalPiezas) displayTotalPiezas.textContent = totalP;
       if (displayCosto) displayCosto.textContent = formatMoney(costo);
-      if (displayDesglose) displayDesglose.textContent = `${totalPiezas} piezas × ${formatMoney(precio)} = ${formatMoney(costo)}`;
+      if (displayDesglose) displayDesglose.textContent = `${totalP} piezas × ${formatMoney(precio)} = ${formatMoney(costo)}`;
     };
 
-    inputP?.addEventListener('input', actualizarVistaEnVivo);
-    inputP?.addEventListener('change', actualizarVistaEnVivo);
+    [inputBol, inputDul, inputCamb, inputPrecio].forEach(inp => {
+      inp?.addEventListener('input', actualizarVistaEnVivo);
+      inp?.addEventListener('change', actualizarVistaEnVivo);
+    });
 
     document.getElementById('btnCerrarModalPanCosto')?.addEventListener('click', () => this.close());
 
     if (esEditable) {
       document.getElementById('btnGuardarModalPanCosto')?.addEventListener('click', () => {
-        const precio = parseFloat(inputP?.value) || 0;
-        stateManager.guardarPrecioConteoPan(index, precio);
+        stateManager.guardarCapturaPan(index, {
+          bol: inputBol?.value,
+          dul: inputDul?.value,
+          camb: inputCamb?.value,
+          precioPieza: inputPrecio?.value
+        });
         this.close();
         if (onGuardado) onGuardado();
       });
 
-      // Permitir guardar con Enter
-      inputP?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          document.getElementById('btnGuardarModalPanCosto')?.click();
-        }
+      // Guardar con Enter en los campos
+      [inputBol, inputDul, inputCamb, inputPrecio].forEach(inp => {
+        inp?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('btnGuardarModalPanCosto')?.click();
+          }
+        });
       });
     }
   }
 
   // ==========================================
-  // 18. MODAL: ASIGNAR PRECIO Y CALCULAR COSTO TORTILLERÍA (i)
+  // 18. MODAL: CAPTURA COMPLETA Y COSTO TORTILLERÍA (i)
+  // Permite ingresar Nuevas (kg), Cambios (kg) y Precio por Kilo
   // Operación: nuevas - cambios = kilos/piezas a pagar * precio = costo
   // ==========================================
   openCostoTortilleriaModal(index, onGuardado = null) {
     const t = stateManager.data.conteoTortilla?.[index];
     if (!t) return;
 
-    const esEditable = stateManager.esHojaEditable();
+    const esEditable = stateManager.puedeEditarCamposGenerales();
     const proveedor = t.proveedor;
-    const nuev = parseFloat(t.nuev) || 0;
-    const camb = parseFloat(t.camb) || 0;
-    const totalKg = Math.max(0, nuev - camb);
+    const nuevActual = (parseFloat(t.nuev) || 0) > 0 ? t.nuev : '';
+    const cambActual = (parseFloat(t.camb) || 0) > 0 ? t.camb : '';
     const precioActual = t.precioKilo || (stateManager.data.preciosGuardadosTortilla?.[proveedor]) || '';
 
     const formatMoney = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(v || 0);
+
+    const nIni = parseFloat(nuevActual) || 0;
+    const cIni = parseFloat(cambActual) || 0;
+    const totKgIni = Math.max(0, nIni - cIni);
+    const costoIni = totKgIni * (parseFloat(precioActual) || 0);
 
     const body = `
       <div class="costo-info-modal-wrap">
@@ -1622,30 +1710,69 @@ export class ModalManager {
             <strong>${proveedor}</strong>
           </div>
           <div class="costo-info-sub">
-            Cálculo contable por kilo/unidad según la fórmula de la libreta física
+            Registra los kilos nuevos, cambios devueltos y asigna el precio por kilo.
           </div>
         </div>
 
-        <!-- TARJETA DE FÓRMULA CONTABLE -->
+        <!-- FORMULARIO DE CAPTURA DE KILOS -->
+        <div class="costo-captura-card">
+          <div class="costo-formula-header">
+            <span>📦 KILOS RECIBIDOS Y DEVOLUCIONES</span>
+          </div>
+          <div class="grid-dos-campos" style="padding: 12px; gap: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="inputModalNuev" style="font-size: 0.72rem; font-weight: 700; color: #1e293b;">
+                NUEVAS / KILOS SURTIDOS (+)
+              </label>
+              <input 
+                type="number" 
+                step="0.5" 
+                min="0" 
+                class="form-control text-center font-bold" 
+                id="inputModalNuev" 
+                value="${nuevActual}" 
+                placeholder="0.0" 
+                ${esEditable ? 'autofocus' : 'disabled'}>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="inputModalCambTort" style="font-size: 0.72rem; font-weight: 700; color: #b91c1c;">
+                CAMBIOS / MERMA (-)
+              </label>
+              <input 
+                type="number" 
+                step="0.5" 
+                min="0" 
+                class="form-control text-center font-bold" 
+                id="inputModalCambTort" 
+                value="${cambActual}" 
+                placeholder="0.0" 
+                style="color: #b91c1c;" 
+                ${esEditable ? '' : 'disabled'}>
+            </div>
+          </div>
+        </div>
+
+        <!-- TARJETA DE FÓRMULA CONTABLE VISUALIZADA EN VIVO -->
         <div class="costo-formula-card">
           <div class="costo-formula-header">
-            <span>📐 OPERACIÓN DE TORTILLA</span>
+            <span>📐 OPERACIÓN MATEMÁTICA</span>
             <span class="costo-tag-formula">nuevas - cambios</span>
           </div>
           <div class="costo-formula-grid" style="grid-template-columns: 1fr auto 1fr auto 1.3fr;">
             <div class="costo-item-col">
-              <span class="costo-item-lbl">Nuevas (+)</span>
-              <strong class="costo-item-num">${nuev} kg</strong>
+              <span class="costo-item-lbl">Nuevas</span>
+              <strong class="costo-item-num" id="displayModalNumNuev">${nIni} kg</strong>
             </div>
             <div class="costo-simbolo-op">-</div>
             <div class="costo-item-col">
-              <span class="costo-item-lbl">Cambios (-)</span>
-              <strong class="costo-item-num text-red">${camb} kg</strong>
+              <span class="costo-item-lbl">Cambios</span>
+              <strong class="costo-item-num text-red" id="displayModalNumCambTort">${cIni} kg</strong>
             </div>
             <div class="costo-simbolo-op">=</div>
             <div class="costo-item-col costo-item-resultado">
-              <span class="costo-item-lbl">Total Kilos a Pagar</span>
-              <strong class="costo-item-num-total" id="displayModalTotalKg">${totalKg} kg</strong>
+              <span class="costo-item-lbl">Total Kilos</span>
+              <strong class="costo-item-num-total" id="displayModalTotalKg">${totKgIni} kg</strong>
             </div>
           </div>
         </div>
@@ -1665,12 +1792,12 @@ export class ModalManager {
               id="inputModalPrecioKilo" 
               value="${precioActual}" 
               placeholder="0.00" 
-              ${esEditable ? 'autofocus' : 'disabled'}>
+              ${esEditable ? '' : 'disabled'}>
           </div>
           <p class="ayuda-precio-texto">
             ${esEditable 
               ? 'Asigna el precio por kilo acordado. El costo se calculará multiplicando los kilos netos a pagar por este precio.' 
-              : 'Modo solo lectura (hoja histórica).'}
+              : 'Solo lectura (registrado o fuera de fecha/monto inicial).'}
           </p>
         </div>
 
@@ -1678,52 +1805,73 @@ export class ModalManager {
         <div class="costo-total-destacado-card">
           <div class="costo-total-titulo-sub">COSTO TOTAL DEL PEDIDO:</div>
           <div class="costo-total-numero-grande" id="displayModalCostoTort">
-            ${formatMoney(totalKg * (parseFloat(precioActual) || 0))}
+            ${formatMoney(costoIni)}
           </div>
           <div class="costo-total-desglose-linea" id="displayModalDesgloseTort">
-            ${totalKg} kg × ${formatMoney(parseFloat(precioActual) || 0)} = ${formatMoney(totalKg * (parseFloat(precioActual) || 0))}
+            ${totKgIni} kg × ${formatMoney(parseFloat(precioActual) || 0)} = ${formatMoney(costoIni)}
           </div>
         </div>
       </div>
     `;
 
     const footer = `
-      <button type="button" class="btn-secondary" id="btnCerrarModalTortCosto">Cerrar</button>
-      ${esEditable ? '<button type="button" class="btn-primary" id="btnGuardarModalTortCosto" style="min-width: 140px;">Guardar Precio</button>' : ''}
+      <button type="button" class="btn-secondary" id="btnCerrarModalTortCosto">Cancelar</button>
+      ${esEditable ? '<button type="button" class="btn-primary" id="btnGuardarModalTortCosto" style="min-width: 150px;">Guardar Registro</button>' : ''}
     `;
 
-    this.open(`ℹ️ Cálculo y Costo: ${proveedor}`, body, footer);
+    this.open(`ℹ️ Conteo y Costo: ${proveedor}`, body, footer);
 
-    const inputP = document.getElementById('inputModalPrecioKilo');
+    const inputNuev = document.getElementById('inputModalNuev');
+    const inputCamb = document.getElementById('inputModalCambTort');
+    const inputPrecio = document.getElementById('inputModalPrecioKilo');
+
+    const displayNumNuev = document.getElementById('displayModalNumNuev');
+    const displayNumCamb = document.getElementById('displayModalNumCambTort');
+    const displayTotalKg = document.getElementById('displayModalTotalKg');
     const displayCosto = document.getElementById('displayModalCostoTort');
     const displayDesglose = document.getElementById('displayModalDesgloseTort');
 
     const actualizarVistaEnVivo = () => {
-      const precio = parseFloat(inputP?.value) || 0;
+      const n = parseFloat(inputNuev?.value) || 0;
+      const c = parseFloat(inputCamb?.value) || 0;
+      const precio = parseFloat(inputPrecio?.value) || 0;
+
+      const totalKg = Math.max(0, n - c);
       const costo = totalKg * precio;
+
+      if (displayNumNuev) displayNumNuev.textContent = `${n} kg`;
+      if (displayNumCamb) displayNumCamb.textContent = `${c} kg`;
+      if (displayTotalKg) displayTotalKg.textContent = `${totalKg} kg`;
       if (displayCosto) displayCosto.textContent = formatMoney(costo);
       if (displayDesglose) displayDesglose.textContent = `${totalKg} kg × ${formatMoney(precio)} = ${formatMoney(costo)}`;
     };
 
-    inputP?.addEventListener('input', actualizarVistaEnVivo);
-    inputP?.addEventListener('change', actualizarVistaEnVivo);
+    [inputNuev, inputCamb, inputPrecio].forEach(inp => {
+      inp?.addEventListener('input', actualizarVistaEnVivo);
+      inp?.addEventListener('change', actualizarVistaEnVivo);
+    });
 
     document.getElementById('btnCerrarModalTortCosto')?.addEventListener('click', () => this.close());
 
     if (esEditable) {
       document.getElementById('btnGuardarModalTortCosto')?.addEventListener('click', () => {
-        const precio = parseFloat(inputP?.value) || 0;
-        stateManager.guardarPrecioConteoTortilla(index, precio);
+        stateManager.guardarCapturaTortilla(index, {
+          nuev: inputNuev?.value,
+          camb: inputCamb?.value,
+          precioKilo: inputPrecio?.value
+        });
         this.close();
         if (onGuardado) onGuardado();
       });
 
-      // Permitir guardar con Enter
-      inputP?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          document.getElementById('btnGuardarModalTortCosto')?.click();
-        }
+      // Guardar con Enter en los campos
+      [inputNuev, inputCamb, inputPrecio].forEach(inp => {
+        inp?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('btnGuardarModalTortCosto')?.click();
+          }
+        });
       });
     }
   }

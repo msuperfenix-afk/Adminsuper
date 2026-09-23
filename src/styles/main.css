@@ -835,11 +835,54 @@ input, button, select, textarea {
   line-height: 1;
 }
 
+/* Filas Clickeables de Conteo Pan y Tortilla (Abre Modal de Captura y Precio) */
+.fila-conteo-clickeable {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.fila-conteo-clickeable:hover {
+  background-color: #f8fafc;
+}
+
+.fila-conteo-clickeable:hover td {
+  background-color: #f1f5f9;
+}
+
+.fila-conteo-clickeable:active {
+  background-color: #e2e8f0;
+}
+
+.celda-conteo-val {
+  font-size: 0.8rem;
+  padding: 5px 6px;
+  color: #0f172a;
+  user-select: none;
+}
+
+.badge-hint-click-info {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 600;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.2px;
+}
+
+.costo-captura-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 .font-bold { font-weight: 700; }
-.text-red { color: #334155; }
-.text-blue { color: #334155; }
+.text-red { color: #b91c1c; }
+.text-blue { color: #1e3a8a; }
 
 .fila-con-pago {
   background-color: #ffffff;

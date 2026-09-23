@@ -788,6 +788,71 @@ class StateManager {
     }
   }
 
+  guardarCapturaPan(index, { bol, dul, camb, precioPieza }) {
+    if (!this.puedeEditarCamposGenerales()) return false;
+    if (this.data.conteoPan && this.data.conteoPan[index]) {
+      const p = this.data.conteoPan[index];
+      p.proveedor = PROVEEDORES_PAN_OFICIALES[index] || p.proveedor;
+
+      const numBol = (bol !== '' && bol !== null && bol !== undefined) ? (parseFloat(bol) || 0) : '';
+      const numDul = (dul !== '' && dul !== null && dul !== undefined) ? (parseFloat(dul) || 0) : '';
+      const numCamb = (camb !== '' && camb !== null && camb !== undefined) ? (parseFloat(camb) || 0) : '';
+      const precio = parseFloat(precioPieza) || 0;
+
+      p.bol = numBol > 0 ? numBol : '';
+      p.dul = numDul > 0 ? numDul : '';
+      p.camb = numCamb > 0 ? numCamb : '';
+      p.precioPieza = precio > 0 ? precio : '';
+
+      const bVal = parseFloat(p.bol) || 0;
+      const dVal = parseFloat(p.dul) || 0;
+      const cVal = parseFloat(p.camb) || 0;
+      const tot = Math.max(0, bVal + dVal - cVal);
+      p.total = (bVal > 0 || dVal > 0 || cVal > 0) ? tot : '';
+      p.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && (bVal > 0 || dVal > 0) ? 0 : '');
+
+      if (!this.data.preciosGuardadosPan) this.data.preciosGuardadosPan = {};
+      if (p.proveedor && precio > 0) {
+        this.data.preciosGuardadosPan[p.proveedor] = precio;
+      }
+
+      this.saveState();
+      return true;
+    }
+    return false;
+  }
+
+  guardarCapturaTortilla(index, { nuev, camb, precioKilo }) {
+    if (!this.puedeEditarCamposGenerales()) return false;
+    if (this.data.conteoTortilla && this.data.conteoTortilla[index]) {
+      const t = this.data.conteoTortilla[index];
+      t.proveedor = PROVEEDORES_TORTILLA_OFICIALES[index] || t.proveedor;
+
+      const numNuev = (nuev !== '' && nuev !== null && nuev !== undefined) ? (parseFloat(nuev) || 0) : '';
+      const numCamb = (camb !== '' && camb !== null && camb !== undefined) ? (parseFloat(camb) || 0) : '';
+      const precio = parseFloat(precioKilo) || 0;
+
+      t.nuev = numNuev > 0 ? numNuev : '';
+      t.camb = numCamb > 0 ? numCamb : '';
+      t.precioKilo = precio > 0 ? precio : '';
+
+      const nVal = parseFloat(t.nuev) || 0;
+      const cVal = parseFloat(t.camb) || 0;
+      const tot = Math.max(0, nVal - cVal);
+      t.total = (nVal > 0 || cVal > 0) ? tot : '';
+      t.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && nVal > 0 ? 0 : '');
+
+      if (!this.data.preciosGuardadosTortilla) this.data.preciosGuardadosTortilla = {};
+      if (t.proveedor && precio > 0) {
+        this.data.preciosGuardadosTortilla[t.proveedor] = precio;
+      }
+
+      this.saveState();
+      return true;
+    }
+    return false;
+  }
+
   // 3. Compras y Proveedores Pagados (Hoja Diaria)
   updateCompraProveedor(index, campoOVal, valor) {
     if (!this.puedeEditarCamposGenerales()) return;
