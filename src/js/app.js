@@ -34,7 +34,9 @@ class App {
       this.pipelineModule = new PipelineModule(
         'pipelineViewContainer', 
         (prov) => {
-          this.modalManager.openProveedorModal(prov);
+          this.modalManager.openProveedorModal(prov, () => {
+            this.pipelineModule.render();
+          });
         },
         (prov) => {
           this.modalManager.openListaPedidoModal(prov, () => {

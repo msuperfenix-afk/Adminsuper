@@ -57,11 +57,11 @@ export class ModalManager {
   // ==========================================
   // 1. MODAL: AGREGAR / EDITAR PROVEEDOR (SEMANAL)
   // ==========================================
-  openProveedorModal(proveedor = null) {
-    const esEdit = !!(proveedor && (proveedor.id || proveedor.proveedor));
+  openProveedorModal(proveedor = null, onGuardado = null) {
+    const isEdit = !!(proveedor && (proveedor.id || proveedor.proveedor));
     const diaDefault = (proveedor && proveedor.dia) ? proveedor.dia : 'lunes';
     const diaNombre = DIAS_SEMANA.find(d => d.id === diaDefault)?.nombre || diaDefault;
-    const title = esEdit ? `✏️ Editar Proveedor: ${proveedor.proveedor}` : `➕ Nuevo Proveedor (${diaNombre})`;
+    const title = isEdit ? `✏️ Editar Proveedor: ${proveedor.proveedor}` : `➕ Nuevo Proveedor (${diaNombre})`;
 
     const p = {
       dia: diaDefault,
@@ -181,6 +181,7 @@ export class ModalManager {
       }
 
       this.close();
+      if (onGuardado) onGuardado();
     });
   }
 
