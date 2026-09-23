@@ -31,9 +31,17 @@ class App {
 
     try {
       // 3. Módulo de Pipeline Semanal (Lunes a Domingo)
-      this.pipelineModule = new PipelineModule('pipelineViewContainer', (prov) => {
-        this.modalManager.openProveedorModal(prov);
-      });
+      this.pipelineModule = new PipelineModule(
+        'pipelineViewContainer', 
+        (prov) => {
+          this.modalManager.openProveedorModal(prov);
+        },
+        (prov) => {
+          this.modalManager.openListaPedidoModal(prov, () => {
+            this.pipelineModule.render();
+          });
+        }
+      );
     } catch (e) {
       console.error('Error al inicializar PipelineModule:', e);
     }

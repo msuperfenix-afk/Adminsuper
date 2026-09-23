@@ -1861,5 +1861,195 @@ export class ModalManager {
       });
     }
   }
+
+  // ==========================================
+  // MODAL: LISTA DE PEDIDO DE PROVEEDOR (AGENDA SEMANAL)
+  // ==========================================
+  openListaPedidoModal(proveedor, onGuardado = null) {
+    if (!proveedor) return;
+    const p = proveedor;
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(v || 0);
+
+    const itemsPedido = Array.isArray(p.listaPedido) ? JSON.parse(JSON.stringify(p.listaPedido)) : [];
+
+    const badgeEstado = p.yaVino 
+      ? `<span class="badge badge-success" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; font-size:0.8rem; padding: 4px 10px; border-radius: 9999px;">✓ Llegó hoy a las ${p.horaVino || 'hora no registrada'}${p.montoPagadoReal ? ` (${fmt(p.montoPagadoReal)} pagados)` : ''}</span>`
+      : `<span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-size:0.8rem; padding: 4px 10px; border-radius: 9999px;">⏳ Pendiente de visita (${p.dia ? p.dia.toUpperCase() : 'PROGRAMADO'})</span>`;
+
+    const renderFilas = () => {
+      if (itemsPedido.length === 0) {
+        return `<tr><td colspan="4" style="text-align:center; padding: 18px; color:#94a3b8; font-style:italic;">No hay productos registrados en el pedido. Haz clic en "+ Agregar Producto" para añadir.</td></tr>`;
+      }
+      return itemsPedido.map((item, idx) => `
+        <tr data-idx="${idx}" class="fila-item-pedido">
+          <td style="padding: 8px 10px;">
+            <input type="text" class="form-control item-prod-nombre" value="${item.producto || ''}" placeholder="Ej. Coca-Cola 600ml" style="font-size:0.88rem; padding: 6px 10px;">
+          </td>
+          <td style="padding: 8px 10px; width: 140px;">
+            <input type="text" class="form-control item-prod-cant" value="${item.cantidad || ''}" placeholder="Ej. 3 rejas" style="font-size:0.88rem; padding: 6px 10px;">
+          </td>
+          <td style="padding: 8px 10px;">
+            <input type="text" class="form-control item-prod-notas" value="${item.notas || ''}" placeholder="Observaciones / variedad" style="font-size:0.88rem; padding: 6px 10px;">
+          </td>
+          <td style="padding: 8px 10px; text-align: center; width: 44px;">
+            <button type="button" class="btn-eliminar-item-pedido" data-idx="${idx}" title="Eliminar fila" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1.1rem; padding:4px 8px; border-radius:4px;">✕</button>
+          </td>
+        </tr>
+      `).join('');
+    };
+
+    const body = `
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Cabecera de estado -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+          <div>
+            <div style="font-size:1.15rem; font-weight:700; color:#0f172a;">${p.proveedor}</div>
+            <div style="font-size:0.82rem; color:#64748b;">Visita habitual: <strong style="color:#334155; text-transform:capitalize;">${p.dia || 'Día variable'}</strong> ${p.hora ? `• ${p.hora}` : ''} • Categoría: <span style="text-transform:capitalize;">${p.categoria || 'General'}</span></div>
+          </div>
+          <div>${badgeEstado}</div>
+        </div>
+
+        <!-- Cajas de Métricas: Presupuesto y Venta Anterior -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">
+            <label style="display:block; font-size:0.75rem; font-weight:600; text-transform:uppercase; color:#64748b; margin-bottom:4px;">Presupuesto Aprox.</label>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-weight:700; color:#334155;">$</span>
+              <input type="number" id="inputPresupuestoAprox" class="form-control" value="${p.presupuestoAprox || 0}" step="10" min="0" style="font-size:1rem; font-weight:700; padding:6px 10px; color:#0f172a;">
+            </div>
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:4px;">Estimado a pagar al proveedor</div>
+          </div>
+
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">
+            <label style="display:block; font-size:0.75rem; font-weight:600; text-transform:uppercase; color:#64748b; margin-bottom:4px;">Registro Venta Anterior</label>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-weight:700; color:#334155;">$</span>
+              <input type="number" id="inputVentaAnterior" class="form-control" value="${p.ventaAnterior || 0}" step="10" min="0" style="font-size:1rem; font-weight:700; padding:6px 10px; color:#0f172a;">
+            </div>
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:4px;">Base de compra o venta previa</div>
+          </div>
+
+          ${p.yaVino ? `
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px;">
+              <label style="display:block; font-size:0.75rem; font-weight:600; text-transform:uppercase; color:#166534; margin-bottom:4px;">Registrado en Hoja Diaria</label>
+              <div style="font-size:1.1rem; font-weight:700; color:#15803d;">${fmt(p.montoPagadoReal)}</div>
+              <div style="font-size:0.72rem; color:#166534; margin-top:4px;">Hora de llegada: <strong>${p.horaVino || 'Registrado'}</strong></div>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Sección Lista de Pedido -->
+        <div style="border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+            <div style="font-size:0.88rem; font-weight:700; color:#1e293b;">
+              📋 Lista de lo que se va a pedir (<span id="spanTotalArticulos">${itemsPedido.length}</span>)
+            </div>
+            <button type="button" id="btnAgregarFilaPedido" class="btn-secondary" style="font-size:0.8rem; padding:4px 10px; cursor:pointer;">
+              + Agregar Producto
+            </button>
+          </div>
+          <div style="max-height: 280px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size:0.86rem;">
+              <thead>
+                <tr style="background:#f1f5f9; text-align:left; color:#475569; font-size:0.75rem; text-transform:uppercase;">
+                  <th style="padding: 8px 10px;">Producto / Descripción</th>
+                  <th style="padding: 8px 10px; width:140px;">Cantidad</th>
+                  <th style="padding: 8px 10px;">Notas / Variedad</th>
+                  <th style="padding: 8px 10px; width:44px; text-align:center;"></th>
+                </tr>
+              </thead>
+              <tbody id="tbodyPedidoItems">
+                ${renderFilas()}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Notas generales del proveedor -->
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-size:0.8rem; color:#475569;">Notas Adicionales del Proveedor</label>
+          <input type="text" id="inputNotasProveedor" class="form-control" value="${p.notas || ''}" placeholder="Ej. Llega en la mañana, pedir factura, etc." style="font-size:0.85rem;">
+        </div>
+      </div>
+    `;
+
+    const footer = `
+      <button type="button" class="btn-secondary" id="btnCerrarModalPedido">Cerrar</button>
+      <button type="button" class="btn-primary" id="btnGuardarPedidoModal" style="min-width: 150px;">Guardar Pedido</button>
+    `;
+
+    this.open(`📋 Pedido: ${p.proveedor}`, body, footer);
+
+    const tbody = document.getElementById('tbodyPedidoItems');
+    const spanTotal = document.getElementById('spanTotalArticulos');
+
+    const sincronizarItemsDesdeDOM = () => {
+      const filas = tbody.querySelectorAll('.fila-item-pedido');
+      const nuevosItems = [];
+      filas.forEach(f => {
+        const prod = f.querySelector('.item-prod-nombre')?.value.trim();
+        const cant = f.querySelector('.item-prod-cant')?.value.trim();
+        const notas = f.querySelector('.item-prod-notas')?.value.trim();
+        if (prod || cant || notas) {
+          nuevosItems.push({
+            id: 'item-' + Math.random().toString(36).substr(2, 7),
+            producto: prod,
+            cantidad: cant,
+            notas: notas
+          });
+        }
+      });
+      return nuevosItems;
+    };
+
+    const rebindEliminar = () => {
+      tbody.querySelectorAll('.btn-eliminar-item-pedido').forEach(btn => {
+        btn.onclick = (e) => {
+          const idx = parseInt(e.currentTarget.getAttribute('data-idx'));
+          itemsPedido.splice(idx, 1);
+          tbody.innerHTML = renderFilas();
+          if (spanTotal) spanTotal.textContent = itemsPedido.length;
+          rebindEliminar();
+        };
+      });
+    };
+    rebindEliminar();
+
+    document.getElementById('btnAgregarFilaPedido')?.addEventListener('click', () => {
+      const actuales = sincronizarItemsDesdeDOM();
+      actuales.push({
+        id: 'item-' + Math.random().toString(36).substr(2, 7),
+        producto: '',
+        cantidad: '',
+        notas: ''
+      });
+      itemsPedido.length = 0;
+      itemsPedido.push(...actuales);
+      tbody.innerHTML = renderFilas();
+      if (spanTotal) spanTotal.textContent = itemsPedido.length;
+      rebindEliminar();
+      const inputs = tbody.querySelectorAll('.item-prod-nombre');
+      if (inputs.length > 0) inputs[inputs.length - 1].focus();
+    });
+
+    document.getElementById('btnCerrarModalPedido')?.addEventListener('click', () => this.close());
+
+    document.getElementById('btnGuardarPedidoModal')?.addEventListener('click', () => {
+      const finalItems = sincronizarItemsDesdeDOM();
+      const nuevoPresupuesto = parseFloat(document.getElementById('inputPresupuestoAprox')?.value) || 0;
+      const nuevaVentaAnterior = parseFloat(document.getElementById('inputVentaAnterior')?.value) || 0;
+      const nuevasNotas = document.getElementById('inputNotasProveedor')?.value.trim() || '';
+
+      stateManager.updateProveedorPedido(p.id, finalItems);
+      stateManager.updateProveedorAgenda(p.id, {
+        presupuestoAprox: nuevoPresupuesto,
+        ventaAnterior: nuevaVentaAnterior,
+        notas: nuevasNotas
+      });
+
+      this.close();
+      if (onGuardado) onGuardado();
+    });
+  }
 }
 

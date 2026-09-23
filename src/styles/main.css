@@ -1376,6 +1376,74 @@ input, button, select, textarea {
 .status-pagado { background-color: #fef2f2; color: #b91c1c; font-weight: 800; }
 .status-no-llego { background-color: #fee2e2; color: #991b1b; }
 
+/* Proveedor que ya vino (rayado / tachado conectado con Hoja Diaria) */
+.deal-card.proveedor-vino {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  border-left: 4px solid #10b981;
+  opacity: 0.88;
+}
+
+.deal-card.proveedor-vino:hover {
+  opacity: 1;
+  border-color: #10b981;
+}
+
+.nombre-prov-tachado {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: #64748b;
+  color: #64748b !important;
+}
+
+.badge-vino-hora {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* Columna destacada de Mañana y Hoy */
+.kanban-column.col-manana {
+  border: 2px solid #0284c7;
+}
+
+.kanban-column.col-manana .column-header {
+  background-color: #f0f9ff;
+  border-bottom: 2px solid #0284c7;
+}
+
+.kanban-column.col-hoy {
+  border: 2px solid #10b981;
+}
+
+.kanban-column.col-hoy .column-header {
+  background-color: #f0fdf4;
+  border-bottom: 2px solid #10b981;
+}
+
+.badge-dia-destacado {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.badge-dia-destacado.manana {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.badge-dia-destacado.hoy {
+  background: #10b981;
+  color: #ffffff;
+}
+
 /* Modales */
 .modal-overlay {
   position: fixed;

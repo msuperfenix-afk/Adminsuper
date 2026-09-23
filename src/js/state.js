@@ -217,19 +217,254 @@ const SEED_DATA = {
 
   // 9. Agenda Semanal (Pipeline Lunes a Domingo)
   proveedores: [
-    { id: 'p-1', dia: 'lunes', proveedor: 'Coca-Cola', hora: '09:00', tipoPago: 'Transferencia', preventaPresupuesto: 6500, compra: 6320, estado: 'pagado', categoria: 'refrescos' },
-    { id: 'p-2', dia: 'lunes', proveedor: 'Bimbo', hora: '10:30', tipoPago: 'Efectivo', preventaPresupuesto: 2800, compra: 2800, estado: 'pagado', categoria: 'panaderia' },
-    { id: 'p-3', dia: 'martes', proveedor: 'Tortilla La Ideal', hora: '08:00', tipoPago: 'Efectivo', preventaPresupuesto: 440, compra: 440, estado: 'pagado', categoria: 'abarrotes' },
-    { id: 'p-4', dia: 'martes', proveedor: 'Pan Mirella', hora: '08:30', tipoPago: 'Efectivo', preventaPresupuesto: 275, compra: 275, estado: 'pagado', categoria: 'panaderia' },
-    { id: 'p-5', dia: 'martes', proveedor: 'Pan Espacio', hora: '09:00', tipoPago: 'Efectivo', preventaPresupuesto: 380, compra: 380, estado: 'pagado', categoria: 'panaderia' },
-    { id: 'p-6', dia: 'martes', proveedor: 'Pan Celia', hora: '09:15', tipoPago: 'Efectivo', preventaPresupuesto: 467, compra: 467, estado: 'pagado', categoria: 'panaderia' },
-    { id: 'p-7', dia: 'martes', proveedor: 'Pepsi', hora: '11:00', tipoPago: 'Efectivo', preventaPresupuesto: 2600, compra: 2611, estado: 'pagado', categoria: 'refrescos' },
-    { id: 'p-8', dia: 'martes', proveedor: 'Lala', hora: '12:30', tipoPago: 'Efectivo', preventaPresupuesto: 1200, compra: 1180, estado: 'pagado', categoria: 'lacteos' },
-    { id: 'p-9', dia: 'miercoles', proveedor: 'Cerveza Corona', hora: '10:00', tipoPago: 'Transferencia', preventaPresupuesto: 15775, compra: 15775, estado: 'programado', categoria: 'cerveza' },
-    { id: 'p-10', dia: 'jueves', proveedor: 'Gamesa / Sabritas', hora: '11:30', tipoPago: 'Efectivo', preventaPresupuesto: 1200, compra: 1017, estado: 'programado', categoria: 'botanas' },
-    { id: 'p-11', dia: 'viernes', proveedor: 'Huevo San Juan', hora: '10:00', tipoPago: 'Efectivo', preventaPresupuesto: 1100, compra: 1036, estado: 'programado', categoria: 'abarrotes' },
-    { id: 'p-12', dia: 'sabado', proveedor: 'Bonafont', hora: '09:30', tipoPago: 'Efectivo', preventaPresupuesto: 600, compra: 599, estado: 'programado', categoria: 'refrescos' },
-    { id: 'p-13', dia: 'domingo', proveedor: 'Hielo y Extras', hora: '08:00', tipoPago: 'Efectivo', preventaPresupuesto: 800, compra: 0, estado: 'programado', categoria: 'abarrotes' }
+    {
+      id: 'p-1',
+      dia: 'lunes',
+      proveedor: 'Coca-Cola',
+      hora: '09:00',
+      tipoPago: 'Transferencia',
+      presupuestoAprox: 6500,
+      preventaPresupuesto: 6500,
+      ventaAnterior: 6320,
+      compra: 6320,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'refrescos',
+      listaPedido: [
+        { id: 'item-1', producto: 'Coca-Cola 600ml No Retornable', cantidad: '3 cajas', notas: 'Alta rotación' },
+        { id: 'item-2', producto: 'Coca-Cola 2.5L Retornable', cantidad: '4 cajas', notas: 'Tener envases listos' },
+        { id: 'item-3', producto: 'Sprite 600ml', cantidad: '1 caja', notas: '' },
+        { id: 'item-4', producto: 'Agua Ciel 1L', cantidad: '2 paquetes', notas: '' }
+      ]
+    },
+    {
+      id: 'p-2',
+      dia: 'lunes',
+      proveedor: 'Bimbo',
+      hora: '10:30',
+      tipoPago: 'Efectivo',
+      presupuestoAprox: 2800,
+      preventaPresupuesto: 2800,
+      ventaAnterior: 2650,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'panaderia',
+      listaPedido: [
+        { id: 'item-1', producto: 'Pan Blanco Grande', cantidad: '15 pzas', notas: '' },
+        { id: 'item-2', producto: 'Pan Integral Grande', cantidad: '10 pzas', notas: '' },
+        { id: 'item-3', producto: 'Medias Noches Bimbo', cantidad: '8 paq', notas: '' },
+        { id: 'item-4', producto: 'Donas Glaseadas / Espolvoreadas', cantidad: '12 pzas', notas: 'Revisar fecha caducidad' }
+      ]
+    },
+    {
+      id: 'p-3',
+      dia: 'martes',
+      proveedor: 'Tortilla La Ideal',
+      hora: '08:00',
+      tipoPago: 'Efectivo',
+      presupuestoAprox: 440,
+      preventaPresupuesto: 440,
+      ventaAnterior: 440,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'abarrotes',
+      listaPedido: [
+        { id: 'item-1', producto: 'Kilos de Tortilla Caliente', cantidad: '20 kg', notas: 'Entrega temprana 8:00 am' }
+      ]
+    },
+    {
+      id: 'p-4',
+      dia: 'martes',
+      proveedor: 'Pan Mirella',
+      hora: '08:30',
+      tipoPago: 'Efectivo',
+      presupuestoAprox: 275,
+      preventaPresupuesto: 275,
+      ventaAnterior: 275,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'panaderia',
+      listaPedido: [
+        { id: 'item-1', producto: 'Bolillo Tradicional', cantidad: '40 pzas', notas: '' },
+        { id: 'item-2', producto: 'Pan Dulce Surtido', cantidad: '25 pzas', notas: 'Conchas y cuernos' }
+      ]
+    },
+    {
+      id: 'p-5',
+      dia: 'martes',
+      proveedor: 'Pepsi',
+      hora: '11:00',
+      tipoPago: 'Efectivo',
+      presupuestoAprox: 2600,
+      preventaPresupuesto: 2600,
+      ventaAnterior: 2611,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'refrescos',
+      listaPedido: [
+        { id: 'item-1', producto: 'Pepsi 600ml Desechable', cantidad: '2 cajas', notas: '' },
+        { id: 'item-2', producto: 'Manzanita Sol 600ml', cantidad: '2 cajas', notas: '' },
+        { id: 'item-3', producto: 'Mirinda 600ml', cantidad: '1 caja', notas: '' },
+        { id: 'item-4', producto: 'Electrolit / Gatorade', cantidad: '12 pzas', notas: 'Sabores uva y naranja' }
+      ]
+    },
+    {
+      id: 'p-6',
+      dia: 'martes',
+      proveedor: 'Lala',
+      hora: '12:30',
+      tipoPago: 'Efectivo',
+      presupuestoAprox: 1200,
+      preventaPresupuesto: 1200,
+      ventaAnterior: 1180,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'lacteos',
+      listaPedido: [
+        { id: 'item-1', producto: 'Leche Entera Lala 1L', cantidad: '24 pzas', notas: '' },
+        { id: 'item-2', producto: 'Leche Deslactosada Lala 1L', cantidad: '18 pzas', notas: '' },
+        { id: 'item-3', producto: 'Yoghurt Bebible Surtido', cantidad: '12 pzas', notas: 'Fresa y durazno' }
+      ]
+    },
+    {
+      id: 'p-7',
+      dia: 'miercoles',
+      proveedor: 'Cerveza Corona',
+      hora: '10:00',
+      tipoPago: 'Transferencia',
+      presupuestoAprox: 15775,
+      preventaPresupuesto: 15775,
+      ventaAnterior: 14800,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'cerveza',
+      listaPedido: [
+        { id: 'item-1', producto: 'Corona Extra 355ml Mega / Cuartito', cantidad: '10 cartones', notas: 'Revisar envases retornables' },
+        { id: 'item-2', producto: 'Victoria 355ml', cantidad: '8 cartones', notas: '' },
+        { id: 'item-3', producto: 'Modelo Especial Lata 355ml', cantidad: '5 planchas', notas: '' }
+      ]
+    },
+    {
+      id: 'p-8',
+      dia: 'miercoles',
+      proveedor: 'Bimbo',
+      hora: '10:30',
+      tipoPago: 'Efectivo',
+      presupuestoAprox: 2800,
+      preventaPresupuesto: 2800,
+      ventaAnterior: 2750,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'panaderia',
+      listaPedido: [
+        { id: 'item-1', producto: 'Pan Blanco Grande', cantidad: '12 pzas', notas: '' },
+        { id: 'item-2', producto: 'Bimbollos 8 pzas', cantidad: '6 paq', notas: '' },
+        { id: 'item-3', producto: 'Pan Tostado Clásico', cantidad: '8 paq', notas: '' }
+      ]
+    },
+    {
+      id: 'p-9',
+      dia: 'jueves',
+      proveedor: 'Gamesa / Sabritas',
+      hora: '11:30',
+      tipoPago: 'Efectivo',
+      presupuestoAprox: 1200,
+      preventaPresupuesto: 1200,
+      ventaAnterior: 1017,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'botanas',
+      listaPedido: [
+        { id: 'item-1', producto: 'Sabritas Sal Clásicas', cantidad: '15 pzas', notas: 'Tamaño botana' },
+        { id: 'item-2', producto: 'Doritos Nacho', cantidad: '15 pzas', notas: '' },
+        { id: 'item-3', producto: 'Galletas Marías Gamesa', cantidad: '10 rollos', notas: '' },
+        { id: 'item-4', producto: 'Emperador Chocolate', cantidad: '12 paq', notas: '' }
+      ]
+    },
+    {
+      id: 'p-10',
+      dia: 'viernes',
+      proveedor: 'Huevo San Juan',
+      hora: '10:00',
+      tipoPago: 'Efectivo',
+      presupuestoAprox: 1100,
+      preventaPresupuesto: 1100,
+      ventaAnterior: 1036,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'abarrotes',
+      listaPedido: [
+        { id: 'item-1', producto: 'Caja Huevo Blanco San Juan 360 pzas', cantidad: '1 caja grande', notas: 'Revisar que no venga roto' }
+      ]
+    },
+    {
+      id: 'p-11',
+      dia: 'sabado',
+      proveedor: 'Bonafont',
+      hora: '09:30',
+      tipoPago: 'Efectivo',
+      presupuestoAprox: 600,
+      preventaPresupuesto: 600,
+      ventaAnterior: 599,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'refrescos',
+      listaPedido: [
+        { id: 'item-1', producto: 'Garrafones de Agua 20L', cantidad: '15 garrafones', notas: 'Cambio de envases limpios' },
+        { id: 'item-2', producto: 'Botellas Agua 1.5L', cantidad: '2 paquetes', notas: '' }
+      ]
+    },
+    {
+      id: 'p-12',
+      dia: 'domingo',
+      proveedor: 'Hielo y Extras',
+      hora: '08:00',
+      tipoPago: 'Efectivo',
+      presupuestoAprox: 800,
+      preventaPresupuesto: 800,
+      ventaAnterior: 750,
+      compra: 0,
+      estado: 'programado',
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      categoria: 'abarrotes',
+      listaPedido: [
+        { id: 'item-1', producto: 'Bolsas de Hielo en Cubo 5kg', cantidad: '15 bolsas', notas: 'Para el conservador principal' }
+      ]
+    }
   ],
 
   // 10. Compatibilidad con el módulo de operaciones analíticas (CajaOperaciones)
@@ -315,6 +550,7 @@ class StateManager {
   constructor() {
     this.data = this.loadState();
     this.listeners = [];
+    this.sincronizarProveedoresDesdeHoja();
   }
 
   loadState() {
@@ -482,6 +718,20 @@ class StateManager {
             }
           });
         }
+
+        if (Array.isArray(merged.proveedores)) {
+          merged.proveedores.forEach(p => {
+            if (p.presupuestoAprox === undefined) p.presupuestoAprox = p.preventaPresupuesto || 0;
+            if (p.ventaAnterior === undefined) p.ventaAnterior = p.compra || p.presupuestoAprox || 0;
+            if (!Array.isArray(p.listaPedido)) {
+              const seedMatch = SEED_DATA.proveedores.find(sp => sp.id === p.id || sp.proveedor === p.proveedor);
+              p.listaPedido = seedMatch && Array.isArray(seedMatch.listaPedido) ? JSON.parse(JSON.stringify(seedMatch.listaPedido)) : [];
+            }
+            if (p.yaVino === undefined) p.yaVino = false;
+            if (p.horaVino === undefined) p.horaVino = '';
+            if (p.montoPagadoReal === undefined) p.montoPagadoReal = 0;
+          });
+        }
         return merged;
       }
     } catch (e) {
@@ -633,6 +883,8 @@ class StateManager {
     // 5. Cargar datos en la hoja activa
     Object.assign(this.data, hojaDestino);
     this.data.fecha = nuevaFecha;
+
+    this.sincronizarProveedoresDesdeHoja(nuevaFecha);
 
     this.saveState();
   }
@@ -947,6 +1199,7 @@ class StateManager {
 
     // Renumerar notas consecutivas
     this.data.comprasProveedores.forEach((r, i) => { r.nota = i + 1; });
+    this.sincronizarLlegadaProveedor(nombreProveedorConteo, horaActual, costo, this.data.fecha);
   }
 
   // 3. Compras y Proveedores Pagados (Hoja Diaria)
@@ -1014,6 +1267,9 @@ class StateManager {
 
     this.data.comprasProveedores.forEach((r, i) => { r.nota = i + 1; });
 
+    // Sincronizar con la Agenda Semanal (marcar que ya vino, hora y monto)
+    this.sincronizarLlegadaProveedor(pNom, pHora, pMonto, this.data.fecha);
+
     // Agregar también a pagosDia para registro histórico
     this.addPagoDia({
       proveedor: pNom,
@@ -1033,6 +1289,7 @@ class StateManager {
     if (this.data.comprasProveedores && this.data.comprasProveedores[index]) {
       this.data.comprasProveedores.splice(index, 1);
       this.data.comprasProveedores.forEach((r, i) => { r.nota = i + 1; });
+      this.sincronizarProveedoresDesdeHoja(this.data.fecha);
       this.saveState();
     }
   }
@@ -1543,10 +1800,99 @@ class StateManager {
   marcarProveedorPagado(id, montoReal = null) {
     const prov = this.data.proveedores.find(p => p.id === id);
     if (!prov) return null;
-    const monto = montoReal !== null ? parseFloat(montoReal) : (prov.compra > 0 ? prov.compra : prov.preventaPresupuesto);
-    this.updateProveedor(id, { estado: 'pagado', compra: monto });
+    const monto = montoReal !== null ? parseFloat(montoReal) : (prov.compra > 0 ? prov.compra : (prov.presupuestoAprox || prov.preventaPresupuesto));
+    this.updateProveedor(id, { estado: 'pagado', yaVino: true, horaVino: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true }), montoPagadoReal: monto });
     this.agregarCompraProveedor(prov.proveedor, monto);
     return prov;
+  }
+
+  sincronizarProveedoresDesdeHoja(fecha = this.data?.fecha) {
+    if (!this.data || !this.data.proveedores) return;
+    const fStr = fecha || this.getFechaHoy();
+    const dObj = new Date(fStr + 'T12:00:00');
+    const diasSemanaIds = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    const diaHoyId = diasSemanaIds[dObj.getDay()];
+
+    const comprasHoy = (this.data.comprasProveedores || []).filter(c => 
+      c.proveedor && c.proveedor.trim() !== '' && (parseFloat(c.pagado) > 0 || c.pagado !== '')
+    );
+
+    const norm = (s) => (s || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+    this.data.proveedores.forEach(p => {
+      // Buscar coincidencia en compras
+      const coincidencia = comprasHoy.find(c => {
+        const np = norm(p.proveedor);
+        const nc = norm(c.proveedor);
+        return np === nc || (np.length >= 4 && nc.includes(np)) || (nc.length >= 4 && np.includes(nc));
+      });
+
+      if (coincidencia) {
+        p.yaVino = true;
+        p.horaVino = coincidencia.hora || '';
+        p.montoPagadoReal = parseFloat(coincidencia.pagado) || 0;
+        p.estado = 'pagado';
+      } else {
+        if (p.dia === diaHoyId) {
+          p.yaVino = false;
+          p.horaVino = '';
+          p.montoPagadoReal = 0;
+          p.estado = 'programado';
+        }
+      }
+    });
+  }
+
+  sincronizarLlegadaProveedor(nombreProveedor, hora, monto, fecha = this.data?.fecha) {
+    if (!this.data || !this.data.proveedores || !nombreProveedor) return;
+    const fStr = fecha || this.getFechaHoy();
+    const dObj = new Date(fStr + 'T12:00:00');
+    const diasSemanaIds = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    const diaHoyId = diasSemanaIds[dObj.getDay()];
+
+    const norm = (s) => (s || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const nc = norm(nombreProveedor);
+
+    let prov = this.data.proveedores.find(p => p.dia === diaHoyId && (norm(p.proveedor) === nc || (nc.length >= 4 && norm(p.proveedor).includes(nc)) || (norm(p.proveedor).length >= 4 && nc.includes(norm(p.proveedor)))));
+
+    if (!prov) {
+      prov = this.data.proveedores.find(p => norm(p.proveedor) === nc || (nc.length >= 4 && norm(p.proveedor).includes(nc)) || (norm(p.proveedor).length >= 4 && nc.includes(norm(p.proveedor))));
+    }
+
+    if (prov) {
+      prov.yaVino = true;
+      prov.horaVino = hora || new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+      prov.montoPagadoReal = parseFloat(monto) || 0;
+      prov.estado = 'pagado';
+      this.saveState();
+    }
+  }
+
+  updateProveedorPedido(id, listaPedido) {
+    const prov = this.data.proveedores.find(p => p.id === id);
+    if (prov) {
+      prov.listaPedido = Array.isArray(listaPedido) ? listaPedido : [];
+      this.saveState();
+      return prov;
+    }
+    return null;
+  }
+
+  updateProveedorAgenda(id, campos) {
+    const prov = this.data.proveedores.find(p => p.id === id);
+    if (prov) {
+      Object.assign(prov, campos);
+      if (campos.presupuestoAprox !== undefined) {
+        prov.presupuestoAprox = parseFloat(campos.presupuestoAprox) || 0;
+        prov.preventaPresupuesto = prov.presupuestoAprox;
+      }
+      if (campos.ventaAnterior !== undefined) {
+        prov.ventaAnterior = parseFloat(campos.ventaAnterior) || 0;
+      }
+      this.saveState();
+      return prov;
+    }
+    return null;
   }
 
   // 12. Métricas y Totales Globales
