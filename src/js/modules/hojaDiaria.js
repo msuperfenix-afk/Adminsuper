@@ -61,7 +61,7 @@ export class HojaDiariaModule {
         <!-- BARRA RÁPIDA DE DÍAS (LUNES A DOMINGO), CALENDARIO DE HISTORIAL Y FECHA -->
         <div class="barra-navegacion-dias">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span style="font-size: 0.76rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Día:</span>
+            <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px;">Día:</span>
             <div style="display: flex; gap: 4px;">
               ${diasSemanaBarra.map(dia => `
                 <button class="btn-dia-selector ${dia.activo ? 'activo' : ''} ${dia.esHoy ? 'es-dia-hoy' : ''}" data-fecha-iso="${dia.iso}" title="${dia.esHoy ? 'HOY (Editable)' : `Cargar hoja del ${dia.corto} ${dia.numero}`}">
@@ -72,15 +72,26 @@ export class HojaDiariaModule {
               `).join('')}
             </div>
 
-            <!-- Botón de Apertura de Calendario Completo de Historial -->
-            <button class="btn-abrir-calendario" id="btnAbrirCalendarioHistorial" title="Abrir Calendario de Historial Contable">
-              📅 Calendario & Historial
+            <!-- Botón Formal con Solo el Logo de Calendario -->
+            <button class="btn-abrir-calendario-icono" id="btnAbrirCalendarioHistorial" title="Calendario e Historial Contable">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+                <circle cx="8" cy="14" r="1.1" fill="currentColor"></circle>
+                <circle cx="12" cy="14" r="1.1" fill="currentColor"></circle>
+                <circle cx="16" cy="14" r="1.1" fill="currentColor"></circle>
+                <circle cx="8" cy="18" r="1.1" fill="currentColor"></circle>
+                <circle cx="12" cy="18" r="1.1" fill="currentColor"></circle>
+                <circle cx="16" cy="18" r="1.1" fill="currentColor"></circle>
+              </svg>
             </button>
           </div>
 
-          <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 0.74rem; color: #94a3b8; font-weight: 700;">Fecha:</span>
+              <span style="font-size: 0.74rem; color: #64748b; font-weight: 700;">Fecha:</span>
               <input type="date" class="input-fecha-picker" id="inputFechaSelector" value="${d.fecha || ''}">
             </div>
 
@@ -137,26 +148,13 @@ export class HojaDiariaModule {
 
           <div class="hoja-header-datos">
             <div class="hoja-campo-linea">
-              <label>DIA:</label>
+              <span class="header-dato-label">DIA:</span>
               <span class="hoja-texto-fijo-dia" id="displayDia">${(d.dia || 'LUNES').toUpperCase()}</span>
             </div>
 
             <div class="hoja-campo-fecha">
-              <span class="fecha-label">FECHA:</span>
-              <div class="fecha-cajas">
-                <div>
-                  <span class="sub-label">DIA</span>
-                  <div class="hoja-box-fijo" id="displayDiaNum">${d.diaNum || ''}</div>
-                </div>
-                <div>
-                  <span class="sub-label">MES</span>
-                  <div class="hoja-box-fijo" id="displayMes">${d.mes || ''}</div>
-                </div>
-                <div>
-                  <span class="sub-label">AÑO</span>
-                  <div class="hoja-box-fijo" id="displayAno">${d.ano || ''}</div>
-                </div>
-              </div>
+              <span class="header-dato-label">FECHA:</span>
+              <span class="hoja-texto-fijo-fecha" id="displayFecha">${d.diaNum || ''} / ${d.mes || ''} / ${d.ano || ''}</span>
             </div>
 
             <div class="hoja-campo-inicial">
