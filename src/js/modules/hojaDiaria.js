@@ -507,7 +507,7 @@ export class HojaDiariaModule {
                       `).join('')}
                     </tr>
                     <tr style="background: #f8fafc;">
-                      <td class="font-bold">MORRALLA (Suma)</td>
+                      <td class="font-bold">MORRALLA</td>
                       ${d.arqueoColumnas.map((col, idx) => `
                         <td class="text-right font-bold cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; color: #0284c7; padding: 7px 8px;" title="Clic para abrir captura">
                           ${this.formatMoney(col.morralla)}

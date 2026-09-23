@@ -2982,68 +2982,49 @@ input:disabled {
 .proveedores-db-layout {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 8px 4px;
+  gap: 10px;
+  padding: 4px 2px;
 }
 
 .provdb-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
 }
 
 .provdb-kpi-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-}
-
-.kpi-icon-pill {
-  width: 42px;
-  height: 42px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  flex-shrink: 0;
-}
-
-.kpi-icon-pill.icon-blue { background: #eff6ff; color: #1e40af; }
-.kpi-icon-pill.icon-green { background: #ecfdf5; color: #065f46; }
-.kpi-icon-pill.icon-purple { background: #f5f3ff; color: #5b21b6; }
-.kpi-icon-pill.icon-amber { background: #fffbeb; color: #92400e; }
-
-.kpi-info {
+  border-radius: 6px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.15s ease;
 }
 
-.kpi-label {
-  font-size: 0.72rem;
+.provdb-kpi-card:hover {
+  border-color: #cbd5e1;
+}
+
+.provdb-kpi-card .kpi-label {
+  font-size: 0.65rem;
   font-weight: 600;
   text-transform: uppercase;
   color: #64748b;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
+  line-height: 1.1;
+  margin-bottom: 2px;
 }
 
-.kpi-value {
-  font-size: 1.25rem;
-  font-weight: 800;
+.provdb-kpi-card .kpi-value {
+  font-size: 1.08rem;
+  font-weight: 700;
   color: #0f172a;
   line-height: 1.2;
 }
 
-.kpi-subtext {
-  font-size: 0.72rem;
-  color: #94a3b8;
-  margin-top: 2px;
-}
 
 /* Toolbar de Filtros y Búsqueda */
 .provdb-toolbar {
@@ -3663,8 +3644,8 @@ input:disabled {
     grid-template-columns: 1fr !important;
   }
 
-  .provdb-kpis-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+  .provdb-kpi-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
   }
 }
 
@@ -4135,7 +4116,7 @@ input:disabled {
     padding: 4px !important;
   }
 
-  .provdb-kpis-grid {
+  .provdb-kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 6px !important;
     margin-bottom: 6px !important;
@@ -4143,20 +4124,15 @@ input:disabled {
 
   .provdb-kpi-card {
     padding: 6px 8px !important;
-    border-radius: 6px !important;
+    border-radius: 5px !important;
   }
 
-  .provdb-kpi-num {
-    font-size: 1.05rem !important;
+  .provdb-kpi-card .kpi-label {
+    font-size: 0.6rem !important;
   }
 
-  .provdb-kpi-label {
-    font-size: 0.64rem !important;
-  }
-
-  .provdb-kpi-badge {
-    font-size: 0.58rem !important;
-    padding: 1px 4px !important;
+  .provdb-kpi-card .kpi-value {
+    font-size: 0.95rem !important;
   }
 
   .provdb-toolbar {
@@ -4397,8 +4373,21 @@ input:disabled {
     font-size: 0.68rem !important;
   }
 
-  .provdb-kpis-grid {
-    grid-template-columns: 1fr 1fr !important;
+  .provdb-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  .provdb-kpi-card {
+    padding: 5px 6px !important;
+  }
+
+  .provdb-kpi-card .kpi-label {
+    font-size: 0.58rem !important;
+  }
+
+  .provdb-kpi-card .kpi-value {
+    font-size: 0.9rem !important;
   }
 
   .stats-kpi-grid {

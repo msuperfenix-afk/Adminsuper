@@ -75,42 +75,26 @@ export class ProveedoresDbModule {
     let html = `
       <div class="proveedores-db-layout">
         
-        <!-- RESUMEN SUPERIOR KPI SOBRIO -->
+        <!-- RESUMEN KPI MINIMALISTA Y COMPACTO -->
         <div class="provdb-kpi-grid">
           <div class="provdb-kpi-card">
-            <div class="kpi-icon-pill icon-blue" style="font-weight: 800; font-size: 0.75rem;">CAT</div>
-            <div class="kpi-info">
-              <span class="kpi-label">Proveedores Registrados</span>
-              <strong class="kpi-value">${totalProveedores}</strong>
-              <span class="kpi-subtext">Catálogo maestro activo</span>
-            </div>
+            <span class="kpi-label">Proveedores</span>
+            <strong class="kpi-value">${totalProveedores}</strong>
           </div>
 
           <div class="provdb-kpi-card">
-            <div class="kpi-icon-pill icon-green" style="font-weight: 800; font-size: 0.75rem;">PAG</div>
-            <div class="kpi-info">
-              <span class="kpi-label">Forma de Pago</span>
-              <strong class="kpi-value">${pagoEfectivo} <small style="font-size: 0.8rem; font-weight: normal; color: #64748b;">Efec</small> • ${pagoTransferencia} <small style="font-size: 0.8rem; font-weight: normal; color: #64748b;">Transf</small></strong>
-              <span class="kpi-subtext">Preferencia de desembolso</span>
-            </div>
+            <span class="kpi-label">Efectivo</span>
+            <strong class="kpi-value">${pagoEfectivo}</strong>
           </div>
 
           <div class="provdb-kpi-card">
-            <div class="kpi-icon-pill icon-purple" style="font-weight: 800; font-size: 0.75rem;">PRE</div>
-            <div class="kpi-info">
-              <span class="kpi-label">Presupuesto Habitual Total</span>
-              <strong class="kpi-value">${this.formatMoney(presupuestoTotal)}</strong>
-              <span class="kpi-subtext">Suma de compras estimadas</span>
-            </div>
+            <span class="kpi-label">Transferencia</span>
+            <strong class="kpi-value">${pagoTransferencia}</strong>
           </div>
 
           <div class="provdb-kpi-card">
-            <div class="kpi-icon-pill icon-amber" style="font-weight: 800; font-size: 0.75rem;">SYNC</div>
-            <div class="kpi-info">
-              <span class="kpi-label">Alimentación Automática</span>
-              <strong class="kpi-value" style="font-size: 1.05rem; color: #0284c7;">Hoja Diaria & Agenda</strong>
-              <span class="kpi-subtext">Sincronizado en tiempo real</span>
-            </div>
+            <span class="kpi-label">Presupuesto Est.</span>
+            <strong class="kpi-value">${this.formatMoney(presupuestoTotal)}</strong>
           </div>
         </div>
 

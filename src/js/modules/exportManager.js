@@ -215,7 +215,7 @@ export class ExportManager {
       csvContent += `"MON. 2","${col0.mon2 || 0}","${col1.mon2 || 0}","${col2.mon2 || 0}"\n`;
       csvContent += `"MON. 5","${col0.mon5 || 0}","${col1.mon5 || 0}","${col2.mon5 || 0}"\n`;
       csvContent += `"MON. 10","${col0.mon10 || 0}","${col1.mon10 || 0}","${col2.mon10 || 0}"\n`;
-      csvContent += `"MORRALLA (Suma)","${col0.morralla || 0}","${col1.morralla || 0}","${col2.morralla || 0}"\n`;
+      csvContent += `"MORRALLA","${col0.morralla || 0}","${col1.morralla || 0}","${col2.morralla || 0}"\n`;
 
     } else if (datos.tipo === 'mes') {
       csvContent += `"=== REPORTE MENSUAL DE COMPRAS Y RETIROS ==="\n`;

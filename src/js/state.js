@@ -1431,7 +1431,7 @@ class StateManager {
     this.guardarPrestamoSeguro({ proveedor, pendiente, nota });
   }
 
-  // 5. Arqueos de Caja (LAS MONEDAS SE APUNTAN POR MONTO TOTAL EN PESOS)
+  // 5. Arqueos de Caja (MORRALLA ES UN APARTADO INDEPENDIENTE LLENABLE, NO SUMA DE MONEDAS)
   calcularMorralla(m1 = 0, m2 = 0, m5 = 0, m10 = 0) {
     return (parseFloat(m1) || 0) + (parseFloat(m2) || 0) + (parseFloat(m5) || 0) + (parseFloat(m10) || 0);
   }
@@ -1444,7 +1444,10 @@ class StateManager {
         return col;
       }
       Object.assign(col, campos);
-      col.morralla = this.calcularMorralla(col.mon1, col.mon2, col.mon5, col.mon10);
+      // La morralla es un apartado independiente, se llena directamente desde su propio campo
+      if (campos.morralla !== undefined) {
+        col.morralla = parseFloat(campos.morralla) || 0;
+      }
       this.saveState();
       return col;
     }
@@ -1467,7 +1470,8 @@ class StateManager {
       col.mon2 = parseFloat(campos.mon2) || 0;
       col.mon5 = parseFloat(campos.mon5) || 0;
       col.mon10 = parseFloat(campos.mon10) || 0;
-      col.morralla = this.calcularMorralla(col.mon1, col.mon2, col.mon5, col.mon10);
+      // La morralla es un apartado independiente, se llena directamente desde su propio campo
+      col.morralla = campos.morralla !== undefined ? (parseFloat(campos.morralla) || 0) : (parseFloat(col.morralla) || 0);
 
       if (bloquear) {
         col.bloqueado = true;

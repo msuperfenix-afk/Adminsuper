@@ -903,7 +903,7 @@ export class ModalManager {
                   <td style="padding: 7px 12px; text-align: right;">${fmt(col.mon10)}</td>
                 </tr>
                 <tr style="background: #f8fafc; font-weight: 800;">
-                  <td style="padding: 10px 12px; color: #0f172a;">MORRALLA (Suma)</td>
+                  <td style="padding: 10px 12px; color: #0f172a;">MORRALLA</td>
                   <td style="padding: 10px 12px; text-align: right; color: #0f172a; font-size: 0.95rem;">${fmt(col.morralla)}</td>
                 </tr>
               </tbody>
@@ -984,12 +984,11 @@ export class ModalManager {
             </div>
           </div>
 
-          <!-- MORRALLA CALCULADA EN VIVO (SUMA DE MONEDAS) -->
-          <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">MORRALLA (Suma de monedas):</span>
-            <span id="displayModalMorrallaSuma" style="font-weight: 800; font-size: 1.1rem; color: #0284c7;">
-              ${fmt(col.morralla)}
-            </span>
+          <!-- APARTADO INDEPENDIENTE: MORRALLA -->
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">MORRALLA ($ MXN)</label>
+            <input type="number" step="0.5" min="0" class="form-control font-bold" id="inpColMorralla" placeholder="0.00" value="${col.morralla || ''}" style="font-size: 0.95rem; color: #0284c7;">
+            <small style="color: #64748b; font-size: 0.72rem;">Apartado independiente de morralla</small>
           </div>
         </div>
 
@@ -1029,26 +1028,11 @@ export class ModalManager {
 
     this.open(`Arqueo y Corte: ${colNombre}`, body, footer);
 
-    // Cálculo dinámico de morralla en vivo
     const inpM1 = document.getElementById('inpColMon1');
     const inpM2 = document.getElementById('inpColMon2');
     const inpM5 = document.getElementById('inpColMon5');
     const inpM10 = document.getElementById('inpColMon10');
-    const dispMorralla = document.getElementById('displayModalMorrallaSuma');
-
-    const actualizarMorrallaEnVivo = () => {
-      const v1 = parseFloat(inpM1?.value) || 0;
-      const v2 = parseFloat(inpM2?.value) || 0;
-      const v5 = parseFloat(inpM5?.value) || 0;
-      const v10 = parseFloat(inpM10?.value) || 0;
-      const totalM = v1 + v2 + v5 + v10;
-      if (dispMorralla) dispMorralla.textContent = fmt(totalM);
-    };
-
-    [inpM1, inpM2, inpM5, inpM10].forEach(inp => {
-      inp?.addEventListener('input', actualizarMorrallaEnVivo);
-      inp?.addEventListener('change', actualizarMorrallaEnVivo);
-    });
+    const inpMorralla = document.getElementById('inpColMorralla');
 
     document.getElementById('btnCancelArqCol')?.addEventListener('click', () => this.close());
     
@@ -1081,7 +1065,8 @@ export class ModalManager {
         mon1: parseFloat(inpM1?.value) || 0,
         mon2: parseFloat(inpM2?.value) || 0,
         mon5: parseFloat(inpM5?.value) || 0,
-        mon10: parseFloat(inpM10?.value) || 0
+        mon10: parseFloat(inpM10?.value) || 0,
+        morralla: parseFloat(inpMorralla?.value) || 0
       };
 
       stateManager.guardarArqueoColumnaSeguro(colIndex, datos, true);
