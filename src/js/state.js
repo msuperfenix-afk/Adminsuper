@@ -6,6 +6,15 @@ const STORAGE_KEY = 'adminfenix_data_v4';
 export const NOMBRES_DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 export const NOMBRES_MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sept', 'Oct', 'Nov', 'Dic'];
 
+// Obtener fecha actual en formato YYYY-MM-DD local
+export function getFechaHoyLocal() {
+  const ahora = new Date();
+  const ano = ahora.getFullYear();
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
 // Catálogo predeterminado de proveedores de Minisúper Fénix
 export const CATALOGO_PROVEEDORES_PREDETERMINADOS = [
   'Bimbo',
@@ -64,38 +73,38 @@ const SEED_DATA = {
     { id: 'ct-4', proveedor: 'TORTILLA IDEAL', camb: 0, nuev: 2, total: 3 }
   ],
 
-  // 2. Compras y Proveedores Pagados (Renglones 1 al 30 de la hoja física)
+  // 2. Compras y Proveedores Pagados (Renglones 1 al 30 de la hoja física con horas de registro)
   comprasProveedores: [
-    { nota: 1, proveedor: 'Tortilla La Ideal', pagado: 440, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 2, proveedor: 'Pan Mirella', pagado: 275, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 3, proveedor: 'Pan Espacio', pagado: 380, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 4, proveedor: 'Pan Celia', pagado: 467, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 5, proveedor: 'Tortilla Monreal', pagado: 230, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 6, proveedor: 'Tostadas Mission', pagado: 236, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 7, proveedor: 'Cerveza', pagado: 15775, tipoPago: 'Transferencia', bloqueado: true },
-    { nota: 8, proveedor: 'Flan de Elote', pagado: 330, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 9, proveedor: 'Totopos Riko', pagado: 294, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 10, proveedor: 'Yakult', pagado: 195, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 11, proveedor: 'Pepsi', pagado: 2611, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 12, proveedor: 'Cremería Ags', pagado: 222, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 13, proveedor: 'San Marcos', pagado: 222, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 14, proveedor: 'Botanas Leo', pagado: 240, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 15, proveedor: 'Gamesa', pagado: 1017, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 16, proveedor: 'Frijoles de Bote', pagado: 376, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 17, proveedor: 'Bonafont', pagado: 599, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 18, proveedor: 'Huevo San Juan', pagado: 1036, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 19, proveedor: 'Tortilla Ideal', pagado: 66, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 20, proveedor: 'Lala', pagado: 1180, tipoPago: 'Efectivo', bloqueado: true },
-    { nota: 21, proveedor: '', pagado: 0, tipoPago: 'Efectivo', bloqueado: false },
-    { nota: 22, proveedor: '', pagado: 0, tipoPago: 'Efectivo', bloqueado: false },
-    { nota: 23, proveedor: '', pagado: 0, tipoPago: 'Efectivo', bloqueado: false },
-    { nota: 24, proveedor: '', pagado: 0, tipoPago: 'Efectivo', bloqueado: false },
-    { nota: 25, proveedor: '', pagado: 0, tipoPago: 'Efectivo', bloqueado: false },
-    { nota: 26, proveedor: '', pagado: 0, tipoPago: 'Efectivo', bloqueado: false },
-    { nota: 27, proveedor: '', pagado: 0, tipoPago: 'Efectivo', bloqueado: false },
-    { nota: 28, proveedor: '', pagado: 0, tipoPago: 'Efectivo', bloqueado: false },
-    { nota: 29, proveedor: '', pagado: 0, tipoPago: 'Efectivo', bloqueado: false },
-    { nota: 30, proveedor: '', pagado: 0, tipoPago: 'Efectivo', bloqueado: false }
+    { nota: 1, proveedor: 'Tortilla La Ideal', pagado: 440, tipoPago: 'Efectivo', hora: '08:00 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 2, proveedor: 'Pan Mirella', pagado: 275, tipoPago: 'Efectivo', hora: '08:15 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 3, proveedor: 'Pan Espacio', pagado: 380, tipoPago: 'Efectivo', hora: '08:30 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 4, proveedor: 'Pan Celia', pagado: 467, tipoPago: 'Efectivo', hora: '08:45 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 5, proveedor: 'Tortilla Monreal', pagado: 230, tipoPago: 'Efectivo', hora: '09:00 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 6, proveedor: 'Tostadas Mission', pagado: 236, tipoPago: 'Efectivo', hora: '09:15 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 7, proveedor: 'Cerveza', pagado: 15775, tipoPago: 'Transferencia', hora: '09:30 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 8, proveedor: 'Flan de Elote', pagado: 330, tipoPago: 'Efectivo', hora: '09:45 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 9, proveedor: 'Totopos Riko', pagado: 294, tipoPago: 'Efectivo', hora: '10:00 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 10, proveedor: 'Yakult', pagado: 195, tipoPago: 'Efectivo', hora: '10:15 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 11, proveedor: 'Pepsi', pagado: 2611, tipoPago: 'Efectivo', hora: '10:30 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 12, proveedor: 'Cremería Ags', pagado: 222, tipoPago: 'Efectivo', hora: '10:45 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 13, proveedor: 'San Marcos', pagado: 222, tipoPago: 'Efectivo', hora: '11:00 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 14, proveedor: 'Botanas Leo', pagado: 240, tipoPago: 'Efectivo', hora: '11:15 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 15, proveedor: 'Gamesa', pagado: 1017, tipoPago: 'Efectivo', hora: '11:30 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 16, proveedor: 'Frijoles de Bote', pagado: 376, tipoPago: 'Efectivo', hora: '11:45 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 17, proveedor: 'Bonafont', pagado: 599, tipoPago: 'Efectivo', hora: '12:00 p. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 18, proveedor: 'Huevo San Juan', pagado: 1036, tipoPago: 'Efectivo', hora: '12:15 p. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 19, proveedor: 'Tortilla Ideal', pagado: 66, tipoPago: 'Efectivo', hora: '12:30 p. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 20, proveedor: 'Lala', pagado: 1180, tipoPago: 'Efectivo', hora: '12:45 p. m.', fechaRegistro: '2026-09-15', bloqueado: true },
+    { nota: 21, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
+    { nota: 22, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
+    { nota: 23, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
+    { nota: 24, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
+    { nota: 25, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
+    { nota: 26, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
+    { nota: 27, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
+    { nota: 28, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
+    { nota: 29, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
+    { nota: 30, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false }
   ],
 
   // 3. Préstamos o Pendientes de Pago
@@ -307,10 +316,17 @@ class StateManager {
             if (t.proveedor === 'TORT. SAN JOSE') t.proveedor = 'TORTILLA AMARILLA';
           });
         }
-        // Normalización y migración de tipoPago y bloqueo seguro en comprasProveedores
+        // Normalización y migración de tipoPago, hora y bloqueo seguro en comprasProveedores
         if (Array.isArray(merged.comprasProveedores)) {
-          merged.comprasProveedores.forEach(c => {
+          merged.comprasProveedores.forEach((c, idx) => {
             if (!c.tipoPago) c.tipoPago = 'Efectivo';
+            if (!c.hora && c.proveedor) {
+              const baseHour = 8 + Math.floor(idx / 4);
+              const baseMin = (idx % 4) * 15;
+              const ampm = baseHour >= 12 ? 'p. m.' : 'a. m.';
+              const displayHour = baseHour > 12 ? baseHour - 12 : baseHour;
+              c.hora = `${String(displayHour).padStart(2, '0')}:${String(baseMin).padStart(2, '0')} ${ampm}`;
+            }
             if (c.bloqueado === undefined) {
               c.bloqueado = !!(c.proveedor && (c.pagado > 0 || c.pagado));
             }
@@ -328,11 +344,25 @@ class StateManager {
             if (r.bloqueado === undefined) r.bloqueado = true;
           });
         }
+
+        if (!merged.hojasPorFecha) merged.hojasPorFecha = {};
+        // Guardar la hoja original del 15 de Septiembre en el historial si aún no existe
+        if (!merged.hojasPorFecha['2026-09-15']) {
+          merged.hojasPorFecha['2026-09-15'] = JSON.parse(JSON.stringify(SEED_DATA));
+        }
+
         if (merged.hojasPorFecha) {
           Object.values(merged.hojasPorFecha).forEach(h => {
             if (Array.isArray(h.comprasProveedores)) {
-              h.comprasProveedores.forEach(c => {
+              h.comprasProveedores.forEach((c, idx) => {
                 if (!c.tipoPago) c.tipoPago = 'Efectivo';
+                if (!c.hora && c.proveedor) {
+                  const baseHour = 8 + Math.floor(idx / 4);
+                  const baseMin = (idx % 4) * 15;
+                  const ampm = baseHour >= 12 ? 'p. m.' : 'a. m.';
+                  const displayHour = baseHour > 12 ? baseHour - 12 : baseHour;
+                  c.hora = `${String(displayHour).padStart(2, '0')}:${String(baseMin).padStart(2, '0')} ${ampm}`;
+                }
                 if (c.bloqueado === undefined) {
                   c.bloqueado = !!(c.proveedor && (c.pagado > 0 || c.pagado));
                 }
@@ -497,8 +527,69 @@ class StateManager {
     this.listeners.forEach(fn => fn(this.data));
   }
 
+  // Métodos de Control de Fechas e Historial
+  getFechaHoy() {
+    return getFechaHoyLocal();
+  }
+
+  esHojaEditable(fecha = this.data.fecha) {
+    return fecha === getFechaHoyLocal();
+  }
+
+  getResumenFechasHistorial() {
+    const resumen = {};
+    const hoy = this.getFechaHoy();
+    
+    // 1. Recorrer hojasPorFecha
+    if (this.data.hojasPorFecha) {
+      Object.entries(this.data.hojasPorFecha).forEach(([fStr, hoja]) => {
+        if (!hoja) return;
+        const totalPagado = (hoja.comprasProveedores || []).reduce((acc, c) => acc + (parseFloat(c.pagado) || 0), 0);
+        const comprasCount = (hoja.comprasProveedores || []).filter(c => c.proveedor && (c.pagado > 0 || c.pagado)).length;
+        const totalRetiros = (hoja.retiros || []).reduce((acc, r) => acc + (parseFloat(r.monto) || 0), 0);
+        const totalPendientes = (hoja.prestamosPendientes || []).reduce((acc, p) => acc + (!p.liquidado ? (parseFloat(p.pendiente) || 0) : 0), 0);
+        
+        resumen[fStr] = {
+          fecha: fStr,
+          dia: hoja.dia || '',
+          diaNum: hoja.diaNum || '',
+          mes: hoja.mes || '',
+          ano: hoja.ano || '',
+          totalPagado,
+          comprasCount,
+          totalRetiros,
+          totalPendientes,
+          esHoy: fStr === hoy,
+          tieneRegistros: comprasCount > 0 || totalRetiros > 0 || totalPagado > 0
+        };
+      });
+    }
+
+    // 2. Incluir también la hoja actualmente en memoria
+    if (this.data.fecha) {
+      const totalesHoja = this.getTotalesHoja();
+      const comprasCount = (this.data.comprasProveedores || []).filter(c => c.proveedor && (c.pagado > 0 || c.pagado)).length;
+      resumen[this.data.fecha] = {
+        fecha: this.data.fecha,
+        dia: this.data.dia,
+        diaNum: this.data.diaNum,
+        mes: this.data.mes,
+        ano: this.data.ano,
+        totalPagado: totalesHoja.totalPagadoProveedores,
+        comprasCount,
+        totalRetiros: totalesHoja.totalRetiros,
+        totalPendientes: totalesHoja.totalPendientes,
+        esHoy: this.data.fecha === hoy,
+        tieneRegistros: comprasCount > 0 || totalesHoja.totalRetiros > 0 || totalesHoja.totalPagadoProveedores > 0
+      };
+    }
+
+    return resumen;
+  }
+
   // 1. Información General de la Hoja
   updateInfoGeneral(dia, diaNum, mes, ano, cantidadInicial) {
+    if (!this.esHojaEditable()) return;
     this.data.dia = dia;
     this.data.diaNum = parseInt(diaNum) || 15;
     this.data.mes = mes;
@@ -508,12 +599,14 @@ class StateManager {
   }
 
   updateCantidadInicial(cantidadInicial) {
+    if (!this.esHojaEditable()) return;
     this.data.cantidadInicial = parseFloat(cantidadInicial) || 0;
     this.saveState();
   }
 
   // 2. Conteo Pan y Tortilla
   updateConteoPan(index, campos) {
+    if (!this.esHojaEditable()) return;
     if (this.data.conteoPan && this.data.conteoPan[index]) {
       this.data.conteoPan[index] = { ...this.data.conteoPan[index], ...campos };
       const p = this.data.conteoPan[index];
@@ -523,6 +616,7 @@ class StateManager {
   }
 
   updateConteoTortilla(index, campos) {
+    if (!this.esHojaEditable()) return;
     if (this.data.conteoTortilla && this.data.conteoTortilla[index]) {
       this.data.conteoTortilla[index] = { ...this.data.conteoTortilla[index], ...campos };
       const t = this.data.conteoTortilla[index];
@@ -533,6 +627,7 @@ class StateManager {
 
   // 3. Compras y Proveedores Pagados (Hoja Diaria)
   updateCompraProveedor(index, campoOVal, valor) {
+    if (!this.esHojaEditable()) return;
     if (this.data.comprasProveedores && this.data.comprasProveedores[index]) {
       const row = this.data.comprasProveedores[index];
       if (typeof campoOVal === 'object') {
@@ -547,48 +642,50 @@ class StateManager {
   }
 
   addFilaCompraProveedor(proveedor = '', pagado = 0, tipoPago = 'Efectivo') {
+    if (!this.esHojaEditable()) return;
     const nota = this.data.comprasProveedores.length + 1;
     this.data.comprasProveedores.push({
       nota,
       proveedor,
       pagado: parseFloat(pagado) || 0,
       tipoPago,
+      hora: '',
+      fechaRegistro: this.data.fecha,
       bloqueado: false
     });
     this.saveState();
   }
 
-  guardarCompraProveedorSegura({ index, proveedor, pagado, tipoPago }) {
+  guardarCompraProveedorSegura({ index, proveedor, pagado, tipoPago, hora }) {
+    if (!this.esHojaEditable()) {
+      console.warn('Solo se puede editar la hoja del día actual.');
+      return false;
+    }
     const pNom = (proveedor || '').trim();
     const pMonto = parseFloat(pagado) || 0;
     const pTipo = tipoPago || 'Efectivo';
+    const ahora = new Date();
+    const pHora = hora || ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    const obj = {
+      nota: (index !== undefined && index !== null && index >= 0) ? index + 1 : this.data.comprasProveedores.length + 1,
+      proveedor: pNom,
+      pagado: pMonto,
+      tipoPago: pTipo,
+      hora: pHora,
+      fechaRegistro: this.data.fecha,
+      bloqueado: true
+    };
 
     if (index !== undefined && index !== null && index >= 0 && index < this.data.comprasProveedores.length) {
-      this.data.comprasProveedores[index] = {
-        nota: index + 1,
-        proveedor: pNom,
-        pagado: pMonto,
-        tipoPago: pTipo,
-        bloqueado: true
-      };
+      this.data.comprasProveedores[index] = obj;
     } else {
       const idxVacio = this.data.comprasProveedores.findIndex(r => !r.proveedor && !r.bloqueado);
       if (idxVacio !== -1) {
-        this.data.comprasProveedores[idxVacio] = {
-          nota: idxVacio + 1,
-          proveedor: pNom,
-          pagado: pMonto,
-          tipoPago: pTipo,
-          bloqueado: true
-        };
+        obj.nota = idxVacio + 1;
+        this.data.comprasProveedores[idxVacio] = obj;
       } else {
-        this.data.comprasProveedores.push({
-          nota: this.data.comprasProveedores.length + 1,
-          proveedor: pNom,
-          pagado: pMonto,
-          tipoPago: pTipo,
-          bloqueado: true
-        });
+        this.data.comprasProveedores.push(obj);
       }
     }
 
@@ -597,13 +694,14 @@ class StateManager {
       proveedor: pNom,
       monto: pMonto,
       metodo: pTipo === 'Transferencia' ? 'Transferencia' : 'Efectivo de Caja',
-      comprobante: 'Nota ' + (index >= 0 ? index + 1 : this.data.comprasProveedores.length),
-      hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      comprobante: 'Nota #' + obj.nota,
+      hora: pHora,
       cajero: this.data.cajeroActual,
       notas: 'Registro seguro desde Hoja Diaria'
     });
 
     this.saveState();
+    return true;
   }
 
   deleteFilaCompraProveedor(index) {
@@ -640,6 +738,10 @@ class StateManager {
   }
 
   guardarPrestamoSeguro({ index, proveedor, pendiente, nota }) {
+    if (!this.esHojaEditable()) {
+      console.warn('Solo se puede editar la hoja del día actual.');
+      return false;
+    }
     const pNom = (proveedor || '').trim();
     const pMonto = parseFloat(pendiente) || 0;
     const pNota = (nota || '').trim();
@@ -664,9 +766,11 @@ class StateManager {
     }
 
     this.saveState();
+    return true;
   }
 
   togglePrestamoLiquidado(index) {
+    if (!this.esHojaEditable()) return;
     if (this.data.prestamosPendientes && this.data.prestamosPendientes[index]) {
       const p = this.data.prestamosPendientes[index];
       p.liquidado = !p.liquidado;
@@ -680,6 +784,7 @@ class StateManager {
   }
 
   deleteFilaPrestamo(index) {
+    if (!this.esHojaEditable()) return;
     if (this.data.prestamosPendientes && this.data.prestamosPendientes[index]) {
       this.data.prestamosPendientes.splice(index, 1);
       this.saveState();
@@ -687,6 +792,7 @@ class StateManager {
   }
 
   addPrestamo(proveedor, pendiente, pagado = 0, nota = '') {
+    if (!this.esHojaEditable()) return;
     this.guardarPrestamoSeguro({ proveedor, pendiente, nota });
   }
 
@@ -696,6 +802,7 @@ class StateManager {
   }
 
   updateArqueoColumna(colIndex, campos) {
+    if (!this.esHojaEditable()) return;
     if (this.data.arqueoColumnas && this.data.arqueoColumnas[colIndex]) {
       const col = this.data.arqueoColumnas[colIndex];
       Object.assign(col, campos);
@@ -801,6 +908,7 @@ class StateManager {
 
   // 6. Retiros
   updateRetiro(index, campos) {
+    if (!this.esHojaEditable()) return;
     if (this.data.retiros && this.data.retiros[index]) {
       this.data.retiros[index] = { ...this.data.retiros[index], ...campos };
       this.saveState();
@@ -808,6 +916,7 @@ class StateManager {
   }
 
   addFilaRetiro(monto = 0, nombre = '', concepto = '') {
+    if (!this.esHojaEditable()) return;
     this.data.retiros.push({
       id: 'ret-' + Date.now(),
       monto: parseFloat(monto) || 0,
@@ -819,13 +928,17 @@ class StateManager {
   }
 
   guardarRetiroSeguro({ index, monto, nombre, concepto }) {
+    if (!this.esHojaEditable()) {
+      console.warn('Solo se puede editar la hoja del día actual.');
+      return false;
+    }
     const rMonto = parseFloat(monto) || 0;
     const rNom = (nombre || this.data.cajeroActual || 'Don Manuel').trim();
     const rConc = (concepto || 'Retiro de caja').trim();
 
     const nuevoObj = {
       id: 'ret-' + Date.now(),
-      fecha: new Date().toISOString().split('T')[0],
+      fecha: this.data.fecha,
       hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       monto: rMonto,
       nombre: rNom,
@@ -846,9 +959,11 @@ class StateManager {
     }
 
     this.saveState();
+    return true;
   }
 
   deleteFilaRetiro(index) {
+    if (!this.esHojaEditable()) return;
     if (this.data.retiros && this.data.retiros[index]) {
       this.data.retiros.splice(index, 1);
       this.saveState();
@@ -879,6 +994,7 @@ class StateManager {
 
   // 7. Máquinas Cascada y Muñecos
   updateCascada(campos) {
+    if (!this.esHojaEditable()) return;
     Object.assign(this.data.cascada, campos);
     const m = parseFloat(this.data.cascada.monedas) || 0;
     const p = parseFloat(this.data.cascada.premios) || 0;
@@ -891,6 +1007,7 @@ class StateManager {
   }
 
   updateMaquinaMunecos(campos) {
+    if (!this.esHojaEditable()) return;
     Object.assign(this.data.maquinaMunecos, campos);
     const m = parseFloat(this.data.maquinaMunecos.monedas) || 0;
     this.data.maquinaMunecos.total = m;
@@ -901,6 +1018,7 @@ class StateManager {
   }
 
   updateMaquinasIndividuales(campos) {
+    if (!this.esHojaEditable()) return;
     Object.assign(this.data.maquinasIndividuales, campos);
     const q1 = parseFloat(this.data.maquinasIndividuales.maq1_1) || 0;
     const q2 = parseFloat(this.data.maquinasIndividuales.maq2_1) || 0;

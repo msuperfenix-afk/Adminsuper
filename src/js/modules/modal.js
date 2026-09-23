@@ -1234,5 +1234,231 @@ export class ModalManager {
       if (onGuardar) onGuardar();
     });
   }
+
+  // ==========================================
+  // 15. MODAL: DETALLES DE COMPRA / PROVEEDOR (Muestra hora, tipo de pago, etc.)
+  // ==========================================
+  openDetallesProveedorModal(compra, fecha = '') {
+    const numNota = compra.nota || 1;
+    const hora = compra.hora || '08:00 a. m.';
+    const proveedor = compra.proveedor || 'Sin especificar';
+    const tipoPago = compra.tipoPago || 'Efectivo';
+    const pagado = parseFloat(compra.pagado) || 0;
+    const fechaReg = fecha || compra.fechaRegistro || stateManager.data.fecha || '';
+    const formatMoney = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(v);
+
+    const body = `
+      <div style="padding: 4px 0;">
+        <div style="display: flex; align-items: center; justify-content: space-between; background: ${tipoPago === 'Transferencia' ? '#eff6ff' : '#f0fdf4'}; border: 1.5px solid ${tipoPago === 'Transferencia' ? '#93c5fd' : '#86efac'}; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 2rem;">${tipoPago === 'Transferencia' ? '🏦' : '💵'}</span>
+            <div>
+              <div style="font-size: 0.76rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Tipo de Pago Realizado</div>
+              <div style="font-size: 1.1rem; font-weight: 800; color: #0f172a;">Pago con ${tipoPago}</div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 0.76rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Importe Pagado</div>
+            <div style="font-size: 1.4rem; font-weight: 900; color: #b91c1c;">${formatMoney(pagado)}</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 14px;">
+          <div>
+            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">No. de Nota / Renglón</span>
+            <strong style="font-size: 0.95rem; color: #0f172a;">Nota #${numNota}</strong>
+          </div>
+
+          <div>
+            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Proveedor / Empresa</span>
+            <strong style="font-size: 0.95rem; color: #1e3a8a;">${proveedor}</strong>
+          </div>
+
+          <div>
+            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Hora de Registro</span>
+            <strong style="font-size: 0.95rem; color: #0369a1; display: inline-flex; align-items: center; gap: 4px;">
+              <span>⏰</span> ${hora}
+            </strong>
+          </div>
+
+          <div>
+            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Fecha de Comprobante</span>
+            <strong style="font-size: 0.95rem; color: #0f172a;">📅 ${fechaReg}</strong>
+          </div>
+
+          <div>
+            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Cajero / Encargado</span>
+            <span style="font-size: 0.88rem; color: #334155; font-weight: 600;">${stateManager.data.cajeroActual || 'Don Manuel (Encargado)'}</span>
+          </div>
+
+          <div>
+            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Protección de Datos</span>
+            <span style="display: inline-block; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; padding: 2px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700;">🔒 Congelado</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; background: #f8fafc; border-left: 3px solid #1e3a8a; padding: 8px 12px; font-size: 0.74rem; color: #475569;">
+          Por normas de auditoría interna, los renglones guardados quedan bloqueados contra modificaciones posteriores. La hora exacta se conserva para el historial.
+        </div>
+      </div>
+    `;
+
+    const footer = `
+      <button type="button" class="btn-primary" id="btnCerrarDetallesProv" style="background: #0f172a; min-width: 110px;">Cerrar Detalle</button>
+    `;
+
+    this.open(`📄 Detalle del Proveedor: ${proveedor}`, body, footer);
+    document.getElementById('btnCerrarDetallesProv')?.addEventListener('click', () => this.close());
+  }
+
+  // ==========================================
+  // 16. MODAL: CALENDARIO DE HISTORIAL Y CONSULTA DE DÍAS PASADOS
+  // ==========================================
+  openCalendarioHistorialModal(fechaActual, onSeleccionarFecha) {
+    const hoyStr = stateManager.getFechaHoy();
+    let currentFecha = fechaActual || stateManager.data.fecha || hoyStr;
+    const parts = currentFecha.split('-');
+    let navYear = parseInt(parts[0]) || new Date().getFullYear();
+    let navMonth = (parseInt(parts[1]) || (new Date().getMonth() + 1)) - 1;
+
+    const mesesNombres = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const formatMoney = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(v);
+
+    const renderCalendarioDOM = () => {
+      const resumenHistorial = stateManager.getResumenFechasHistorial();
+      const primerDiaMes = new Date(navYear, navMonth, 1);
+      const ultimoDiaMes = new Date(navYear, navMonth + 1, 0);
+      const diasEnMes = ultimoDiaMes.getDate();
+      
+      let startDayOfWeek = primerDiaMes.getDay();
+      startDayOfWeek = (startDayOfWeek === 0 ? 6 : startDayOfWeek - 1);
+
+      const diasSemanaNombres = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+
+      let celdasHTML = '';
+
+      for (let i = 0; i < startDayOfWeek; i++) {
+        celdasHTML += `<div class="cal-celda cal-celda-vacia"></div>`;
+      }
+
+      for (let dia = 1; dia <= diasEnMes; dia++) {
+        const diaPadded = String(dia).padStart(2, '0');
+        const mesPadded = String(navMonth + 1).padStart(2, '0');
+        const fechaISO = `${navYear}-${mesPadded}-${diaPadded}`;
+        
+        const esHoy = fechaISO === hoyStr;
+        const esSeleccionado = fechaISO === stateManager.data.fecha;
+        const esFuturo = fechaISO > hoyStr;
+        
+        const hist = resumenHistorial[fechaISO];
+        const tieneRegistros = hist && hist.tieneRegistros;
+
+        let badgeHistorial = '';
+        if (tieneRegistros) {
+          badgeHistorial = `
+            <div class="cal-badge-pagado" title="Total Pagado: ${formatMoney(hist.totalPagado)}">
+              💵 ${formatMoney(hist.totalPagado)}
+            </div>
+          `;
+        }
+
+        celdasHTML += `
+          <div class="cal-celda ${esHoy ? 'cal-es-hoy' : ''} ${esSeleccionado ? 'cal-seleccionado' : ''} ${tieneRegistros ? 'cal-con-historial' : ''} ${esFuturo ? 'cal-futuro' : ''}" 
+            data-cal-fecha="${fechaISO}" title="${tieneRegistros ? `Historial: ${formatMoney(hist.totalPagado)} pagados` : (esHoy ? 'Día de Hoy (Editable)' : 'Consultar día')}">
+            <div class="cal-celda-header">
+              <span class="cal-numero-dia">${dia}</span>
+              ${esHoy ? '<span class="cal-tag-hoy">HOY</span>' : ''}
+              ${tieneRegistros && !esHoy ? '<span class="cal-punto-historial" title="Día con registros guardados">✓</span>' : ''}
+            </div>
+            <div class="cal-celda-body">
+              ${badgeHistorial}
+              ${hist && hist.comprasCount > 0 ? `<span class="cal-sub-count">${hist.comprasCount} notas</span>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="calendario-historial-wrap">
+          <div style="background: #f1f5f9; border-left: 4px solid #1e3a8a; padding: 10px 14px; border-radius: 4px; margin-bottom: 14px; font-size: 0.78rem; color: #334155;">
+            <strong>📅 Historial de Hojas Contables Diarias</strong>
+            <p style="margin: 4px 0 0; color: #64748b;">
+              Selecciona cualquier fecha para consultar su hoja diaria.
+              <strong>Regla contable:</strong> Solo la hoja de <em>HOY</em> puede ser editada; los días pasados se cargan en modo seguro de solo lectura.
+            </p>
+          </div>
+
+          <div class="cal-mes-nav">
+            <button type="button" class="btn-cal-nav" id="btnCalPrevMes" title="Mes Anterior">◀</button>
+            <div class="cal-mes-titulo">
+              <strong>${mesesNombres[navMonth]} ${navYear}</strong>
+            </div>
+            <button type="button" class="btn-cal-nav" id="btnCalNextMes" title="Mes Siguiente">▶</button>
+            <button type="button" class="btn-cal-hoy" id="btnCalIrHoy">Ir a Hoy</button>
+          </div>
+
+          <div class="cal-grid-dias-semana">
+            ${diasSemanaNombres.map(d => `<div class="cal-header-dia">${d}</div>`).join('')}
+          </div>
+
+          <div class="cal-grid-celdas">
+            ${celdasHTML}
+          </div>
+        </div>
+      `;
+    };
+
+    const attachCalListeners = () => {
+      document.getElementById('btnCalPrevMes')?.addEventListener('click', () => {
+        navMonth--;
+        if (navMonth < 0) {
+          navMonth = 11;
+          navYear--;
+        }
+        actualizarVista();
+      });
+
+      document.getElementById('btnCalNextMes')?.addEventListener('click', () => {
+        navMonth++;
+        if (navMonth > 11) {
+          navMonth = 0;
+          navYear++;
+        }
+        actualizarVista();
+      });
+
+      document.getElementById('btnCalIrHoy')?.addEventListener('click', () => {
+        this.close();
+        if (onSeleccionarFecha) onSeleccionarFecha(hoyStr);
+      });
+
+      this.container.querySelectorAll('[data-cal-fecha]').forEach(el => {
+        el.addEventListener('click', () => {
+          const f = el.getAttribute('data-cal-fecha');
+          if (f > hoyStr) {
+            alert('Esta es una fecha futura. Solo puedes consultar el historial de días pasados o la hoja de hoy.');
+            return;
+          }
+          this.close();
+          if (onSeleccionarFecha) onSeleccionarFecha(f);
+        });
+      });
+    };
+
+    const actualizarVista = () => {
+      const bodyEl = this.container.querySelector('.modal-body');
+      if (bodyEl) {
+        bodyEl.innerHTML = renderCalendarioDOM();
+        attachCalListeners();
+      }
+    };
+
+    this.open('📅 Historial Contable y Calendario de Días', renderCalendarioDOM(), `
+      <button type="button" class="btn-secondary" id="btnCerrarModalCal">Cerrar Calendario</button>
+    `);
+
+    document.getElementById('btnCerrarModalCal')?.addEventListener('click', () => this.close());
+    attachCalListeners();
+  }
 }
 

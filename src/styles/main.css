@@ -1244,6 +1244,347 @@ input, button, select, textarea {
 }
 
 /* ======================================================
+   ESTILOS DE HISTORIAL, CALENDARIO Y MODO SOLO LECTURA
+   ====================================================== */
+
+/* Botón de Selección de Día con Indicador de Hoy */
+.btn-dia-selector.es-dia-hoy {
+  border-color: #3b82f6;
+  position: relative;
+}
+
+.punto-hoy-badge {
+  color: #38bdf8;
+  font-size: 1rem;
+  line-height: 0.5;
+  margin-left: 2px;
+}
+
+/* Botón de Apertura de Calendario Historial */
+.btn-abrir-calendario {
+  background: #1e3a8a;
+  color: #ffffff;
+  border: 1px solid #3b82f6;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all var(--transition-fast);
+}
+
+.btn-abrir-calendario:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+/* Banner de Aviso de Modo Historial (Solo Lectura) */
+.banner-aviso-historial {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fffbeb;
+  border: 2px solid #f59e0b;
+  border-left: 6px solid #d97706;
+  padding: 12px 18px;
+  border-radius: 6px;
+  margin: 12px 20px 0;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.12);
+}
+
+.banner-aviso-contenido {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icono-candado-aviso {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.banner-titulo-historial {
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #92400e;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.banner-sub-historial {
+  font-size: 0.78rem;
+  color: #78350f;
+  margin-top: 2px;
+}
+
+.btn-regresar-hoy {
+  background: #d97706;
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.btn-regresar-hoy:hover {
+  background: #b45309;
+  transform: scale(1.03);
+}
+
+/* Badge hint de hora en la celda de proveedor */
+.badge-hora-hint {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  transition: opacity var(--transition-fast);
+}
+
+.fila-bloqueada:hover .badge-hora-hint {
+  opacity: 1;
+}
+
+/* Fila de renglón vacío en histórico */
+.fila-vacia-historico {
+  background-color: #fafbfc;
+  opacity: 0.7;
+}
+
+/* Estilos de Celda Deshabilitada */
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+  color: #334155 !important;
+  background-color: transparent !important;
+}
+
+.fila-disponible-captura {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.fila-disponible-captura:hover {
+  background-color: #eff6ff;
+}
+
+.celda-placeholder-clic {
+  padding: 4px 8px;
+}
+
+.placeholder-clic {
+  color: #3b82f6;
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* Modal de Calendario de Historial */
+.calendario-historial-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.cal-mes-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  background: #f8fafc;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.cal-mes-titulo {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #0f172a;
+  text-transform: capitalize;
+}
+
+.btn-cal-nav {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.btn-cal-nav:hover {
+  background: #1e3a8a;
+  border-color: #1e3a8a;
+  color: #ffffff;
+}
+
+.btn-cal-hoy {
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  color: #1e3a8a;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-cal-hoy:hover {
+  background: #1e3a8a;
+  color: #ffffff;
+}
+
+.cal-grid-dias-semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.cal-header-dia {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #64748b;
+  padding: 4px 0;
+  text-transform: uppercase;
+}
+
+.cal-grid-celdas {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.cal-celda {
+  min-height: 64px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.cal-celda:hover:not(.cal-futuro) {
+  border-color: #1e3a8a;
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.cal-celda-vacia {
+  border: 1px dashed #e2e8f0;
+  background: transparent;
+  cursor: default;
+}
+
+.cal-celda.cal-futuro {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cal-celda.cal-es-hoy {
+  border: 2px solid #2563eb;
+  background: #eff6ff;
+}
+
+.cal-celda.cal-seleccionado {
+  box-shadow: 0 0 0 2.5px #b91c1c;
+}
+
+.cal-celda.cal-con-historial {
+  border-color: #93c5fd;
+  background: #f0fdf4;
+}
+
+.cal-celda.cal-con-historial.cal-es-hoy {
+  background: #eff6ff;
+}
+
+.cal-celda-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cal-numero-dia {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.cal-tag-hoy {
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.58rem;
+  font-weight: 900;
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+}
+
+.cal-punto-historial {
+  background: #059669;
+  color: #ffffff;
+  font-size: 0.6rem;
+  font-weight: 900;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-celda-body {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cal-badge-pagado {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  border-radius: 3px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 1px 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.cal-sub-count {
+  font-size: 0.62rem;
+  color: #64748b;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* ======================================================
    MODO IMPRESIÓN (IDÉNTICO A LA HOJA FÍSICA)
    ====================================================== */
 @media print {
