@@ -549,36 +549,7 @@ export class HojaDiariaModule {
               </div>
             </div>
 
-            <!-- 4. CASCADA (Máquinas) -->
-            <div class="hoja-subcuadro" style="margin-top: 14px;">
-              <div class="subcuadro-titulo">CASCADA</div>
-              <div class="grid-tres-campos">
-                <div>
-                  <label>MONEDAS:</label>
-                  <input type="number" class="cell-input text-right font-bold" id="cascadaMonedas" value="${d.cascada.monedas}" ${editableGeneral ? '' : 'disabled'}>
-                </div>
-                <div>
-                  <label>PREMIOS:</label>
-                  <input type="number" class="cell-input text-right font-bold text-red" id="cascadaPremios" value="${d.cascada.premios}" ${editableGeneral ? '' : 'disabled'}>
-                </div>
-                <div>
-                  <label>TOTAL:</label>
-                  <div class="field-static-val">${this.formatMoney(d.cascada.total)}</div>
-                </div>
-              </div>
-              <div class="corte-reparto-box">
-                <div class="reparto-item">
-                  <span>ELLOS (${d.cascada.porcentajeEllos}%):</span>
-                  <strong>${this.formatMoney(d.cascada.ellosTotal)}</strong>
-                </div>
-                <div class="reparto-item item-nosotros">
-                  <span>NOSOTROS (${d.cascada.porcentajeNosotros}%):</span>
-                  <strong>${this.formatMoney(d.cascada.nosotrosTotal)}</strong>
-                </div>
-              </div>
-            </div>
-
-            <!-- 5. MAQUINA MUÑECOS (Peluches) -->
+            <!-- 4. MAQUINA MUÑECOS (Peluches) -->
             <div class="hoja-subcuadro" style="margin-top: 14px;">
               <div class="subcuadro-titulo">MAQUINA MUÑECOS</div>
               <div class="grid-dos-campos">
@@ -895,14 +866,6 @@ export class HojaDiariaModule {
       });
     });
 
-    // Cascada
-    const saveCascada = () => {
-      const m = document.getElementById('cascadaMonedas')?.value;
-      const p = document.getElementById('cascadaPremios')?.value;
-      stateManager.updateCascada({ monedas: m, premios: p });
-    };
-    document.getElementById('cascadaMonedas')?.addEventListener('change', saveCascada);
-    document.getElementById('cascadaPremios')?.addEventListener('change', saveCascada);
 
     // Muñecos
     document.getElementById('munecosMonedas')?.addEventListener('change', (e) => {
