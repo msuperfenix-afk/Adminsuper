@@ -1007,12 +1007,13 @@ export class ModalManager {
   openCapturaProveedorModal({ index, nota, proveedor = '', pagado = 0, tipoPago = 'Efectivo' }, onGuardar) {
     const numNota = nota || (index !== undefined ? index + 1 : stateManager.data.comprasProveedores.length + 1);
 
-    // Obtener proveedores únicos combinando el catálogo y los ya registrados
+    // Obtener proveedores únicos combinando el catálogo maestro y los ya registrados
     const catalogo = Array.from(new Set([
+      ...stateManager.getProveedoresCatalogo().map(p => p.nombre).filter(Boolean),
       ...CATALOGO_PROVEEDORES_PREDETERMINADOS,
       ...stateManager.data.proveedores.map(p => p.proveedor).filter(Boolean),
       ...stateManager.data.comprasProveedores.map(p => p.proveedor).filter(Boolean)
-    ])).sort();
+    ])).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
 
     const body = `
       <form id="formCapturaProveedorSeguro">
@@ -2050,6 +2051,119 @@ export class ModalManager {
         ventaAnterior: nuevaVentaAnterior,
         notas: nuevasNotas
       });
+
+      this.close();
+      if (onGuardado) onGuardado();
+    });
+  }
+
+  // ==========================================
+  // 19. MODAL: AGREGAR / EDITAR PROVEEDOR EN BASE DE DATOS MAESTRA
+  // ==========================================
+  openProveedorCatalogoModal(prov = null, onGuardado = null) {
+    const isEdit = !!(prov && prov.id);
+    const p = {
+      nombre: '',
+      categoria: 'abarrotes',
+      diaHabitual: 'lunes',
+      horaHabitual: '10:00',
+      tipoPago: 'Efectivo',
+      presupuestoHabitual: '',
+      contacto: '',
+      notas: '',
+      ...(prov || {})
+    };
+
+    const diasOptions = DIAS_SEMANA.map(d => `<option value="${d.id}" ${p.diaHabitual === d.id ? 'selected' : ''}>${d.nombre}</option>`).join('');
+    const catsOptions = Object.entries(CATEGORIAS_PROVEEDOR).map(([key, val]) => `<option value="${key}" ${p.categoria === key ? 'selected' : ''}>${val.nombre}</option>`).join('');
+
+    const body = `
+      <form id="formProvCatalogo">
+        <div class="form-group">
+          <label class="form-label">Nombre del Proveedor o Empresa *</label>
+          <input type="text" class="form-control" name="nombre" placeholder="Ej: Coca-Cola, Sabritas, Panadería..." value="${p.nombre}" required autofocus>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Categoría *</label>
+            <select class="form-control" name="categoria" required>
+              ${catsOptions}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Forma de Pago Preferida *</label>
+            <select class="form-control" name="tipoPago" required>
+              <option value="Efectivo" ${p.tipoPago === 'Efectivo' ? 'selected' : ''}>💵 Efectivo de Caja</option>
+              <option value="Transferencia" ${p.tipoPago === 'Transferencia' ? 'selected' : ''}>🏦 Transferencia Bancaria</option>
+              <option value="Cheque" ${p.tipoPago === 'Cheque' ? 'selected' : ''}>📄 Cheque</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Día Habitual de Visita *</label>
+            <select class="form-control" name="diaHabitual" required>
+              ${diasOptions}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hora Estimada</label>
+            <input type="time" class="form-control" name="horaHabitual" value="${p.horaHabitual || '10:00'}">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Presupuesto Habitual ($ MXN)</label>
+            <input type="number" step="10" min="0" class="form-control" name="presupuestoHabitual" placeholder="0.00" value="${p.presupuestoHabitual || ''}">
+            <small style="color: #64748b; font-size: 0.72rem;">Estimado promedio de compra por visita</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teléfono / Preventista</label>
+            <input type="text" class="form-control" name="contacto" placeholder="Ej: Juan Pérez / 449-123-4567" value="${p.contacto || ''}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Observaciones / Notas</label>
+          <textarea class="form-control" name="notas" placeholder="Requerimientos de recibo, días alternos, promociones...">${p.notas || ''}</textarea>
+        </div>
+      </form>
+    `;
+
+    const footer = `
+      <button type="button" class="btn-secondary" id="btnCancelProvCat">Cancelar</button>
+      <button type="button" class="btn-primary" id="btnSaveProvCat">${isEdit ? 'Guardar Cambios' : 'Registrar en Catálogo'}</button>
+    `;
+
+    this.open(isEdit ? `✏️ Editar Proveedor: ${p.nombre}` : '➕ Nuevo Proveedor en Base de Datos', body, footer);
+
+    document.getElementById('btnCancelProvCat')?.addEventListener('click', () => this.close());
+    document.getElementById('btnSaveProvCat')?.addEventListener('click', () => {
+      const form = document.getElementById('formProvCatalogo');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      const formData = new FormData(form);
+      const datos = {
+        nombre: formData.get('nombre').trim(),
+        categoria: formData.get('categoria'),
+        tipoPago: formData.get('tipoPago'),
+        diaHabitual: formData.get('diaHabitual'),
+        horaHabitual: formData.get('horaHabitual'),
+        presupuestoHabitual: parseFloat(formData.get('presupuestoHabitual')) || 0,
+        contacto: formData.get('contacto').trim(),
+        notas: formData.get('notas').trim()
+      };
+
+      if (isEdit) {
+        stateManager.updateProveedorCatalogo(prov.id, datos);
+      } else {
+        stateManager.addProveedorCatalogo(datos);
+      }
 
       this.close();
       if (onGuardado) onGuardado();

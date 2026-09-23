@@ -46,6 +46,37 @@ export const CATALOGO_PROVEEDORES_PREDETERMINADOS = [
   'Yakult'
 ];
 
+// Base de Datos Maestra Inicial de Proveedores de Minisúper Fénix
+export const CATALOGO_PROVEEDORES_INICIAL = [
+  { id: 'cat-1', nombre: 'Coca-Cola', categoria: 'refrescos', diaHabitual: 'lunes', horaHabitual: '09:00', tipoPago: 'Transferencia', presupuestoHabitual: 6500, contacto: 'Preventa Coca: 449-123-4567', notas: 'Tener envases vacíos listos' },
+  { id: 'cat-2', nombre: 'Bimbo', categoria: 'panaderia', diaHabitual: 'lunes', horaHabitual: '10:30', tipoPago: 'Efectivo', presupuestoHabitual: 2800, contacto: 'Repartidor Ruta 12', notas: 'Revisar caducidad en pan dulce' },
+  { id: 'cat-3', nombre: 'Tortilla La Ideal', categoria: 'abarrotes', diaHabitual: 'martes', horaHabitual: '08:00', tipoPago: 'Efectivo', presupuestoHabitual: 440, contacto: 'Tortillería La Ideal', notas: 'Entrega en mostrador temprano' },
+  { id: 'cat-4', nombre: 'Tortilla Amarilla', categoria: 'abarrotes', diaHabitual: 'martes', horaHabitual: '08:15', tipoPago: 'Efectivo', presupuestoHabitual: 110, contacto: 'Don Chuy', notas: '' },
+  { id: 'cat-5', nombre: 'Tortilla Monreal', categoria: 'abarrotes', diaHabitual: 'martes', horaHabitual: '08:45', tipoPago: 'Efectivo', presupuestoHabitual: 230, contacto: 'Tortillería Monreal', notas: '' },
+  { id: 'cat-6', nombre: 'Pan Mirella', categoria: 'panaderia', diaHabitual: 'martes', horaHabitual: '08:30', tipoPago: 'Efectivo', presupuestoHabitual: 275, contacto: 'Panadería Mirella', notas: 'Bolillo y conchas' },
+  { id: 'cat-7', nombre: 'Pan Espacio', categoria: 'panaderia', diaHabitual: 'martes', horaHabitual: '08:40', tipoPago: 'Efectivo', presupuestoHabitual: 380, contacto: 'Panadería Espacio', notas: 'Bolillo caliente' },
+  { id: 'cat-8', nombre: 'Pan Celia', categoria: 'panaderia', diaHabitual: 'martes', horaHabitual: '08:50', tipoPago: 'Efectivo', presupuestoHabitual: 467, contacto: 'Panadería Celia', notas: 'Bolillo y dulce surtido' },
+  { id: 'cat-9', nombre: 'Pepsi', categoria: 'refrescos', diaHabitual: 'martes', horaHabitual: '11:00', tipoPago: 'Efectivo', presupuestoHabitual: 2600, contacto: 'Gepp Aguascalientes', notas: 'Pepsi, Manzanita y 7Up' },
+  { id: 'cat-10', nombre: 'Sabritas', categoria: 'botanas', diaHabitual: 'lunes', horaHabitual: '12:00', tipoPago: 'Efectivo', presupuestoHabitual: 3200, contacto: 'Ruta Pepsico', notas: 'Surtir exhibidor frontal' },
+  { id: 'cat-11', nombre: 'Gamesa', categoria: 'panaderia', diaHabitual: 'martes', horaHabitual: '11:30', tipoPago: 'Efectivo', presupuestoHabitual: 1017, contacto: 'Preventa Gamesa', notas: 'Galletas surtidas y Marías' },
+  { id: 'cat-12', nombre: 'Marinela', categoria: 'panaderia', diaHabitual: 'miercoles', horaHabitual: '10:00', tipoPago: 'Efectivo', presupuestoHabitual: 1500, contacto: 'Ruta Bimbo / Marinela', notas: 'Gansitos, Pingüinos, Choco Roles' },
+  { id: 'cat-13', nombre: 'Lala', categoria: 'lacteos', diaHabitual: 'martes', horaHabitual: '12:45', tipoPago: 'Efectivo', presupuestoHabitual: 1180, contacto: 'Grupo Lala Ags', notas: 'Leche entera, deslactosada y yogurt' },
+  { id: 'cat-14', nombre: 'Cremería Ags', categoria: 'lacteos', diaHabitual: 'martes', horaHabitual: '10:45', tipoPago: 'Efectivo', presupuestoHabitual: 222, contacto: 'Cremería Local', notas: 'Queso panela, crema y jamón' },
+  { id: 'cat-15', nombre: 'Cerveza Corona', categoria: 'cerveza', diaHabitual: 'jueves', horaHabitual: '10:00', tipoPago: 'Transferencia', presupuestoHabitual: 15775, contacto: 'Agencia Corona / Modelo', notas: 'Mega, Corona Extra y Victoria' },
+  { id: 'cat-16', nombre: 'Cerveza Modelo', categoria: 'cerveza', diaHabitual: 'viernes', horaHabitual: '11:00', tipoPago: 'Transferencia', presupuestoHabitual: 8500, contacto: 'Preventa Modelo', notas: 'Modelo Especial y Negra Modelo' },
+  { id: 'cat-17', nombre: 'Bonafont', categoria: 'refrescos', diaHabitual: 'martes', horaHabitual: '12:00', tipoPago: 'Efectivo', presupuestoHabitual: 599, contacto: 'Bonafont Garrafones y botellas', notas: 'Agua natural y Levité' },
+  { id: 'cat-18', nombre: 'Huevo San Juan', categoria: 'abarrotes', diaHabitual: 'martes', horaHabitual: '12:15', tipoPago: 'Efectivo', presupuestoHabitual: 1036, contacto: 'Distribuidora Huevo', notas: 'Cajas de huevo blanco' },
+  { id: 'cat-19', nombre: 'Tostadas Mission', categoria: 'botanas', diaHabitual: 'martes', horaHabitual: '09:15', tipoPago: 'Efectivo', presupuestoHabitual: 236, contacto: 'Gruma / Mission', notas: 'Tostadas y totopos' },
+  { id: 'cat-20', nombre: 'Totopos Riko', categoria: 'botanas', diaHabitual: 'martes', horaHabitual: '10:00', tipoPago: 'Efectivo', presupuestoHabitual: 294, contacto: 'Distribuidor local', notas: '' },
+  { id: 'cat-21', nombre: 'Yakult', categoria: 'lacteos', diaHabitual: 'martes', horaHabitual: '10:15', tipoPago: 'Efectivo', presupuestoHabitual: 195, contacto: 'Yakult Aguascalientes', notas: 'Yakult original y 40LT' },
+  { id: 'cat-22', nombre: 'Flan de Elote', categoria: 'abarrotes', diaHabitual: 'martes', horaHabitual: '09:45', tipoPago: 'Efectivo', presupuestoHabitual: 330, contacto: 'Postres Caseros Doña Tere', notas: 'Refrigerar al recibir' },
+  { id: 'cat-23', nombre: 'Frijoles de Bote', categoria: 'abarrotes', diaHabitual: 'martes', horaHabitual: '11:45', tipoPago: 'Efectivo', presupuestoHabitual: 376, contacto: 'Distribuidora Abarrotes', notas: '' },
+  { id: 'cat-24', nombre: 'San Marcos', categoria: 'abarrotes', diaHabitual: 'martes', horaHabitual: '11:00', tipoPago: 'Efectivo', presupuestoHabitual: 222, contacto: 'Conservas San Marcos', notas: 'Chiles y enlatados' },
+  { id: 'cat-25', nombre: 'Botanas Leo', categoria: 'botanas', diaHabitual: 'martes', horaHabitual: '11:15', tipoPago: 'Efectivo', presupuestoHabitual: 240, contacto: 'Botanas Leo', notas: 'Papas y chicharrones' },
+  { id: 'cat-26', nombre: 'Sr Combi', categoria: 'abarrotes', diaHabitual: 'lunes', horaHabitual: '14:00', tipoPago: 'Efectivo', presupuestoHabitual: 3000, contacto: 'Distribuidor Mayorista', notas: 'Abarrotes generales por mayoreo' },
+  { id: 'cat-27', nombre: 'Hielo y Extras', categoria: 'refrescos', diaHabitual: 'viernes', horaHabitual: '15:00', tipoPago: 'Efectivo', presupuestoHabitual: 500, contacto: 'Hielo San Marcos', notas: 'Bolsas de 5kg para congelador' }
+];
+
 // Nombres fijos oficiales de proveedores de pan y tortilla (no se deben de cambiar)
 export const PROVEEDORES_PAN_OFICIALES = [
   'PAN CELIA',
@@ -72,6 +103,9 @@ const SEED_DATA = {
   ano: 2026,
   cantidadInicial: 1500,
   cajeroActual: 'Don Manuel (Encargado)',
+
+  // Base de Datos Maestra de Proveedores
+  catalogoProveedores: JSON.parse(JSON.stringify(CATALOGO_PROVEEDORES_INICIAL)),
 
   // Catálogos recordatorios de precio por pieza y kilo
   preciosGuardadosPan: {
@@ -732,6 +766,12 @@ class StateManager {
             if (p.montoPagadoReal === undefined) p.montoPagadoReal = 0;
           });
         }
+
+        // Asegurar que la Base de Datos Maestra de Proveedores esté inicializada
+        if (!Array.isArray(merged.catalogoProveedores) || merged.catalogoProveedores.length === 0) {
+          merged.catalogoProveedores = JSON.parse(JSON.stringify(CATALOGO_PROVEEDORES_INICIAL));
+        }
+
         return merged;
       }
     } catch (e) {
@@ -1942,6 +1982,288 @@ class StateManager {
       totalPendientes: totalesHoja.totalPendientes,
       totalProveedoresActivos: this.data.proveedores.length
     };
+  }
+
+  // 13. MÉTODOS DE BASE DE DATOS MAESTRA DE PROVEEDORES
+  getProveedoresCatalogo() {
+    if (!Array.isArray(this.data.catalogoProveedores) || this.data.catalogoProveedores.length === 0) {
+      this.data.catalogoProveedores = JSON.parse(JSON.stringify(CATALOGO_PROVEEDORES_INICIAL));
+      this.saveState();
+    }
+    return [...this.data.catalogoProveedores].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' }));
+  }
+
+  addProveedorCatalogo(p) {
+    if (!Array.isArray(this.data.catalogoProveedores)) {
+      this.data.catalogoProveedores = [];
+    }
+    const nombre = (p.nombre || p.proveedor || '').trim();
+    if (!nombre) return null;
+
+    const nuevo = {
+      id: 'cat-prov-' + Date.now(),
+      nombre,
+      categoria: p.categoria || 'abarrotes',
+      diaHabitual: p.diaHabitual || p.dia || 'lunes',
+      horaHabitual: p.horaHabitual || p.hora || '10:00',
+      tipoPago: p.tipoPago || 'Efectivo',
+      presupuestoHabitual: parseFloat(p.presupuestoHabitual || p.presupuestoAprox || p.preventaPresupuesto) || 0,
+      contacto: (p.contacto || '').trim(),
+      notas: (p.notas || '').trim(),
+      productosBase: Array.isArray(p.productosBase) ? p.productosBase : []
+    };
+
+    this.data.catalogoProveedores.push(nuevo);
+    this.saveState();
+    return nuevo;
+  }
+
+  updateProveedorCatalogo(id, campos) {
+    if (!Array.isArray(this.data.catalogoProveedores)) return null;
+    const idx = this.data.catalogoProveedores.findIndex(p => p.id === id);
+    if (idx !== -1) {
+      this.data.catalogoProveedores[idx] = {
+        ...this.data.catalogoProveedores[idx],
+        ...campos,
+        nombre: (campos.nombre !== undefined ? campos.nombre : this.data.catalogoProveedores[idx].nombre).trim()
+      };
+      if (campos.presupuestoHabitual !== undefined) {
+        this.data.catalogoProveedores[idx].presupuestoHabitual = parseFloat(campos.presupuestoHabitual) || 0;
+      }
+      this.saveState();
+      return this.data.catalogoProveedores[idx];
+    }
+    return null;
+  }
+
+  deleteProveedorCatalogo(id) {
+    if (!Array.isArray(this.data.catalogoProveedores)) return;
+    this.data.catalogoProveedores = this.data.catalogoProveedores.filter(p => p.id !== id);
+    this.saveState();
+  }
+
+  // 14. MÉTODOS DE ESTADÍSTICAS GENERALES Y POR PROVEEDOR
+  getHojasUnificadas() {
+    const hojasMap = new Map();
+    // 1. Recorrer hojasPorFecha
+    if (this.data.hojasPorFecha) {
+      Object.entries(this.data.hojasPorFecha).forEach(([fStr, hoja]) => {
+        if (hoja && fStr) {
+          hojasMap.set(fStr, hoja);
+        }
+      });
+    }
+    // 2. Incluir hoja actual
+    if (this.data.fecha) {
+      hojasMap.set(this.data.fecha, this.extraerDatosHojaActual());
+    }
+    return Array.from(hojasMap.values());
+  }
+
+  getEstadisticasGenerales() {
+    const hojas = this.getHojasUnificadas();
+    let totalPagado = 0;
+    let totalEfectivo = 0;
+    let totalTransferencia = 0;
+    let totalNotas = 0;
+    const diasConRegistro = new Set();
+    const gastoPorCategoria = {};
+    const gastoPorDiaSemana = {
+      lunes: 0,
+      martes: 0,
+      miercoles: 0,
+      jueves: 0,
+      viernes: 0,
+      sabado: 0,
+      domingo: 0
+    };
+
+    // Crear mapa de categorías de proveedores
+    const catMap = new Map();
+    this.getProveedoresCatalogo().forEach(p => {
+      const norm = (p.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      catMap.set(norm, p.categoria || 'abarrotes');
+    });
+
+    hojas.forEach(hoja => {
+      const fStr = hoja.fecha;
+      let diaId = 'lunes';
+      if (fStr) {
+        const dObj = new Date(fStr + 'T12:00:00');
+        const diasSemanaIds = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        diaId = diasSemanaIds[dObj.getDay()] || 'lunes';
+      }
+
+      const compras = (hoja.comprasProveedores || []).filter(c => (parseFloat(c.pagado) > 0) || (c.proveedor && c.proveedor.trim() !== ''));
+      if (compras.length > 0 && fStr) {
+        diasConRegistro.add(fStr);
+      }
+
+      compras.forEach(c => {
+        const monto = parseFloat(c.pagado) || 0;
+        if (monto > 0) {
+          totalPagado += monto;
+          totalNotas++;
+          const esTransf = (c.tipoPago === 'Transferencia');
+          if (esTransf) {
+            totalTransferencia += monto;
+          } else {
+            totalEfectivo += monto;
+          }
+
+          if (gastoPorDiaSemana[diaId] !== undefined) {
+            gastoPorDiaSemana[diaId] += monto;
+          }
+
+          // Identificar categoría
+          const normNombre = (c.proveedor || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+          let cat = 'abarrotes';
+          for (const [keyNorm, cVal] of catMap.entries()) {
+            if (normNombre === keyNorm || (normNombre.length >= 4 && keyNorm.includes(normNombre)) || (keyNorm.length >= 4 && normNombre.includes(keyNorm))) {
+              cat = cVal;
+              break;
+            }
+          }
+          gastoPorCategoria[cat] = (gastoPorCategoria[cat] || 0) + monto;
+        }
+      });
+    });
+
+    const numDias = Math.max(1, diasConRegistro.size);
+    const promedioPorDia = totalPagado / numDias;
+    const promedioPorCompra = totalNotas > 0 ? (totalPagado / totalNotas) : 0;
+    const pctEfectivo = totalPagado > 0 ? ((totalEfectivo / totalPagado) * 100) : 0;
+    const pctTransferencia = totalPagado > 0 ? ((totalTransferencia / totalPagado) * 100) : 0;
+
+    return {
+      totalPagado,
+      totalEfectivo,
+      totalTransferencia,
+      pctEfectivo,
+      pctTransferencia,
+      totalNotas,
+      totalDiasRegistrados: numDias,
+      promedioPorDia,
+      promedioPorCompra,
+      gastoPorCategoria,
+      gastoPorDiaSemana
+    };
+  }
+
+  getEstadisticasProveedor(nombreProveedor) {
+    if (!nombreProveedor) return null;
+    const hojas = this.getHojasUnificadas();
+    const norm = (s) => (s || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const targetNorm = norm(nombreProveedor);
+
+    let totalPagado = 0;
+    let conteoEfectivo = 0;
+    let conteoTransferencia = 0;
+    const comprasHistorial = [];
+
+    hojas.forEach(hoja => {
+      const fStr = hoja.fecha || '';
+      (hoja.comprasProveedores || []).forEach(c => {
+        const cNorm = norm(c.proveedor);
+        const match = cNorm === targetNorm || (targetNorm.length >= 4 && cNorm.includes(targetNorm)) || (cNorm.length >= 4 && targetNorm.includes(cNorm));
+        if (match) {
+          const monto = parseFloat(c.pagado) || 0;
+          if (monto > 0) {
+            totalPagado += monto;
+            const esTransf = (c.tipoPago === 'Transferencia');
+            if (esTransf) conteoTransferencia++;
+            else conteoEfectivo++;
+
+            comprasHistorial.push({
+              fecha: fStr,
+              dia: hoja.dia || '',
+              nota: c.nota || '',
+              monto,
+              tipoPago: c.tipoPago || 'Efectivo',
+              hora: c.hora || ''
+            });
+          }
+        }
+      });
+    });
+
+    // Ordenar compras por fecha descendente
+    comprasHistorial.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+
+    const totalCompras = comprasHistorial.length;
+    const promedioPorCompra = totalCompras > 0 ? (totalPagado / totalCompras) : 0;
+
+    // Buscar datos en el catálogo
+    const catItem = (this.data.catalogoProveedores || []).find(p => {
+      const pNorm = norm(p.nombre);
+      return pNorm === targetNorm || (targetNorm.length >= 4 && pNorm.includes(targetNorm)) || (pNorm.length >= 4 && targetNorm.includes(pNorm));
+    });
+
+    const presupuestoHabitual = catItem ? (catItem.presupuestoHabitual || 0) : 0;
+    const diferenciaPresupuesto = presupuestoHabitual > 0 ? (promedioPorCompra - presupuestoHabitual) : 0;
+
+    return {
+      nombre: catItem ? catItem.nombre : nombreProveedor,
+      categoria: catItem ? catItem.categoria : 'abarrotes',
+      diaHabitual: catItem ? catItem.diaHabitual : '',
+      contacto: catItem ? catItem.contacto : '',
+      tipoPagoHabitual: catItem ? catItem.tipoPago : (conteoTransferencia > conteoEfectivo ? 'Transferencia' : 'Efectivo'),
+      totalPagado,
+      totalCompras,
+      promedioPorCompra,
+      presupuestoHabitual,
+      diferenciaPresupuesto,
+      conteoEfectivo,
+      conteoTransferencia,
+      comprasHistorial
+    };
+  }
+
+  getTopProveedores(limit = 10) {
+    const catalogo = this.getProveedoresCatalogo();
+    const statsList = catalogo.map(p => {
+      const st = this.getEstadisticasProveedor(p.nombre);
+      return {
+        id: p.id,
+        nombre: p.nombre,
+        categoria: p.categoria,
+        diaHabitual: p.diaHabitual,
+        tipoPago: p.tipoPago,
+        totalPagado: st ? st.totalPagado : 0,
+        totalCompras: st ? st.totalCompras : 0,
+        promedioPorCompra: st ? st.promedioPorCompra : 0
+      };
+    });
+
+    // Si hay proveedores que estuvieron en compras pero no en el catálogo
+    const hojas = this.getHojasUnificadas();
+    const norm = (s) => (s || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    hojas.forEach(hoja => {
+      (hoja.comprasProveedores || []).forEach(c => {
+        if (c.proveedor && parseFloat(c.pagado) > 0) {
+          const cNorm = norm(c.proveedor);
+          const yaEsta = statsList.some(s => norm(s.nombre) === cNorm);
+          if (!yaEsta) {
+            const st = this.getEstadisticasProveedor(c.proveedor);
+            if (st && st.totalPagado > 0) {
+              statsList.push({
+                id: 'extra-' + Math.random().toString(36).substr(2, 6),
+                nombre: c.proveedor,
+                categoria: 'abarrotes',
+                diaHabitual: '',
+                tipoPago: c.tipoPago || 'Efectivo',
+                totalPagado: st.totalPagado,
+                totalCompras: st.totalCompras,
+                promedioPorCompra: st.promedioPorCompra
+              });
+            }
+          }
+        }
+      });
+    });
+
+    statsList.sort((a, b) => b.totalPagado - a.totalPagado);
+    return statsList.slice(0, limit);
   }
 
   exportarJSON() {
