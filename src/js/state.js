@@ -1,6 +1,6 @@
 import { guardarHojaEnFirestore, cargarHojaDeFirestore, isFirebaseConectado } from './firebaseClient.js';
 
-const STORAGE_KEY = 'adminfenix_data_v4';
+const STORAGE_KEY = 'adminfenix_data_v5';
 
 // Nombres de días en español
 export const NOMBRES_DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -94,20 +94,28 @@ export const PROVEEDORES_TORTILLA_OFICIALES = [
   'TORTILLA IDEAL'
 ];
 
-// Datos iniciales con los datos reales de la hoja en papel física
+// Obtener fecha y datos cronológicos iniciales de hoy
+const fechaInicialHoy = getFechaHoyLocal();
+const dInicialHoy = new Date(fechaInicialHoy + 'T12:00:00');
+const diaInicialNombre = NOMBRES_DIAS[dInicialHoy.getDay()] || 'Lunes';
+const diaInicialNum = dInicialHoy.getDate();
+const mesInicialNombre = NOMBRES_MESES[dInicialHoy.getMonth()] || 'Ene';
+const anoInicialNum = dInicialHoy.getFullYear();
+
+// Datos iniciales en limpio para inicio de operación real (proveedores y calendario preservados)
 const SEED_DATA = {
-  dia: 'Martes',
-  fecha: '2026-09-15',
-  diaNum: 15,
-  mes: 'Sept',
-  ano: 2026,
-  cantidadInicial: 1500,
+  dia: diaInicialNombre,
+  fecha: fechaInicialHoy,
+  diaNum: diaInicialNum,
+  mes: mesInicialNombre,
+  ano: anoInicialNum,
+  cantidadInicial: 0,
   cajeroActual: 'Don Manuel (Encargado)',
 
-  // Base de Datos Maestra de Proveedores
+  // Base de Datos Maestra de Proveedores (CONSERVADA ÍNTEGRAMENTE)
   catalogoProveedores: JSON.parse(JSON.stringify(CATALOGO_PROVEEDORES_INICIAL)),
 
-  // Catálogos recordatorios de precio por pieza y kilo
+  // Catálogos recordatorios de precio por pieza y kilo (CONSERVADOS)
   preciosGuardadosPan: {
     'PAN CELIA': 4.05,
     'PAN MIRELLA': 5.50,
@@ -119,83 +127,58 @@ const SEED_DATA = {
     'TORT. MONREAL': 23.00
   },
 
-  // 1. Conteo Pan y Tortilla (Hoja Física)
+  // 1. Conteo Pan y Tortilla (Vacíos listos para captura del día)
   conteoPan: [
-    { id: 'cp-1', proveedor: 'PAN CELIA', bol: 70, dul: 50, camb: 5, total: 115, precioPieza: 4.05, costo: 465.75 },
-    { id: 'cp-2', proveedor: 'PAN MIRELLA', bol: 40, dul: 25, camb: 15, total: 50, precioPieza: 5.50, costo: 275 },
-    { id: 'cp-3', proveedor: 'PAN ESPACIO', bol: 30, dul: 50, camb: 11, total: 69, precioPieza: 5.50, costo: 379.5 },
+    { id: 'cp-1', proveedor: 'PAN CELIA', bol: '', dul: '', camb: '', total: '', precioPieza: 4.05, costo: '' },
+    { id: 'cp-2', proveedor: 'PAN MIRELLA', bol: '', dul: '', camb: '', total: '', precioPieza: 5.50, costo: '' },
+    { id: 'cp-3', proveedor: 'PAN ESPACIO', bol: '', dul: '', camb: '', total: '', precioPieza: 5.50, costo: '' },
     { id: 'cp-4', proveedor: 'PAN CELIA (Turno 2)', bol: '', dul: '', camb: '', total: '', precioPieza: 4.05, costo: '' },
     { id: 'cp-5', proveedor: 'PAN MIRELLA (Turno 2)', bol: '', dul: '', camb: '', total: '', precioPieza: 5.50, costo: '' },
     { id: 'cp-6', proveedor: 'PAN ESPACIO (Turno 2)', bol: '', dul: '', camb: '', total: '', precioPieza: 5.50, costo: '' }
   ],
 
   conteoTortilla: [
-    { id: 'ct-1', proveedor: 'TORTILLA IDEAL', camb: '', nuev: 20, total: 20, precioKilo: 22.00, costo: 440 },
-    { id: 'ct-2', proveedor: 'TORTILLA AMARILLA', camb: '', nuev: 5, total: 5, precioKilo: 22.00, costo: 110 },
-    { id: 'ct-3', proveedor: 'TORT. MONREAL', camb: '', nuev: 10, total: 10, precioKilo: 23.00, costo: 230 },
-    { id: 'ct-4', proveedor: 'TORTILLA IDEAL', camb: '', nuev: 3, total: 3, precioKilo: 22.00, costo: 66 }
+    { id: 'ct-1', proveedor: 'TORTILLA IDEAL', camb: '', nuev: '', total: '', precioKilo: 22.00, costo: '' },
+    { id: 'ct-2', proveedor: 'TORTILLA AMARILLA', camb: '', nuev: '', total: '', precioKilo: 22.00, costo: '' },
+    { id: 'ct-3', proveedor: 'TORT. MONREAL', camb: '', nuev: '', total: '', precioKilo: 23.00, costo: '' },
+    { id: 'ct-4', proveedor: 'TORTILLA IDEAL', camb: '', nuev: '', total: '', precioKilo: 22.00, costo: '' }
   ],
 
-  // 2. Compras y Proveedores Pagados (Renglones 1 al 30 de la hoja física con horas de registro)
-  comprasProveedores: [
-    { nota: 1, proveedor: 'Tortilla La Ideal', pagado: 440, tipoPago: 'Efectivo', hora: '08:00 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 2, proveedor: 'Pan Mirella', pagado: 275, tipoPago: 'Efectivo', hora: '08:15 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 3, proveedor: 'Pan Espacio', pagado: 380, tipoPago: 'Efectivo', hora: '08:30 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 4, proveedor: 'Pan Celia', pagado: 467, tipoPago: 'Efectivo', hora: '08:45 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 5, proveedor: 'Tortilla Monreal', pagado: 230, tipoPago: 'Efectivo', hora: '09:00 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 6, proveedor: 'Tostadas Mission', pagado: 236, tipoPago: 'Efectivo', hora: '09:15 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 7, proveedor: 'Cerveza', pagado: 15775, tipoPago: 'Transferencia', hora: '09:30 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 8, proveedor: 'Flan de Elote', pagado: 330, tipoPago: 'Efectivo', hora: '09:45 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 9, proveedor: 'Totopos Riko', pagado: 294, tipoPago: 'Efectivo', hora: '10:00 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 10, proveedor: 'Yakult', pagado: 195, tipoPago: 'Efectivo', hora: '10:15 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 11, proveedor: 'Pepsi', pagado: 2611, tipoPago: 'Efectivo', hora: '10:30 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 12, proveedor: 'Cremería Ags', pagado: 222, tipoPago: 'Efectivo', hora: '10:45 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 13, proveedor: 'San Marcos', pagado: 222, tipoPago: 'Efectivo', hora: '11:00 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 14, proveedor: 'Botanas Leo', pagado: 240, tipoPago: 'Efectivo', hora: '11:15 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 15, proveedor: 'Gamesa', pagado: 1017, tipoPago: 'Efectivo', hora: '11:30 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 16, proveedor: 'Frijoles de Bote', pagado: 376, tipoPago: 'Efectivo', hora: '11:45 a. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 17, proveedor: 'Bonafont', pagado: 599, tipoPago: 'Efectivo', hora: '12:00 p. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 18, proveedor: 'Huevo San Juan', pagado: 1036, tipoPago: 'Efectivo', hora: '12:15 p. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 19, proveedor: 'Tortilla Ideal', pagado: 66, tipoPago: 'Efectivo', hora: '12:30 p. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 20, proveedor: 'Lala', pagado: 1180, tipoPago: 'Efectivo', hora: '12:45 p. m.', fechaRegistro: '2026-09-15', bloqueado: true }
-  ],
+  // 2. Compras y Proveedores Pagados (Limpio para inicio de operación)
+  comprasProveedores: [],
 
-  // 3. Préstamos o Pendientes de Pago
-  prestamosPendientes: [
-    { id: 'pres-1', proveedor: 'Sr Combi', pendiente: 3000, pagado: 0, nota: 'Préstamo acordado', liquidado: false, bloqueado: true },
-    { id: 'pres-2', proveedor: 'Grupo Modelo', pendiente: 8500, pagado: 0, nota: 'Pago de fin de semana', liquidado: false, bloqueado: true }
-  ],
+  // 3. Préstamos o Pendientes de Pago (Limpio)
+  prestamosPendientes: [],
 
-  // 4. Corte y Arqueo (Columnas de Turnos: Cantidad 1, Cantidad 2, Cantidad 3)
-  // LAS MONEDAS SE REGISTRAN POR MONTO TOTAL EN PESOS
+  // 4. Corte y Arqueo (En ceros, listo para turnos reales)
   arqueoColumnas: [
     {
       id: 'col-1',
       nombre: 'Arqueo 1 (Turno 1)',
-      tarjetas: 2450,
+      tarjetas: 0,
       tarjetaYomp: 0,
-      sistema: 29500,
-      billetes: 8500,
-      mon1: 180,
-      mon2: 240,
-      mon5: 450,
-      mon10: 890,
-      morralla: 1760,
-      bloqueado: true
+      sistema: 0,
+      billetes: 0,
+      mon1: 0,
+      mon2: 0,
+      mon5: 0,
+      mon10: 0,
+      morralla: 0,
+      bloqueado: false
     },
     {
       id: 'col-2',
       nombre: 'Arqueo 2 (Turno 2)',
-      tarjetas: 3800,
+      tarjetas: 0,
       tarjetaYomp: 0,
-      sistema: 15400,
-      billetes: 11200,
-      mon1: 95,
-      mon2: 160,
-      mon5: 350,
-      mon10: 600,
-      morralla: 1205,
-      bloqueado: true
+      sistema: 0,
+      billetes: 0,
+      mon1: 0,
+      mon2: 0,
+      mon5: 0,
+      mon10: 0,
+      morralla: 0,
+      bloqueado: false
     },
     {
       id: 'col-3',
@@ -213,46 +196,43 @@ const SEED_DATA = {
     }
   ],
 
-  // 5. Retiros de Efectivo
-  retiros: [
-    { id: 'ret-1', monto: 1500, nombre: 'Don Manuel', concepto: 'Caja Fuerte', hora: '10:15', autorizo: 'Gerencia', responsable: 'Don Manuel' },
-    { id: 'ret-2', monto: 3000, nombre: 'Supervisor Roberto', concepto: 'Depósito Bancario', hora: '14:20', autorizo: 'Don Manuel', responsable: 'Supervisor Roberto' }
-  ],
+  // 5. Retiros de Efectivo (Limpio)
+  retiros: [],
 
-  // 6. Cascada (Máquinas)
+  // 6. Cascada (Máquinas en 0)
   cascada: {
-    monedas: 1850,
-    premios: 450,
-    total: 1400,
-    totalCorte: 1400,
+    monedas: 0,
+    premios: 0,
+    total: 0,
+    totalCorte: 0,
     porcentajeEllos: 60,
     porcentajeNosotros: 40,
-    ellosTotal: 840,
-    nosotrosTotal: 560
+    ellosTotal: 0,
+    nosotrosTotal: 0
   },
 
-  // 7. Máquina Muñecos (Peluches)
+  // 7. Máquina Muñecos (Peluches en 0)
   maquinaMunecos: {
-    monedas: 2200,
-    total: 2200,
-    totalCorte: 2200,
+    monedas: 0,
+    total: 0,
+    totalCorte: 0,
     porcentajeEllos: 60,
     porcentajeNosotros: 40,
-    ellosTotal: 1320,
-    nosotrosTotal: 880
+    ellosTotal: 0,
+    nosotrosTotal: 0
   },
 
-  // 8. Máquinas Monto Individual
+  // 8. Máquinas Monto Individual (en 0)
   maquinasIndividuales: {
-    maq1_1: 420,
-    maq2_1: 380,
-    maq3_5: 950,
-    total: 1750,
+    maq1_1: 0,
+    maq2_1: 0,
+    maq3_5: 0,
+    total: 0,
     porcentajeProveedor: 60,
     porcentajeNosotros: 40,
-    proveedorTotal: 1050,
-    nosotrosTotal: 700,
-    nota: 'Corte de máquinas'
+    proveedorTotal: 0,
+    nosotrosTotal: 0,
+    nota: ''
   },
 
   // 9. Agenda Semanal (Pipeline Lunes a Domingo)
@@ -507,83 +487,14 @@ const SEED_DATA = {
     }
   ],
 
-  // 10. Compatibilidad con el módulo de operaciones analíticas (CajaOperaciones)
-  pagosDia: [
-    { id: 'pago-1', proveedor: 'Tortilla La Ideal', monto: 440, metodo: 'Efectivo de Caja', hora: '08:00', comprobante: 'Nota #1', cajero: 'Don Manuel', notas: 'Entrega matutina' },
-    { id: 'pago-2', proveedor: 'Pan Mirella', monto: 275, metodo: 'Efectivo de Caja', hora: '08:30', comprobante: 'Nota #2', cajero: 'Don Manuel', notas: 'Bolillo y dulce' },
-    { id: 'pago-3', proveedor: 'Pan Espacio', monto: 380, metodo: 'Efectivo de Caja', hora: '09:00', comprobante: 'Nota #3', cajero: 'Don Manuel', notas: 'Entrega dulce' },
-    { id: 'pago-4', proveedor: 'Pan Celia', monto: 467, metodo: 'Efectivo de Caja', hora: '09:15', comprobante: 'Nota #4', cajero: 'Don Manuel', notas: 'Surtido completo' },
-    { id: 'pago-5', proveedor: 'Cerveza', monto: 15775, metodo: 'Transferencia', hora: '10:00', comprobante: 'Factura F-982', cajero: 'Don Manuel', notas: 'Surtido de cerveza' },
-    { id: 'pago-6', proveedor: 'Pepsi', monto: 2611, metodo: 'Efectivo de Caja', hora: '11:00', comprobante: 'Nota #11', cajero: 'Don Manuel', notas: 'Refresco retornable' }
-  ],
-
-  panaderos: [
-    { id: 'pan-1', proveedor: 'PAN CELIA', cambios: 5, dulces: 50, bolillo: 70, total: 85, pagado: true, hora: '09:15' },
-    { id: 'pan-2', proveedor: 'PAN MIRELLA', cambios: 15, dulces: 25, bolillo: 40, total: 50, pagado: true, hora: '08:30' },
-    { id: 'pan-3', proveedor: 'PAN ESPACIO', cambios: 11, dulces: 50, bolillo: 30, total: 69, pagado: true, hora: '09:00' }
-  ],
-
-  tortillerias: [
-    { id: 'tort-1', proveedor: 'TORTILLA IDEAL', cambio: 0, nuevo: 15, total: 20, pagado: true, hora: '08:00' },
-    { id: 'tort-2', proveedor: 'TORTILLA AMARILLA', cambio: 0, nuevo: 5, total: 5, pagado: true, hora: '08:15' },
-    { id: 'tort-3', proveedor: 'TORT. MONREAL', cambio: 0, nuevo: 7.5, total: 12, pagado: true, hora: '08:45' }
-  ],
-
-  pendientesPago: [
-    { id: 'pend-1', proveedor: 'Sr Combi', monto: 3000, fechaVencimiento: '2026-09-18', concepto: 'Préstamo acordado', estado: 'pendiente', notas: 'Liquidación en próximos días' },
-    { id: 'pend-2', proveedor: 'Grupo Modelo', monto: 8500, fechaVencimiento: '2026-09-19', concepto: 'Factura F-99432 (Cerveza)', estado: 'programado', notas: 'Pago de fin de semana' }
-  ],
-
-  arqueos: [
-    {
-      id: 'arq-1',
-      turno: 'Arqueo 1 (Turno Mañana)',
-      fecha: '2026-09-15',
-      cajero: 'Don Manuel',
-      tarjetas: 2450,
-      yompTarjetas: 0,
-      sistema: 29500,
-      billetes: 8500,
-      monedas1: 180, // pesos totales
-      monedas2: 240, // pesos totales
-      monedas5: 450, // pesos totales
-      monedas10: 890, // pesos totales
-      morralla: 1760,
-      totalEfectivo: 10260,
-      retirosTurno: 1500,
-      pagosTurno: 26191,
-      totalDeclarado: 38901,
-      diferencia: 0,
-      notas: 'Arqueo matutino'
-    },
-    {
-      id: 'arq-2',
-      turno: 'Arqueo 2 (Turno Tarde)',
-      fecha: '2026-09-15',
-      cajero: 'Don Manuel',
-      tarjetas: 3800,
-      yompTarjetas: 0,
-      sistema: 15400,
-      billetes: 11200,
-      monedas1: 95,
-      monedas2: 160,
-      monedas5: 350,
-      monedas10: 600,
-      morralla: 1205,
-      totalEfectivo: 12405,
-      retirosTurno: 3000,
-      pagosTurno: 0,
-      totalDeclarado: 19205,
-      diferencia: 0,
-      notas: 'Arqueo vespertino'
-    }
-  ],
-
-  maquinas: [
-    { id: 'maq-1', fecha: '2026-09-15', nombreMaquina: 'Cascada', montoTotal: 1400, porcentajeTienda: 40, gananciaTienda: 560, pagoProveedor: 840, contadorAnterior: 0, contadorActual: 0, responsable: 'Don Manuel' },
-    { id: 'maq-2', fecha: '2026-09-15', nombreMaquina: 'Máquina Muñecos (Peluches)', montoTotal: 2200, porcentajeTienda: 40, gananciaTienda: 880, pagoProveedor: 1320, contadorAnterior: 0, contadorActual: 0, responsable: 'Don Manuel' },
-    { id: 'maq-3', fecha: '2026-09-15', nombreMaquina: 'Máquinas Individuales ($1, $1, $5)', montoTotal: 1750, porcentajeTienda: 40, gananciaTienda: 700, pagoProveedor: 1050, contadorAnterior: 0, contadorActual: 0, responsable: 'Don Manuel' }
-  ]
+  // 10. Listas de operaciones transaccionales (En blanco para inicio de operaciones en producción)
+  pagosDia: [],
+  panaderos: [],
+  tortillerias: [],
+  pendientesPago: [],
+  arqueos: [],
+  maquinas: [],
+  hojasPorFecha: {}
 };
 
 class StateManager {
@@ -595,12 +506,70 @@ class StateManager {
 
   loadState() {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
+      let stored = localStorage.getItem(STORAGE_KEY);
+      let datosMigracion = null;
+      let fueMigrado = false;
+
+      // Si no existe adminfenix_data_v5, recuperar catálogos de versiones previas
+      if (!stored) {
+        const versionesPrevias = ['adminfenix_data_v4', 'adminfenix_data_v3', 'adminfenix_data_v2', 'adminfenix_data'];
+        for (const vKey of versionesPrevias) {
+          const oldStr = localStorage.getItem(vKey);
+          if (oldStr) {
+            try {
+              datosMigracion = JSON.parse(oldStr);
+              fueMigrado = true;
+              break;
+            } catch (err) {}
+          }
+        }
+      }
+
+      if (stored || datosMigracion) {
+        const parsed = stored ? JSON.parse(stored) : datosMigracion;
         const merged = { ...SEED_DATA, ...parsed };
-        
-        // Migración automática: cambiar TORT. SAN JOSE por TORTILLA AMARILLA si existe en datos guardados
+
+        // Si venimos de migración de versión previa o detectamos datos de prueba antiguos (ej. fecha 2026-09-15 o compra simulada de Cerveza $15,775)
+        const tieneDatosPrueba = merged.fecha === '2026-09-15' || 
+          (Array.isArray(merged.comprasProveedores) && merged.comprasProveedores.some(c => c.monto === 15775 || c.pagado === 15775 || c.proveedor === 'Cerveza Corona' || c.proveedor === 'Cerveza'));
+
+        if (fueMigrado || tieneDatosPrueba) {
+          // Resetear hoja activa a la fecha de hoy local limpia
+          const fechaHoy = getFechaHoyLocal();
+          const dHoy = new Date(fechaHoy + 'T12:00:00');
+          merged.fecha = fechaHoy;
+          merged.dia = NOMBRES_DIAS[dHoy.getDay()] || 'Lunes';
+          merged.diaNum = dHoy.getDate();
+          merged.mes = NOMBRES_MESES[dHoy.getMonth()] || 'Ene';
+          merged.ano = dHoy.getFullYear();
+          merged.cantidadInicial = 0;
+          merged.comprasProveedores = [];
+          merged.prestamosPendientes = [];
+          merged.retiros = [];
+          merged.pagosDia = [];
+          merged.panaderos = [];
+          merged.tortillerias = [];
+          merged.pendientesPago = [];
+          merged.arqueos = [];
+          merged.maquinas = [];
+          merged.arqueoColumnas = [
+            { id: 'col-1', nombre: 'Arqueo 1 (Turno 1)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false },
+            { id: 'col-2', nombre: 'Arqueo 2 (Turno 2)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false },
+            { id: 'col-3', nombre: 'Arqueo 3 (Cierre)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false }
+          ];
+          merged.cascada = { monedas: 0, premios: 0, total: 0, totalCorte: 0, porcentajeEllos: 60, porcentajeNosotros: 40, ellosTotal: 0, nosotrosTotal: 0 };
+          merged.maquinaMunecos = { monedas: 0, total: 0, totalCorte: 0, porcentajeEllos: 60, porcentajeNosotros: 40, ellosTotal: 0, nosotrosTotal: 0 };
+          merged.maquinasIndividuales = { maq1_1: 0, maq2_1: 0, maq3_5: 0, total: 0, porcentajeProveedor: 60, porcentajeNosotros: 40, proveedorTotal: 0, nosotrosTotal: 0, nota: '' };
+
+          // Limpiar historial de hojas pasadas simuladas
+          if (merged.hojasPorFecha) {
+            delete merged.hojasPorFecha['2026-09-15'];
+          } else {
+            merged.hojasPorFecha = {};
+          }
+        }
+
+        // Migración de nombres de tortilla si hiciera falta
         if (Array.isArray(merged.conteoTortilla)) {
           merged.conteoTortilla.forEach(t => {
             if (t.proveedor === 'TORT. SAN JOSE') t.proveedor = 'TORTILLA AMARILLA';
@@ -609,38 +578,6 @@ class StateManager {
         if (Array.isArray(merged.tortillerias)) {
           merged.tortillerias.forEach(t => {
             if (t.proveedor === 'TORT. SAN JOSE') t.proveedor = 'TORTILLA AMARILLA';
-          });
-        }
-        // Limpieza y normalización de comprasProveedores (sin campos vacíos predeterminados)
-        if (Array.isArray(merged.comprasProveedores)) {
-          merged.comprasProveedores = merged.comprasProveedores.filter(c => (c.proveedor && c.proveedor.trim() !== '') || (parseFloat(c.pagado) > 0));
-          merged.comprasProveedores.forEach((c, idx) => {
-            c.nota = idx + 1;
-            if (!c.tipoPago) c.tipoPago = 'Efectivo';
-            if (!c.hora && c.proveedor) {
-              const baseHour = 8 + Math.floor(idx / 4);
-              const baseMin = (idx % 4) * 15;
-              const ampm = baseHour >= 12 ? 'p. m.' : 'a. m.';
-              const displayHour = baseHour > 12 ? baseHour - 12 : baseHour;
-              c.hora = `${String(displayHour).padStart(2, '0')}:${String(baseMin).padStart(2, '0')} ${ampm}`;
-            }
-            if (c.bloqueado === undefined) {
-              c.bloqueado = !!(c.proveedor && (c.pagado > 0 || c.pagado));
-            }
-          });
-        }
-        // Limpieza de préstamos y retiros
-        if (Array.isArray(merged.prestamosPendientes)) {
-          merged.prestamosPendientes = merged.prestamosPendientes.filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0));
-          merged.prestamosPendientes.forEach(p => {
-            if (p.liquidado === undefined) p.liquidado = false;
-            if (p.bloqueado === undefined) p.bloqueado = true;
-          });
-        }
-        if (Array.isArray(merged.retiros)) {
-          merged.retiros = merged.retiros.filter(r => (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== ''));
-          merged.retiros.forEach(r => {
-            if (r.bloqueado === undefined) r.bloqueado = true;
           });
         }
 
@@ -685,78 +622,9 @@ class StateManager {
         }
 
         if (!merged.hojasPorFecha) merged.hojasPorFecha = {};
-        // Guardar la hoja original del 15 de Septiembre en el historial si aún no existe
-        if (!merged.hojasPorFecha['2026-09-15']) {
-          merged.hojasPorFecha['2026-09-15'] = JSON.parse(JSON.stringify(SEED_DATA));
-        }
-
-        if (merged.hojasPorFecha) {
-          Object.values(merged.hojasPorFecha).forEach(h => {
-            if (Array.isArray(h.comprasProveedores)) {
-              h.comprasProveedores = h.comprasProveedores.filter(c => (c.proveedor && c.proveedor.trim() !== '') || (parseFloat(c.pagado) > 0));
-              h.comprasProveedores.forEach((c, idx) => {
-                c.nota = idx + 1;
-                if (!c.tipoPago) c.tipoPago = 'Efectivo';
-                if (!c.hora && c.proveedor) {
-                  const baseHour = 8 + Math.floor(idx / 4);
-                  const baseMin = (idx % 4) * 15;
-                  const ampm = baseHour >= 12 ? 'p. m.' : 'a. m.';
-                  const displayHour = baseHour > 12 ? baseHour - 12 : baseHour;
-                  c.hora = `${String(displayHour).padStart(2, '0')}:${String(baseMin).padStart(2, '0')} ${ampm}`;
-                }
-                if (c.bloqueado === undefined) {
-                  c.bloqueado = !!(c.proveedor && (c.pagado > 0 || c.pagado));
-                }
-              });
-            }
-            if (Array.isArray(h.prestamosPendientes)) {
-              h.prestamosPendientes = h.prestamosPendientes.filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0));
-              h.prestamosPendientes.forEach(p => {
-                if (p.liquidado === undefined) p.liquidado = false;
-                if (p.bloqueado === undefined) p.bloqueado = true;
-              });
-            }
-            if (Array.isArray(h.retiros)) {
-              h.retiros = h.retiros.filter(r => (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== ''));
-              h.retiros.forEach(r => {
-                if (r.bloqueado === undefined) r.bloqueado = true;
-              });
-            }
-            if (Array.isArray(h.conteoPan)) {
-              h.conteoPan.forEach((p, idx) => {
-                p.proveedor = PROVEEDORES_PAN_OFICIALES[idx] || p.proveedor;
-                if (p.bol === 0 || p.bol === '0') p.bol = '';
-                if (p.dul === 0 || p.dul === '0') p.dul = '';
-                if (p.camb === 0 || p.camb === '0') p.camb = '';
-                const bol = parseFloat(p.bol) || 0;
-                const dul = parseFloat(p.dul) || 0;
-                const camb = parseFloat(p.camb) || 0;
-                const tot = Math.max(0, bol + dul - camb);
-                p.total = (bol > 0 || dul > 0 || camb > 0) ? tot : '';
-                if (p.precioPieza === undefined || p.precioPieza === '') {
-                  p.precioPieza = merged.preciosGuardadosPan[p.proveedor] || '';
-                }
-                const precio = parseFloat(p.precioPieza) || 0;
-                p.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && (bol > 0 || dul > 0) ? 0 : '');
-              });
-            }
-            if (Array.isArray(h.conteoTortilla)) {
-              h.conteoTortilla.forEach((t, idx) => {
-                t.proveedor = PROVEEDORES_TORTILLA_OFICIALES[idx] || t.proveedor;
-                if (t.camb === 0 || t.camb === '0') t.camb = '';
-                if (t.nuev === 0 || t.nuev === '0') t.nuev = '';
-                const camb = parseFloat(t.camb) || 0;
-                const nuev = parseFloat(t.nuev) || 0;
-                const tot = Math.max(0, nuev - camb);
-                t.total = (nuev > 0 || camb > 0) ? tot : '';
-                if (t.precioKilo === undefined || t.precioKilo === '') {
-                  t.precioKilo = merged.preciosGuardadosTortilla[t.proveedor] || '';
-                }
-                const precio = parseFloat(t.precioKilo) || 0;
-                t.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && nuev > 0 ? 0 : '');
-              });
-            }
-          });
+        // Asegurarse de que no exista la hoja demo antigua en el historial
+        if (merged.hojasPorFecha['2026-09-15']) {
+          delete merged.hojasPorFecha['2026-09-15'];
         }
 
         if (Array.isArray(merged.proveedores)) {
@@ -777,6 +645,11 @@ class StateManager {
         if (!Array.isArray(merged.catalogoProveedores) || merged.catalogoProveedores.length === 0) {
           merged.catalogoProveedores = JSON.parse(JSON.stringify(CATALOGO_PROVEEDORES_INICIAL));
         }
+
+        // Guardar estado actualizado en STORAGE_KEY (v5)
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        } catch (errSave) {}
 
         return merged;
       }
@@ -2594,6 +2467,67 @@ class StateManager {
   resetearDatosDemo() {
     this.data = JSON.parse(JSON.stringify(SEED_DATA));
     this.saveState();
+    this.notify();
+  }
+
+  limpiarHojasDiariasProduccion() {
+    const fechaHoy = getFechaHoyLocal();
+    const d = new Date(fechaHoy + 'T12:00:00');
+    const diaNombre = NOMBRES_DIAS[d.getDay()] || 'Lunes';
+    const diaNum = d.getDate();
+    const mesNombre = NOMBRES_MESES[d.getMonth()] || 'Ene';
+    const anoNum = d.getFullYear();
+
+    // Conservar proveedores del catálogo, agenda semanal y precios guardados
+    const catalogo = this.data.catalogoProveedores ? JSON.parse(JSON.stringify(this.data.catalogoProveedores)) : JSON.parse(JSON.stringify(CATALOGO_PROVEEDORES_INICIAL));
+    const proveedoresAgenda = this.data.proveedores ? JSON.parse(JSON.stringify(this.data.proveedores)) : JSON.parse(JSON.stringify(SEED_DATA.proveedores));
+    const preciosPan = this.data.preciosGuardadosPan ? JSON.parse(JSON.stringify(this.data.preciosGuardadosPan)) : { ...SEED_DATA.preciosGuardadosPan };
+    const preciosTortilla = this.data.preciosGuardadosTortilla ? JSON.parse(JSON.stringify(this.data.preciosGuardadosTortilla)) : { ...SEED_DATA.preciosGuardadosTortilla };
+
+    // Resetear completamente las hojas y transacciones
+    this.data.fecha = fechaHoy;
+    this.data.dia = diaNombre;
+    this.data.diaNum = diaNum;
+    this.data.mes = mesNombre;
+    this.data.ano = anoNum;
+    this.data.cantidadInicial = 0;
+    this.data.comprasProveedores = [];
+    this.data.prestamosPendientes = [];
+    this.data.retiros = [];
+    this.data.pagosDia = [];
+    this.data.panaderos = [];
+    this.data.tortillerias = [];
+    this.data.pendientesPago = [];
+    this.data.arqueos = [];
+    this.data.maquinas = [];
+    this.data.hojasPorFecha = {};
+
+    this.data.conteoPan = PROVEEDORES_PAN_OFICIALES.map(p => ({
+      proveedor: p, bol: '', dul: '', camb: '', total: '', precioPieza: preciosPan[p] || '', costo: ''
+    }));
+    this.data.conteoTortilla = PROVEEDORES_TORTILLA_OFICIALES.map(t => ({
+      proveedor: t, camb: '', nuev: '', total: '', precioKilo: preciosTortilla[t] || '', costo: ''
+    }));
+
+    this.data.arqueoColumnas = [
+      { id: 'col-1', nombre: 'Arqueo 1 (Turno 1)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false },
+      { id: 'col-2', nombre: 'Arqueo 2 (Turno 2)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false },
+      { id: 'col-3', nombre: 'Arqueo 3 (Cierre)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false }
+    ];
+
+    this.data.cascada = { monedas: 0, premios: 0, total: 0, totalCorte: 0, porcentajeEllos: 60, porcentajeNosotros: 40, ellosTotal: 0, nosotrosTotal: 0 };
+    this.data.maquinaMunecos = { monedas: 0, total: 0, totalCorte: 0, porcentajeEllos: 60, porcentajeNosotros: 40, ellosTotal: 0, nosotrosTotal: 0 };
+    this.data.maquinasIndividuales = { maq1_1: 0, maq2_1: 0, maq3_5: 0, total: 0, porcentajeProveedor: 60, porcentajeNosotros: 40, proveedorTotal: 0, nosotrosTotal: 0, nota: '' };
+
+    // Restaurar catálogos y agenda
+    this.data.catalogoProveedores = catalogo;
+    this.data.proveedores = proveedoresAgenda;
+    this.data.preciosGuardadosPan = preciosPan;
+    this.data.preciosGuardadosTortilla = preciosTortilla;
+
+    this.saveState();
+    this.notify();
+    return true;
   }
 }
 

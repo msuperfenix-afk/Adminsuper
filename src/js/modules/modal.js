@@ -1585,8 +1585,8 @@ export class ModalManager {
               <button type="button" class="btn-primary" id="btnSubirArchivoJSON" style="font-size: 0.78rem; padding: 6px 12px; background: #2563eb;">
                 Cargar Archivo
               </button>
-              <button type="button" class="btn-secondary" id="btnResetSeed" style="color: #dc2626; font-size: 0.78rem; margin-left: auto;">
-                Restablecer Datos Demo
+              <button type="button" class="btn-secondary" id="btnLimpiarHojasProduccion" style="color: #dc2626; font-size: 0.78rem; margin-left: auto;">
+                Limpiar Hojas (Iniciar en Vivo)
               </button>
             </div>
           </div>
@@ -1680,13 +1680,15 @@ export class ModalManager {
       reader.readAsText(file);
     });
 
-    document.getElementById('btnResetSeed')?.addEventListener('click', () => {
-      if (confirm('¿Restablecer el sistema con los datos de demostración originales?')) {
-        stateManager.resetearDatosDemo();
-        alert('¡Datos de demostración restablecidos!');
+    const handleLimpiarHojas = () => {
+      if (confirm('¿Vaciar los datos de las hojas diarias para iniciar la operación en limpio?\n\nNota: Tu catálogo de proveedores, agenda semanal y calendario se mantendrán intactos.')) {
+        stateManager.limpiarHojasDiariasProduccion();
+        alert('¡Hojas diarias vaciadas correctamente! El sistema está listo para la operación en vivo.');
         this.close();
       }
-    });
+    };
+    document.getElementById('btnLimpiarHojasProduccion')?.addEventListener('click', handleLimpiarHojas);
+    document.getElementById('btnResetSeed')?.addEventListener('click', handleLimpiarHojas);
   }
 
   // ==========================================
