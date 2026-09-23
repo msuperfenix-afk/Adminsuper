@@ -6,23 +6,23 @@
 import { stateManager } from '../state.js';
 
 export const DIAS_SEMANA = [
-  { id: 'lunes', nombre: 'Lunes', corto: 'LUN', icono: '📅' },
-  { id: 'martes', nombre: 'Martes', corto: 'MAR', icono: '📅' },
-  { id: 'miercoles', nombre: 'Miércoles', corto: 'MIÉ', icono: '📅' },
-  { id: 'jueves', nombre: 'Jueves', corto: 'JUE', icono: '📅' },
-  { id: 'viernes', nombre: 'Viernes', corto: 'VIE', icono: '📅' },
-  { id: 'sabado', nombre: 'Sábado', corto: 'SÁB', icono: '⭐' },
-  { id: 'domingo', nombre: 'Domingo', corto: 'DOM', icono: '⭐' }
+  { id: 'lunes', nombre: 'Lunes', corto: 'LUN' },
+  { id: 'martes', nombre: 'Martes', corto: 'MAR' },
+  { id: 'miercoles', nombre: 'Miércoles', corto: 'MIÉ' },
+  { id: 'jueves', nombre: 'Jueves', corto: 'JUE' },
+  { id: 'viernes', nombre: 'Viernes', corto: 'VIE' },
+  { id: 'sabado', nombre: 'Sábado', corto: 'SÁB' },
+  { id: 'domingo', nombre: 'Domingo', corto: 'DOM' }
 ];
 
 export const CATEGORIAS_PROVEEDOR = {
-  refrescos: { nombre: 'Refrescos / Bebidas', color: '#b91c1c', bg: '#fef2f2' },
+  refrescos: { nombre: 'Refrescos / Bebidas', color: '#1e293b', bg: '#f1f5f9' },
   panaderia: { nombre: 'Panadería / Galletas', color: '#1e3a8a', bg: '#eff6ff' },
   botanas: { nombre: 'Botanas / Frituras', color: '#334155', bg: '#f1f5f9' },
-  lacteos: { nombre: 'Lácteos / Embutidos', color: '#1d4ed8', bg: '#dbeafe' },
-  cerveza: { nombre: 'Cerveza / Licores', color: '#991b1b', bg: '#fee2e2' },
+  lacteos: { nombre: 'Lácteos / Embutidos', color: '#0369a1', bg: '#e0f2fe' },
+  cerveza: { nombre: 'Cerveza / Licores', color: '#475569', bg: '#f1f5f9' },
   abarrotes: { nombre: 'Abarrotes / Granel', color: '#0f172a', bg: '#e2e8f0' },
-  carniceria: { nombre: 'Carnes / Fríos', color: '#7f1d1d', bg: '#fef2f2' }
+  carniceria: { nombre: 'Carnes / Fríos', color: '#334155', bg: '#f1f5f9' }
 };
 
 export class PipelineModule {
@@ -35,6 +35,10 @@ export class PipelineModule {
     this.filtroTipoPago = 'todos';
     this.vistaModo = 'kanban';
     this.draggedCardId = null;
+
+    // Control para mostrar los días que caben en pantalla sin saturar
+    this.diasVisiblesCantidad = 4;
+    this.offsetDias = 0;
 
     this.init();
   }
@@ -82,6 +86,17 @@ export class PipelineModule {
     return [...DIAS_SEMANA.slice(idxHoy), ...DIAS_SEMANA.slice(0, idxHoy)];
   }
 
+  getDiasVisibles() {
+    const todos = this.getDiasOrdenadosDesdeHoy();
+    if (this.diasVisiblesCantidad >= 7) return todos;
+    const vis = [];
+    for (let i = 0; i < this.diasVisiblesCantidad; i++) {
+      const idx = (this.offsetDias + i) % todos.length;
+      vis.push(todos[idx]);
+    }
+    return vis;
+  }
+
   filtrarProveedores(proveedores) {
     return proveedores.filter(p => {
       const matchSearch = !this.searchTerm ||
@@ -117,66 +132,47 @@ export class PipelineModule {
     const totalPagadoHoy = provsHoyVinieron.reduce((acc, p) => acc + (parseFloat(p.montoPagadoReal) || 0), 0);
 
     return `
-      <div style="padding: 14px 24px 0 24px;">
-        <div style="background: #ffffff; border: 1.5px solid #10b981; border-radius: 8px; padding: 14px 18px; box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1);">
-          <!-- Cabecera del Banner de Hoy -->
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+      <div style="padding: 12px 20px 0 20px;">
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-weight: 800; font-size: 0.95rem; color: #0f172a;">Hoy: ${diasInfo.nombreHoy}</span>
               <span class="badge-dia-destacado hoy">HOY</span>
-              <span style="font-weight: 800; font-size: 1rem; color: #064e3b;">Agenda de Hoy (${diasInfo.nombreHoy})</span>
-              <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">• ${provsHoy.length} proveedores programados</span>
+              <span style="font-size: 0.78rem; color: #64748b;">• ${provsHoy.length} proveedores programados</span>
+              <span style="font-size: 0.78rem; color: #047857; font-weight: 700;">• ${provsHoyVinieron.length} atendidos</span>
             </div>
-            
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <button type="button" id="btnAgregarProveedorHoyBanner" class="btn-primary" style="font-size: 0.78rem; height: 30px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px; background: #065f46; border-color: #065f46; cursor: pointer;">
-                <span>+</span> Agregar Proveedor a Hoy
+
+            <div style="display: flex; align-items: center; gap: 14px; font-size: 0.8rem;">
+              <div>
+                <span style="color: #64748b;">Presupuesto Hoy:</span>
+                <strong style="color: #0f172a; margin-left: 4px;">${this.formatCurrency(totalPresupuestoHoy)}</strong>
+              </div>
+              <div>
+                <span style="color: #64748b;">Pagado en Caja:</span>
+                <strong style="color: #047857; margin-left: 4px;">${this.formatCurrency(totalPagadoHoy)}</strong>
+              </div>
+              <button type="button" id="btnAgregarProveedorHoyBanner" class="btn-secondary" style="font-size: 0.74rem; height: 26px; padding: 0 10px; cursor: pointer;">
+                + Proveedor para Hoy
               </button>
             </div>
           </div>
 
-          <!-- Métricas del Día de Hoy -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px;">
-              <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b;">Proveedores Atendidos</div>
-              <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">${provsHoyVinieron.length} / ${provsHoy.length} ya vinieron</div>
+          <!-- Chips sobrios de proveedores de hoy -->
+          ${provsHoy.length > 0 ? `
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f1f5f9;">
+              ${provsHoy.map(p => {
+                const cant = Array.isArray(p.listaPedido) ? p.listaPedido.length : 0;
+                return `
+                  <button type="button" class="btn-chip-proveedor-hoy" data-id="${p.id}" style="background: ${p.yaVino ? '#f0fdf4' : '#ffffff'}; border: 1px solid ${p.yaVino ? '#bbf7d0' : '#e2e8f0'}; border-radius: 4px; padding: 3px 8px; font-size: 0.74rem; font-weight: 600; color: ${p.yaVino ? '#166534' : '#1e293b'}; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="${p.yaVino ? 'nombre-prov-tachado' : ''}">${p.proveedor}</span>
+                    <span style="color: #64748b; font-size: 0.7rem;">${this.formatCurrency(p.presupuestoAprox || p.preventaPresupuesto)}</span>
+                    ${cant > 0 ? `<span style="color: #0284c7; font-size: 0.68rem;">📋 ${cant}</span>` : ''}
+                    ${p.yaVino ? `<span style="color:#047857; font-size:0.68rem; font-weight:700;">✓ ${p.horaVino}</span>` : ''}
+                  </button>
+                `;
+              }).join('')}
             </div>
-
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px;">
-              <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b;">Presupuesto Total Hoy</div>
-              <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">${this.formatCurrency(totalPresupuestoHoy)}</div>
-            </div>
-
-            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 8px 12px;">
-              <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #065f46;">Pagado en Hoja Diaria</div>
-              <div style="font-size: 1.05rem; font-weight: 800; color: #047857;">${this.formatCurrency(totalPagadoHoy)}</div>
-            </div>
-          </div>
-
-          <!-- Chips de Proveedores de Hoy (clic para ver pedido) -->
-          <div>
-            <div style="font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
-              Proveedores de hoy (haz clic para abrir lista de pedido):
-            </div>
-            ${provsHoy.length === 0 ? `
-              <div style="font-size: 0.8rem; color: #94a3b8; font-style: italic;">
-                No hay proveedores programados para hoy. Haz clic en "+ Agregar Proveedor a Hoy" para registrar uno.
-              </div>
-            ` : `
-              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                ${provsHoy.map(p => {
-                  const cant = Array.isArray(p.listaPedido) ? p.listaPedido.length : 0;
-                  return `
-                    <button type="button" class="btn-chip-proveedor-hoy" data-id="${p.id}" style="background: ${p.yaVino ? '#ecfdf5' : '#f8fafc'}; border: 1px solid ${p.yaVino ? '#a7f3d0' : '#cbd5e1'}; border-radius: 6px; padding: 5px 12px; font-size: 0.8rem; font-weight: 700; color: ${p.yaVino ? '#065f46' : '#1e293b'}; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s ease;">
-                      <span class="${p.yaVino ? 'nombre-prov-tachado' : ''}">${p.proveedor}</span>
-                      <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">${this.formatCurrency(p.presupuestoAprox || p.preventaPresupuesto)}</span>
-                      <span style="background: ${p.yaVino ? '#d1fae5' : '#e2e8f0'}; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; color: ${p.yaVino ? '#065f46' : '#475569'};">📋 ${cant} art.</span>
-                      ${p.yaVino ? `<span class="badge-vino-hora">✓ Vino ${p.horaVino}</span>` : `<span style="font-size:0.72rem; color:#64748b;">⏰ ${p.hora || '10:00'}</span>`}
-                    </button>
-                  `;
-                }).join('')}
-              </div>
-            `}
-          </div>
+          ` : ''}
         </div>
       </div>
     `;
@@ -186,53 +182,68 @@ export class PipelineModule {
     const proveedores = stateManager.data.proveedores;
     const filtrados = this.filtrarProveedores(proveedores);
     const diasInfo = this.getDiasInfo();
-    const diasOrdenados = this.getDiasOrdenadosDesdeHoy();
+    const diasVisibles = this.getDiasVisibles();
 
     let html = this.renderBannerHoy(proveedores, diasInfo);
+
+    // Barra de navegación sobria de días visibles (evita saturar la pantalla)
+    html += `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px 0 20px;">
+        <div style="font-size: 0.78rem; font-weight: 600; color: #475569;">
+          Días en pantalla: <span style="color: #0f172a; font-weight: 700;">${diasVisibles.map(d => d.nombre).join(' ➔ ')}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <button type="button" id="btnDiaAnterior" class="btn-secondary" style="height: 24px; padding: 0 8px; font-size: 0.72rem; cursor: pointer;" title="Desplazar al día anterior">
+            ‹ Anterior
+          </button>
+          <button type="button" id="btnDiaSiguiente" class="btn-secondary" style="height: 24px; padding: 0 8px; font-size: 0.72rem; cursor: pointer;" title="Desplazar al día siguiente">
+            Siguiente ›
+          </button>
+          <button type="button" id="btnToggleTodosDias" class="btn-secondary" style="height: 24px; padding: 0 8px; font-size: 0.72rem; cursor: pointer;">
+            ${this.diasVisiblesCantidad === 7 ? 'Ver 4 días (ajustado)' : 'Ver 7 días'}
+          </button>
+        </div>
+      </div>
+    `;
+
     html += `<div class="kanban-board" id="kanbanBoard">`;
 
-    diasOrdenados.forEach(dia => {
+    diasVisibles.forEach(dia => {
       const provsDia = filtrados.filter(p => p.dia === dia.id);
       const totalPresupuesto = provsDia.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
-      const totalCompletados = provsDia.filter(p => p.yaVino || p.estado === 'pagado' || p.estado === 'recibido').length;
-      const porcentaje = provsDia.length > 0 ? Math.round((totalCompletados / provsDia.length) * 100) : 0;
-
       const esHoy = dia.id === diasInfo.idHoy;
       const claseColExtra = esHoy ? 'col-hoy' : '';
 
       html += `
         <div class="kanban-column ${claseColExtra}" data-dia="${dia.id}">
           <div class="column-header">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
               <div class="column-day" style="display: flex; align-items: center; gap: 6px;">
-                <span>${dia.icono}</span>
-                <span>${dia.nombre}</span>
+                <span style="text-transform: capitalize;">${dia.nombre}</span>
                 ${esHoy ? '<span class="badge-dia-destacado hoy">HOY</span>' : ''}
               </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="background: #e2e8f0; font-size: 0.72rem; font-weight: 800; padding: 2px 6px; border-radius: 4px;">${provsDia.length} prov.</span>
-                <button type="button" class="btn-agregar-prov-col" data-dia="${dia.id}" title="Agregar proveedor para el ${dia.nombre}" style="background: #0f172a; color: #ffffff; border: none; border-radius: 4px; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 800; cursor: pointer; line-height: 1;">
-                  +
-                </button>
-              </div>
+              <span style="font-size: 0.74rem; font-weight: 700; color: #64748b;">
+                ${provsDia.length} ${provsDia.length === 1 ? 'prov.' : 'provs.'}
+              </span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #475569;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #475569; margin-top: 4px;">
               <span>Presupuesto Aprox:</span>
               <span class="column-total-budget">${this.formatCurrency(totalPresupuesto)}</span>
             </div>
-            <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 8px; overflow: hidden;">
-              <div class="column-progress-fill" style="width: ${porcentaje}%; height: 100%; background: ${esHoy ? '#10b981' : '#1e3a8a'};"></div>
-            </div>
           </div>
-          <div style="padding: 10px; display: flex; flex-direction: column; gap: 10px;" data-dia="${dia.id}" id="col-${dia.id}">
+
+          <!-- Contenedor con scroll interno para que deslice en el mismo recuadro -->
+          <div class="column-cards-scroll" data-dia="${dia.id}" id="col-${dia.id}">
             ${provsDia.length === 0 ? `
-              <div style="text-align: center; color: #94a3b8; padding: 20px 10px; font-size: 0.78rem; border: 1.5px dashed #cbd5e1; border-radius: 6px;">
-                <div>Sin proveedores</div>
-                <button type="button" class="btn-secondary btn-agregar-prov-col" data-dia="${dia.id}" style="margin-top: 8px; font-size: 0.72rem; padding: 3px 8px; cursor: pointer;">
-                  + Agregar
-                </button>
+              <div style="text-align: center; color: #94a3b8; padding: 16px 8px; font-size: 0.75rem; border: 1px dashed #e2e8f0; border-radius: 4px;">
+                Sin proveedores
               </div>
             ` : provsDia.map(p => this.renderDealCard(p)).join('')}
+
+            <!-- Botón + debajo del siguiente registro -->
+            <button type="button" class="btn-agregar-prov-abajo" data-dia="${dia.id}" title="Agregar proveedor para el ${dia.nombre}">
+              <span>+</span> Agregar Proveedor
+            </button>
           </div>
         </div>
       `;
@@ -245,63 +256,47 @@ export class PipelineModule {
   }
 
   renderDealCard(p) {
-    const cat = CATEGORIAS_PROVEEDOR[p.categoria] || { color: '#1e3a8a', bg: '#eff6ff' };
     const cantArticulos = Array.isArray(p.listaPedido) ? p.listaPedido.length : 0;
     const esVino = !!p.yaVino;
 
     return `
-      <div class="deal-card ${esVino ? 'proveedor-vino' : ''}" data-id="${p.id}" id="card-${p.id}" style="cursor: pointer; transition: all 0.15s ease;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
-          <div style="flex: 1; padding-right: 6px;">
-            <div class="card-proveedor-nombre ${esVino ? 'nombre-prov-tachado' : ''}" style="font-weight: 800; font-size: 0.92rem; color: #0f172a; line-height: 1.2;">
-              ${p.proveedor}
-            </div>
-            <div style="font-size: 0.72rem; font-weight: 600; color: ${cat.color}; margin-top: 2px;">
-              ${cat.nombre || p.categoria}
-            </div>
+      <div class="deal-card ${esVino ? 'proveedor-vino' : ''}" data-id="${p.id}" id="card-${p.id}" style="cursor: pointer;">
+        <!-- Línea 1: Nombre del proveedor + Presupuesto Aprox (Sin venta anterior) -->
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+          <div class="card-proveedor-nombre ${esVino ? 'nombre-prov-tachado' : ''}" style="font-weight: 700; font-size: 0.88rem; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.proveedor}">
+            ${p.proveedor}
           </div>
-          ${esVino 
-            ? `<span class="badge-vino-hora">✓ Vino a las ${p.horaVino || 'hoy'}</span>` 
-            : `<span class="deal-status-pill status-${p.estado}">${p.estado.toUpperCase().replace('_', ' ')}</span>`
-          }
-        </div>
-
-        <!-- Cajas de Presupuesto Aprox y Venta Anterior -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: ${esVino ? '#f1f5f9' : '#f8fafc'}; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 8px; margin: 8px 0;">
-          <div>
-            <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Presupuesto Aprox.</div>
-            <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a;">${this.formatCurrency(p.presupuestoAprox || p.preventaPresupuesto)}</div>
-          </div>
-          <div>
-            <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Venta Anterior</div>
-            <div style="font-weight: 800; font-size: 0.88rem; color: #475569;">${this.formatCurrency(p.ventaAnterior)}</div>
+          <div style="font-weight: 700; font-size: 0.82rem; color: #1e293b; white-space: nowrap;">
+            ${this.formatCurrency(p.presupuestoAprox || p.preventaPresupuesto)}
           </div>
         </div>
 
-        <!-- Indicador de Lista de Pedido (clic en tarjeta para ver y editar) -->
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #475569; padding-top: 6px; border-top: 1px dashed #cbd5e1;">
-          <span style="display: inline-flex; align-items: center; gap: 4px; color: #0284c7; font-weight: 700;">
-            📋 ${cantArticulos > 0 ? `${cantArticulos} productos en pedido` : 'Ver lista de pedido'}
-          </span>
-          <span style="font-size: 0.7rem; color: #64748b;">
-            ⏰ ${p.hora || '10:00'}
-          </span>
-        </div>
-
-        ${esVino && p.montoPagadoReal > 0 ? `
-          <div style="margin-top: 6px; font-size: 0.72rem; color: #166534; background: #ecfdf5; border: 1px solid #bbf7d0; border-radius: 4px; padding: 3px 6px; font-weight: 600; display: flex; justify-content: space-between;">
-            <span>Pagado en Hoja:</span>
-            <span>${this.formatCurrency(p.montoPagadoReal)}</span>
+        <!-- Línea 2: Hora / Estado + Botones con Logo (Lista, Editar, Eliminar) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px; padding-top: 4px; border-top: 1px solid #f1f5f9;">
+          <div style="font-size: 0.7rem; color: #64748b;">
+            ${esVino 
+              ? `<span class="badge-vino-hora">✓ Vino ${p.horaVino || ''}</span>` 
+              : `<span>⏰ ${p.hora || '10:00'}</span>`
+            }
           </div>
-        ` : ''}
 
-        <div style="display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px;" class="card-action-bar">
-          <button class="btn-secondary" style="height: 24px; font-size: 0.7rem; padding: 0 8px;" data-action="edit" data-id="${p.id}" title="Editar detalles generales">
-            Editar
-          </button>
-          <button class="btn-secondary" style="height: 24px; font-size: 0.7rem; padding: 0 6px; color:#ef4444;" data-action="delete" data-id="${p.id}" title="Eliminar de la agenda">
-            🗑️
-          </button>
+          <div style="display: flex; align-items: center; gap: 4px;" class="card-action-bar">
+            <!-- Botón Lista de Pedido con Logo -->
+            <button type="button" class="btn-card-accion" data-action="ver-pedido" data-id="${p.id}" title="Ver/Editar lista de pedido">
+              <span>📋</span>
+              <span style="font-size: 0.68rem; font-weight: 700;">${cantArticulos}</span>
+            </button>
+
+            <!-- Botón Editar con Logo -->
+            <button type="button" class="btn-card-accion" data-action="edit" data-id="${p.id}" title="Editar datos del proveedor">
+              <span>✏️</span>
+            </button>
+
+            <!-- Botón Eliminar con Logo -->
+            <button type="button" class="btn-card-accion btn-card-delete" data-action="delete" data-id="${p.id}" title="Eliminar proveedor">
+              <span>🗑️</span>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -312,19 +307,17 @@ export class PipelineModule {
     const filtrados = this.filtrarProveedores(proveedores);
 
     let html = `
-      <div style="padding: 20px; max-width: 1300px; margin: 0 auto;">
-        <div style="background: #fff; border: 1.5px solid #0f172a; padding: 16px; border-radius: 6px;">
-          <h2 style="font-size: 1.1rem; font-weight: 900; color: #0f172a; margin-bottom: 12px;">Agenda Consolidada de Proveedores</h2>
+      <div style="padding: 16px 20px; max-width: 1300px; margin: 0 auto;">
+        <div style="background: #fff; border: 1px solid #cbd5e1; padding: 14px; border-radius: 6px;">
+          <h2 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 10px;">Agenda Consolidada de Proveedores</h2>
           <table class="hoja-tabla-proveedores">
             <thead>
               <tr>
                 <th>DÍA</th>
                 <th>PROVEEDOR</th>
-                <th>CATEGORÍA</th>
                 <th>HORA</th>
                 <th style="text-align: right;">PRESUPUESTO APROX.</th>
-                <th style="text-align: right;">VENTA ANTERIOR</th>
-                <th style="text-align: center;">LISTA PEDIDO</th>
+                <th style="text-align: center;">PEDIDO</th>
                 <th>ESTADO HOJA</th>
                 <th>ACCIONES</th>
               </tr>
@@ -339,13 +332,11 @@ export class PipelineModule {
                     ${p.proveedor}
                     ${p.yaVino ? `<div class="badge-vino-hora" style="display:inline-block; margin-left:6px;">✓ Vino ${p.horaVino}</div>` : ''}
                   </td>
-                  <td>${p.categoria}</td>
                   <td>${p.hora || '-'}</td>
-                  <td style="text-align: right; font-weight: 800;">${this.formatCurrency(p.presupuestoAprox || p.preventaPresupuesto)}</td>
-                  <td style="text-align: right; font-weight: 800; color: #475569;">${this.formatCurrency(p.ventaAnterior)}</td>
+                  <td style="text-align: right; font-weight: 700;">${this.formatCurrency(p.presupuestoAprox || p.preventaPresupuesto)}</td>
                   <td style="text-align: center;">
-                    <button class="btn-secondary" style="padding: 2px 8px; font-size: 0.75rem; color: #0284c7; font-weight: 700;" data-action="ver-pedido" data-id="${p.id}">
-                      📋 ${cant} art.
+                    <button class="btn-card-accion" data-action="ver-pedido" data-id="${p.id}">
+                      <span>📋</span> ${cant} art.
                     </button>
                   </td>
                   <td>
@@ -355,8 +346,8 @@ export class PipelineModule {
                     }
                   </td>
                   <td>
-                    <button class="btn-secondary" style="padding: 2px 6px; font-size: 0.72rem;" data-action="edit" data-id="${p.id}" title="Editar">✏️</button>
-                    <button class="btn-secondary" style="padding: 2px 6px; font-size: 0.72rem; color:#ef4444;" data-action="delete" data-id="${p.id}" title="Eliminar">🗑️</button>
+                    <button class="btn-card-accion" data-action="edit" data-id="${p.id}" title="Editar">✏️</button>
+                    <button class="btn-card-accion btn-card-delete" data-action="delete" data-id="${p.id}" title="Eliminar">🗑️</button>
                   </td>
                 </tr>
               `;
@@ -405,8 +396,8 @@ export class PipelineModule {
       }
     });
 
-    // Botones + en cada columna de día
-    this.container.querySelectorAll('.btn-agregar-prov-col').forEach(btn => {
+    // Botones + debajo del siguiente registro en cada columna
+    this.container.querySelectorAll('.btn-agregar-prov-abajo').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const dia = btn.getAttribute('data-dia');
@@ -414,6 +405,26 @@ export class PipelineModule {
           this.onOpenEditModal({ dia });
         }
       });
+    });
+
+    // Controles de navegación de días en pantalla
+    this.container.querySelector('#btnDiaAnterior')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.offsetDias = (this.offsetDias - 1 + 7) % 7;
+      this.render();
+    });
+
+    this.container.querySelector('#btnDiaSiguiente')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.offsetDias = (this.offsetDias + 1) % 7;
+      this.render();
+    });
+
+    this.container.querySelector('#btnToggleTodosDias')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.diasVisiblesCantidad = this.diasVisiblesCantidad === 7 ? 4 : 7;
+      this.offsetDias = 0;
+      this.render();
     });
 
     // Clic en botones de acciones (eliminar, editar, ver pedido)
