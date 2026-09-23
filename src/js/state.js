@@ -1827,6 +1827,15 @@ class StateManager {
     if (nuevo.presupuestoAprox && !nuevo.preventaPresupuesto) {
       nuevo.preventaPresupuesto = nuevo.presupuestoAprox;
     }
+
+    // Si no trae lista de pedido explícita, consultar si ya existía una lista anterior para basarse en ella
+    if (!nuevo.listaPedido || nuevo.listaPedido.length === 0) {
+      const pedidoAnterior = this.getPedidoAnteriorProveedor(nuevo.proveedor);
+      if (pedidoAnterior && Array.isArray(pedidoAnterior) && pedidoAnterior.length > 0) {
+        nuevo.listaPedido = JSON.parse(JSON.stringify(pedidoAnterior));
+      }
+    }
+
     this.data.proveedores.push(nuevo);
     this.saveState();
     return nuevo;
@@ -1926,9 +1935,63 @@ class StateManager {
     const prov = this.data.proveedores.find(p => p.id === id);
     if (prov) {
       prov.listaPedido = Array.isArray(listaPedido) ? listaPedido : [];
+
+      // Guardar en el histórico de pedidos anteriores para este proveedor
+      if (prov.listaPedido.length > 0) {
+        if (!this.data.pedidosAnterioresPorProveedor) this.data.pedidosAnterioresPorProveedor = {};
+        this.data.pedidosAnterioresPorProveedor[prov.proveedor] = JSON.parse(JSON.stringify(prov.listaPedido));
+
+        // Sincronizar también con productosBase del catálogo maestro si existe
+        if (this.data.catalogoProveedores) {
+          const catItem = this.data.catalogoProveedores.find(c => c.nombre === prov.proveedor);
+          if (catItem) {
+            catItem.productosBase = JSON.parse(JSON.stringify(prov.listaPedido));
+          }
+        }
+      }
+
       this.saveState();
       return prov;
     }
+    return null;
+  }
+
+  getPedidoAnteriorProveedor(nombreProveedor) {
+    if (!nombreProveedor) return null;
+    const norm = (s) => (s || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const targetNorm = norm(nombreProveedor);
+
+    // 1. Revisar en pedidosAnterioresPorProveedor
+    if (this.data.pedidosAnterioresPorProveedor) {
+      for (const [key, lista] of Object.entries(this.data.pedidosAnterioresPorProveedor)) {
+        if (norm(key) === targetNorm && Array.isArray(lista) && lista.length > 0) {
+          return JSON.parse(JSON.stringify(lista));
+        }
+      }
+    }
+
+    // 2. Revisar en catálogo de proveedores (productosBase)
+    if (this.data.catalogoProveedores) {
+      const catItem = this.data.catalogoProveedores.find(c => norm(c.nombre) === targetNorm);
+      if (catItem && Array.isArray(catItem.productosBase) && catItem.productosBase.length > 0) {
+        return JSON.parse(JSON.stringify(catItem.productosBase));
+      }
+    }
+
+    // 3. Revisar en otros días de la Agenda Semanal (proveedores)
+    if (this.data.proveedores) {
+      const match = this.data.proveedores.find(p => norm(p.proveedor) === targetNorm && Array.isArray(p.listaPedido) && p.listaPedido.length > 0);
+      if (match) {
+        return JSON.parse(JSON.stringify(match.listaPedido));
+      }
+    }
+
+    // 4. Revisar en SEED_DATA
+    const seedMatch = SEED_DATA.proveedores?.find(p => norm(p.proveedor) === targetNorm && Array.isArray(p.listaPedido) && p.listaPedido.length > 0);
+    if (seedMatch) {
+      return JSON.parse(JSON.stringify(seedMatch.listaPedido));
+    }
+
     return null;
   }
 

@@ -61,14 +61,15 @@ export class ModalManager {
     const isEdit = !!(proveedor && (proveedor.id || proveedor.proveedor));
     const diaDefault = (proveedor && proveedor.dia) ? proveedor.dia : 'lunes';
     const diaNombre = DIAS_SEMANA.find(d => d.id === diaDefault)?.nombre || diaDefault;
-    const title = isEdit ? `✏️ Editar Proveedor: ${proveedor.proveedor}` : `➕ Nuevo Proveedor (${diaNombre})`;
+    const title = isEdit ? `✏️ Editar Proveedor: ${proveedor.proveedor}` : `➕ Nuevo Proveedor en Agenda (${diaNombre})`;
 
     const p = {
       dia: diaDefault,
       proveedor: '',
       categoria: 'abarrotes',
       hora: '10:00',
-      tipoPago: 'Efectivo Caja',
+      tipoPago: 'Efectivo',
+      presupuestoAprox: '',
       preventaPresupuesto: '',
       compra: '',
       estado: 'programado',
@@ -76,82 +77,150 @@ export class ModalManager {
       ...(proveedor || {})
     };
 
+    // Obtener catálogo maestro de la BD de Proveedores
+    const proveedoresBD = stateManager.getProveedoresCatalogo();
+
     const diasOptions = DIAS_SEMANA.map(d => `<option value="${d.id}" ${p.dia === d.id ? 'selected' : ''}>${d.nombre}</option>`).join('');
     const catsOptions = Object.entries(CATEGORIAS_PROVEEDOR).map(([key, val]) => `<option value="${key}" ${p.categoria === key ? 'selected' : ''}>${val.nombre}</option>`).join('');
 
     const body = `
-      <form id="formProveedor">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Día de Visita *</label>
-            <select class="form-control" name="dia" required>
+      <form id="formProveedor" style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- BLOQUE 1: PROVEEDOR DESDE LA BASE DE DATOS -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label class="form-label" style="font-weight: 700; color: #0f172a; margin-bottom: 0;">
+              🏢 Proveedor / Empresa *
+            </label>
+            <span style="font-size: 0.72rem; color: #0284c7; font-weight: 600;">
+              🗄️ Conectado a BD Proveedores (${proveedoresBD.length})
+            </span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Selector rápido de la BD -->
+            <select id="selectProvAgendaDesdeBD" class="form-control" style="font-size: 0.88rem; font-weight: 600; color: #0369a1; border-color: #7dd3fc; background: #f0f9ff;">
+              <option value="">-- Seleccionar de la Base de Datos de Proveedores --</option>
+              ${proveedoresBD.map(cp => `
+                <option value="${cp.nombre}" 
+                  data-cat="${cp.categoria || 'abarrotes'}" 
+                  data-pago="${cp.tipoPago || 'Efectivo'}" 
+                  data-presupuesto="${cp.presupuestoHabitual || ''}" 
+                  data-hora="${cp.horaHabitual || '10:00'}" 
+                  data-notas="${cp.notas || ''}"
+                  ${cp.nombre === p.proveedor ? 'selected' : ''}>
+                  ${cp.nombre} • ${CATEGORIAS_PROVEEDOR[cp.categoria]?.nombre || cp.categoria}
+                </option>
+              `).join('')}
+            </select>
+
+            <!-- Input editable del nombre -->
+            <input type="text" class="form-control font-bold" id="inputNombreProvAgenda" name="proveedor" placeholder="O escribe el nombre del proveedor..." value="${p.proveedor}" required style="font-size: 0.95rem;">
+            <small style="color: #64748b; font-size: 0.72rem;">* Al seleccionar de la lista se autocompletan en automático su categoría, forma de pago y presupuesto habitual.</small>
+          </div>
+        </div>
+
+        <!-- BLOQUE 2: DÍA DE VISITA Y CATEGORÍA -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 700;">🗓️ Día de Visita en Agenda *</label>
+            <select class="form-control font-bold" name="dia" required>
               ${diasOptions}
             </select>
           </div>
-          <div class="form-group">
-            <label class="form-label">Categoría de Producto *</label>
-            <select class="form-control" name="categoria" required>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 700;">🏷️ Categoría de Producto *</label>
+            <select class="form-control" name="categoria" id="selectCatProvAgenda" required>
               ${catsOptions}
             </select>
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Nombre del Proveedor / Empresa *</label>
-          <input type="text" class="form-control" name="proveedor" placeholder="Ej: Coca-Cola, Sabritas, Panadería..." value="${p.proveedor}" required>
+        <!-- BLOQUE 3: PRESUPUESTO, HORA Y FORMA DE PAGO -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700;">💰 Presupuesto Aprox. ($ MXN)</label>
+              <input type="number" step="10" min="0" class="form-control font-bold" id="inputPresupuestoProvAgenda" name="presupuestoAprox" placeholder="0.00" value="${p.presupuestoAprox || p.preventaPresupuesto || ''}" style="font-size: 0.95rem;">
+              <small style="color: #64748b; font-size: 0.72rem;">Estimado a pagar este día</small>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700;">⏰ Hora Estimada de Llegada</label>
+              <input type="time" class="form-control" id="inputHoraProvAgenda" name="hora" value="${p.hora || '10:00'}">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 700; margin-bottom: 6px;">💳 Forma de Pago *</label>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #f8fafc;">
+                <input type="radio" name="tipoPago" value="Efectivo" ${(!p.tipoPago || p.tipoPago.toLowerCase().includes('efectivo')) ? 'checked' : ''}>
+                <span>💵 Efectivo de Caja</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #f8fafc;">
+                <input type="radio" name="tipoPago" value="Transferencia" ${(p.tipoPago && p.tipoPago.toLowerCase().includes('transferencia')) ? 'checked' : ''}>
+                <span>🏦 Transferencia Bancaria</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #f8fafc;">
+                <input type="radio" name="tipoPago" value="Cheque" ${(p.tipoPago && p.tipoPago.toLowerCase().includes('cheque')) ? 'checked' : ''}>
+                <span>📄 Cheque / Otro</span>
+              </label>
+            </div>
+          </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Hora Estimada de Llegada</label>
-            <input type="time" class="form-control" name="hora" value="${p.hora || '10:00'}">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Forma de Pago Preferida *</label>
-            <select class="form-control" name="tipoPago" required>
-              <option value="Efectivo Caja" ${p.tipoPago === 'Efectivo Caja' ? 'selected' : ''}>Efectivo de Caja</option>
-              <option value="Transferencia" ${p.tipoPago === 'Transferencia' ? 'selected' : ''}>Transferencia Electrónica</option>
-              <option value="Crédito Semanal" ${p.tipoPago === 'Crédito Semanal' ? 'selected' : ''}>Crédito Semanal</option>
-              <option value="Cheque" ${p.tipoPago === 'Cheque' ? 'selected' : ''}>Cheque</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Preventa Presupuesto ($)</label>
-            <input type="number" step="10" min="0" class="form-control" name="preventaPresupuesto" placeholder="0.00" value="${p.preventaPresupuesto}">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Compra Real / Factura ($)</label>
-            <input type="number" step="10" min="0" class="form-control" name="compra" placeholder="0.00" value="${p.compra || ''}">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Estado Actual</label>
-          <select class="form-control" name="estado">
-            <option value="programado" ${p.estado === 'programado' ? 'selected' : ''}>Programado</option>
-            <option value="en_tienda" ${p.estado === 'en_tienda' ? 'selected' : ''}>En Tienda (Descargando)</option>
-            <option value="recibido" ${p.estado === 'recibido' ? 'selected' : ''}>Recibido</option>
-            <option value="pagado" ${p.estado === 'pagado' ? 'selected' : ''}>Pagado</option>
-            <option value="no_llego" ${p.estado === 'no_llego' ? 'selected' : ''}>No Llegó</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Observaciones / Pedido Específico</label>
-          <textarea class="form-control" name="notas" placeholder="Anotaciones para el recibo, promociones o producto faltante...">${p.notas || ''}</textarea>
+        <!-- BLOQUE 4: OBSERVACIONES -->
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569;">Observaciones / Instrucciones de Entrega</label>
+          <input type="text" class="form-control" id="inputNotasProvAgenda" name="notas" placeholder="Ej. Tener envases vacíos listos, llega por la mañana, etc." value="${p.notas || ''}" style="font-size: 0.86rem;">
         </div>
       </form>
     `;
 
     const footer = `
       <button type="button" class="btn-secondary" id="modalCancelBtn">Cancelar</button>
-      <button type="button" class="btn-primary" id="modalSaveProvBtn">${isEdit ? 'Guardar Cambios' : 'Agregar Proveedor'}</button>
+      <button type="button" class="btn-primary" id="modalSaveProvBtn">${isEdit ? 'Guardar Cambios' : 'Agregar a la Agenda'}</button>
     `;
 
     this.open(title, body, footer);
+
+    // Conectar autocompletado en vivo al seleccionar proveedor de la BD
+    const selectBD = document.getElementById('selectProvAgendaDesdeBD');
+    const inputNombre = document.getElementById('inputNombreProvAgenda');
+    const selectCat = document.getElementById('selectCatProvAgenda');
+    const inputPresupuesto = document.getElementById('inputPresupuestoProvAgenda');
+    const inputHora = document.getElementById('inputHoraProvAgenda');
+    const inputNotas = document.getElementById('inputNotasProvAgenda');
+
+    selectBD?.addEventListener('change', (e) => {
+      const selectedOption = e.target.selectedOptions?.[0];
+      if (!selectedOption || !selectedOption.value) return;
+
+      const nombre = selectedOption.value;
+      const cat = selectedOption.getAttribute('data-cat');
+      const pago = selectedOption.getAttribute('data-pago');
+      const presupuesto = selectedOption.getAttribute('data-presupuesto');
+      const hora = selectedOption.getAttribute('data-hora');
+      const notas = selectedOption.getAttribute('data-notas');
+
+      if (inputNombre) inputNombre.value = nombre;
+      if (selectCat && cat) selectCat.value = cat;
+      if (inputPresupuesto && presupuesto) inputPresupuesto.value = presupuesto;
+      if (inputHora && hora) inputHora.value = hora;
+      if (inputNotas && notas && !inputNotas.value) inputNotas.value = notas;
+
+      // Autocompletar radio de forma de pago
+      if (pago) {
+        const esTransf = pago.toLowerCase().includes('transferencia');
+        const esCheque = pago.toLowerCase().includes('cheque');
+        const radios = document.querySelectorAll('input[name="tipoPago"]');
+        radios.forEach(r => {
+          if (esTransf && r.value === 'Transferencia') r.checked = true;
+          else if (esCheque && r.value === 'Cheque') r.checked = true;
+          else if (!esTransf && !esCheque && r.value === 'Efectivo') r.checked = true;
+        });
+      }
+    });
 
     document.getElementById('modalCancelBtn')?.addEventListener('click', () => this.close());
     document.getElementById('modalSaveProvBtn')?.addEventListener('click', () => {
@@ -167,11 +236,12 @@ export class ModalManager {
         categoria: formData.get('categoria'),
         proveedor: formData.get('proveedor').trim(),
         hora: formData.get('hora'),
-        tipoPago: formData.get('tipoPago'),
-        preventaPresupuesto: parseFloat(formData.get('preventaPresupuesto')) || 0,
-        compra: parseFloat(formData.get('compra')) || 0,
-        estado: formData.get('estado'),
-        notas: formData.get('notas').trim()
+        tipoPago: formData.get('tipoPago') || 'Efectivo',
+        presupuestoAprox: parseFloat(formData.get('presupuestoAprox')) || 0,
+        preventaPresupuesto: parseFloat(formData.get('presupuestoAprox')) || 0,
+        compra: parseFloat(p.compra) || 0,
+        estado: p.estado || 'programado',
+        notas: formData.get('notas')?.trim() || ''
       };
 
       if (isEdit) {
@@ -1944,23 +2014,34 @@ export class ModalManager {
         </div>
 
         <!-- Sección Lista de Pedido -->
-        <div style="border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#f8fafc; border-bottom:1px solid #e2e8f0;">
-            <div style="font-size:0.88rem; font-weight:700; color:#1e293b;">
-              📋 Lista de lo que se va a pedir (<span id="spanTotalArticulos">${itemsPedido.length}</span>)
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
+            <div style="font-size: 0.88rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+              <span>📋 Lista de lo que se va a pedir</span>
+              <span id="spanTotalArticulos" style="background: #e2e8f0; color: #334155; font-size: 0.75rem; padding: 2px 8px; border-radius: 9999px; font-weight: 700;">${itemsPedido.length}</span>
             </div>
-            <button type="button" id="btnAgregarFilaPedido" class="btn-secondary" style="font-size:0.8rem; padding:4px 10px; cursor:pointer;">
-              + Agregar Producto
-            </button>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <!-- Botón Desplegar Lista Pasada para basarse en ella -->
+              <button type="button" id="btnCargarPedidoAnterior" class="btn-secondary" style="font-size: 0.78rem; padding: 5px 12px; cursor: pointer; background: #ffffff; border: 1.5px solid #cbd5e1; color: #0f172a; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;" title="Cargar y desplegar la lista del pedido anterior para basarse de ahí">
+                <span>↺</span> Cargar Lista Anterior
+              </button>
+              <button type="button" id="btnAgregarFilaPedido" class="btn-secondary" style="font-size: 0.78rem; padding: 5px 12px; cursor: pointer; background: #0f172a; color: #ffffff; border: none; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                <span>+</span> Agregar Producto
+              </button>
+            </div>
           </div>
+
+          <!-- Alerta de estado al consultar lista previa -->
+          <div id="alertaPedidoAnterior" style="display: none; padding: 10px 14px; font-size: 0.8rem; border-bottom: 1px solid #e2e8f0; transition: all 0.2s ease;"></div>
+
           <div style="max-height: 280px; overflow-y: auto;">
-            <table style="width: 100%; border-collapse: collapse; font-size:0.86rem;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.86rem;">
               <thead>
-                <tr style="background:#f1f5f9; text-align:left; color:#475569; font-size:0.75rem; text-transform:uppercase;">
+                <tr style="background: #f1f5f9; text-align: left; color: #475569; font-size: 0.75rem; text-transform: uppercase;">
                   <th style="padding: 8px 10px;">Producto / Descripción</th>
-                  <th style="padding: 8px 10px; width:140px;">Cantidad</th>
+                  <th style="padding: 8px 10px; width: 140px;">Cantidad</th>
                   <th style="padding: 8px 10px;">Notas / Variedad</th>
-                  <th style="padding: 8px 10px; width:44px; text-align:center;"></th>
+                  <th style="padding: 8px 10px; width: 44px; text-align: center;"></th>
                 </tr>
               </thead>
               <tbody id="tbodyPedidoItems">
@@ -1971,9 +2052,9 @@ export class ModalManager {
         </div>
 
         <!-- Notas generales del proveedor -->
-        <div class="form-group" style="margin-bottom:0;">
-          <label class="form-label" style="font-size:0.8rem; color:#475569;">Notas Adicionales del Proveedor</label>
-          <input type="text" id="inputNotasProveedor" class="form-control" value="${p.notas || ''}" placeholder="Ej. Llega en la mañana, pedir factura, etc." style="font-size:0.85rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-size: 0.8rem; color: #475569;">Notas Adicionales del Proveedor</label>
+          <input type="text" id="inputNotasProveedor" class="form-control" value="${p.notas || ''}" placeholder="Ej. Llega en la mañana, pedir factura, etc." style="font-size: 0.85rem;">
         </div>
       </div>
     `;
@@ -1987,6 +2068,7 @@ export class ModalManager {
 
     const tbody = document.getElementById('tbodyPedidoItems');
     const spanTotal = document.getElementById('spanTotalArticulos');
+    const alerta = document.getElementById('alertaPedidoAnterior');
 
     const sincronizarItemsDesdeDOM = () => {
       const filas = tbody.querySelectorAll('.fila-item-pedido');
@@ -2019,6 +2101,57 @@ export class ModalManager {
       });
     };
     rebindEliminar();
+
+    // Evento para Cargar / Desplegar la lista pasada de pedido
+    document.getElementById('btnCargarPedidoAnterior')?.addEventListener('click', () => {
+      const pedidoAnterior = stateManager.getPedidoAnteriorProveedor(p.proveedor);
+
+      if (pedidoAnterior && Array.isArray(pedidoAnterior) && pedidoAnterior.length > 0) {
+        // Cargar lista pasada como base
+        itemsPedido.length = 0;
+        itemsPedido.push(...JSON.parse(JSON.stringify(pedidoAnterior)));
+        tbody.innerHTML = renderFilas();
+        if (spanTotal) spanTotal.textContent = itemsPedido.length;
+        rebindEliminar();
+
+        if (alerta) {
+          alerta.style.display = 'block';
+          alerta.style.background = '#f0fdf4';
+          alerta.style.color = '#166534';
+          alerta.style.borderBottom = '1.5px solid #bbf7d0';
+          alerta.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <div>
+                <strong>✓ Lista anterior desplegada:</strong> Se cargaron <strong>${pedidoAnterior.length} productos</strong> del pedido anterior de <em>"${p.proveedor}"</em>. Puedes modificar cantidades o agregar más artículos para este nuevo pedido.
+              </div>
+              <button type="button" id="btnCerrarAlertaPedido" style="background: none; border: none; font-weight: bold; color: #166534; cursor: pointer; font-size: 1.1rem; line-height: 1;">✕</button>
+            </div>
+          `;
+          document.getElementById('btnCerrarAlertaPedido')?.addEventListener('click', () => {
+            alerta.style.display = 'none';
+          });
+        }
+      } else {
+        // Indicar claramente que no hay pedido anterior
+        if (alerta) {
+          alerta.style.display = 'block';
+          alerta.style.background = '#fffbeb';
+          alerta.style.color = '#92400e';
+          alerta.style.borderBottom = '1.5px solid #fde68a';
+          alerta.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <div>
+                ⚠️ <strong>Sin lista anterior:</strong> No hay un pedido anterior registrado para <strong>"${p.proveedor}"</strong>. Registra los productos de este pedido y quedarán guardados automáticamente como base para tus próximos pedidos.
+              </div>
+              <button type="button" id="btnCerrarAlertaPedido" style="background: none; border: none; font-weight: bold; color: #92400e; cursor: pointer; font-size: 1.1rem; line-height: 1;">✕</button>
+            </div>
+          `;
+          document.getElementById('btnCerrarAlertaPedido')?.addEventListener('click', () => {
+            alerta.style.display = 'none';
+          });
+        }
+      }
+    });
 
     document.getElementById('btnAgregarFilaPedido')?.addEventListener('click', () => {
       const actuales = sincronizarItemsDesdeDOM();
@@ -2078,57 +2211,83 @@ export class ModalManager {
     const catsOptions = Object.entries(CATEGORIAS_PROVEEDOR).map(([key, val]) => `<option value="${key}" ${p.categoria === key ? 'selected' : ''}>${val.nombre}</option>`).join('');
 
     const body = `
-      <form id="formProvCatalogo">
-        <div class="form-group">
-          <label class="form-label">Nombre del Proveedor o Empresa *</label>
-          <input type="text" class="form-control" name="nombre" placeholder="Ej: Coca-Cola, Sabritas, Panadería..." value="${p.nombre}" required autofocus>
+      <form id="formProvCatalogo" style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- AVISO DE SINCRONIZACIÓN -->
+        <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; color: #1e3a8a;">
+          <strong>🗄️ Catálogo Maestro de Proveedores</strong>
+          <p style="margin: 3px 0 0; color: #475569; font-size: 0.74rem;">
+            Los datos aquí registrados alimentarán automáticamente el autocompletado en las 30 líneas de la <strong>Hoja Diaria</strong> y los registros de la <strong>Agenda Semanal</strong>.
+          </p>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Categoría *</label>
-            <select class="form-control" name="categoria" required>
-              ${catsOptions}
-            </select>
+        <!-- BLOQUE 1: IDENTIFICACIÓN -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-weight: 700; color: #0f172a;">Nombre del Proveedor o Empresa *</label>
+            <input type="text" class="form-control font-bold" name="nombre" placeholder="Ej: Coca-Cola, Bimbo, Sabritas, Tortillería..." value="${p.nombre}" required autofocus style="font-size: 0.96rem; color: #0f172a;">
           </div>
-          <div class="form-group">
-            <label class="form-label">Forma de Pago Preferida *</label>
-            <select class="form-control" name="tipoPago" required>
-              <option value="Efectivo" ${p.tipoPago === 'Efectivo' ? 'selected' : ''}>💵 Efectivo de Caja</option>
-              <option value="Transferencia" ${p.tipoPago === 'Transferencia' ? 'selected' : ''}>🏦 Transferencia Bancaria</option>
-              <option value="Cheque" ${p.tipoPago === 'Cheque' ? 'selected' : ''}>📄 Cheque</option>
-            </select>
-          </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Día Habitual de Visita *</label>
-            <select class="form-control" name="diaHabitual" required>
-              ${diasOptions}
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Hora Estimada</label>
-            <input type="time" class="form-control" name="horaHabitual" value="${p.horaHabitual || '10:00'}">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700;">🏷️ Categoría de Producto *</label>
+              <select class="form-control font-bold" name="categoria" required>
+                ${catsOptions}
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700;">🗓️ Día Habitual de Visita *</label>
+              <select class="form-control font-bold" name="diaHabitual" required>
+                ${diasOptions}
+              </select>
+            </div>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Presupuesto Habitual ($ MXN)</label>
-            <input type="number" step="10" min="0" class="form-control" name="presupuestoHabitual" placeholder="0.00" value="${p.presupuestoHabitual || ''}">
-            <small style="color: #64748b; font-size: 0.72rem;">Estimado promedio de compra por visita</small>
+        <!-- BLOQUE 2: CONDICIONES DE PAGO Y PRESUPUESTO -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+          <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700;">💰 Presupuesto Habitual ($ MXN)</label>
+              <input type="number" step="10" min="0" class="form-control font-bold" name="presupuestoHabitual" placeholder="0.00" value="${p.presupuestoHabitual || ''}" style="font-size: 0.95rem;">
+              <small style="color: #64748b; font-size: 0.72rem;">Gasto promedio habitual por visita</small>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700;">⏰ Hora Estimada</label>
+              <input type="time" class="form-control" name="horaHabitual" value="${p.horaHabitual || '10:00'}">
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Teléfono / Preventista</label>
-            <input type="text" class="form-control" name="contacto" placeholder="Ej: Juan Pérez / 449-123-4567" value="${p.contacto || ''}">
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 700; margin-bottom: 6px;">💳 Forma de Pago Preferida *</label>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #ffffff;">
+                <input type="radio" name="tipoPago" value="Efectivo" ${(!p.tipoPago || p.tipoPago.toLowerCase().includes('efectivo')) ? 'checked' : ''}>
+                <span>💵 Efectivo de Caja</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #ffffff;">
+                <input type="radio" name="tipoPago" value="Transferencia" ${(p.tipoPago && p.tipoPago.toLowerCase().includes('transferencia')) ? 'checked' : ''}>
+                <span>🏦 Transferencia Bancaria</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 600; font-size: 0.84rem; background: #ffffff;">
+                <input type="radio" name="tipoPago" value="Cheque" ${(p.tipoPago && p.tipoPago.toLowerCase().includes('cheque')) ? 'checked' : ''}>
+                <span>📄 Cheque</span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Observaciones / Notas</label>
-          <textarea class="form-control" name="notas" placeholder="Requerimientos de recibo, días alternos, promociones...">${p.notas || ''}</textarea>
+        <!-- BLOQUE 3: CONTACTO Y NOTAS -->
+        <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569;">📞 Teléfono / Preventista</label>
+            <input type="text" class="form-control" name="contacto" placeholder="Ej. Juan Pérez / 449-123-4567" value="${p.contacto || ''}" style="font-size: 0.86rem;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569;">📝 Observaciones / Instrucciones</label>
+            <textarea class="form-control" name="notas" placeholder="Requerimientos de recibo, días alternos, productos especiales..." style="font-size: 0.85rem; height: 60px;">${p.notas || ''}</textarea>
+          </div>
         </div>
       </form>
     `;
