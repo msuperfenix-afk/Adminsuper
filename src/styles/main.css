@@ -1444,6 +1444,16 @@ input, button, select, textarea {
   color: #ffffff;
 }
 
+.btn-agregar-prov-col:hover {
+  background: #1e3a8a !important;
+  transform: scale(1.08);
+}
+
+.btn-chip-proveedor-hoy:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  border-color: #059669 !important;
+}
+
 /* Modales */
 .modal-overlay {
   position: fixed;

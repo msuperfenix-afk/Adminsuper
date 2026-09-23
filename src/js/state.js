@@ -1772,7 +1772,21 @@ class StateManager {
 
   // 11. Pipeline Semanal
   addProveedor(p) {
-    const nuevo = { id: 'p-' + Date.now(), compra: 0, estado: 'programado', ...p };
+    const nuevo = {
+      id: 'p-' + Date.now(),
+      compra: 0,
+      presupuestoAprox: parseFloat(p.preventaPresupuesto || p.presupuestoAprox) || 0,
+      ventaAnterior: parseFloat(p.ventaAnterior) || 0,
+      listaPedido: Array.isArray(p.listaPedido) ? p.listaPedido : [],
+      yaVino: false,
+      horaVino: '',
+      montoPagadoReal: 0,
+      estado: 'programado',
+      ...p
+    };
+    if (nuevo.presupuestoAprox && !nuevo.preventaPresupuesto) {
+      nuevo.preventaPresupuesto = nuevo.presupuestoAprox;
+    }
     this.data.proveedores.push(nuevo);
     this.saveState();
     return nuevo;

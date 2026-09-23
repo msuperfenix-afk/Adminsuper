@@ -75,6 +75,13 @@ export class PipelineModule {
     };
   }
 
+  getDiasOrdenadosDesdeHoy() {
+    const diasInfo = this.getDiasInfo();
+    const idxHoy = DIAS_SEMANA.findIndex(d => d.id === diasInfo.idHoy);
+    if (idxHoy === -1) return DIAS_SEMANA;
+    return [...DIAS_SEMANA.slice(idxHoy), ...DIAS_SEMANA.slice(0, idxHoy)];
+  }
+
   filtrarProveedores(proveedores) {
     return proveedores.filter(p => {
       const matchSearch = !this.searchTerm ||
@@ -103,71 +110,72 @@ export class PipelineModule {
     }
   }
 
-  renderBannerProximos(proveedores, diasInfo) {
-    const provsManana = proveedores.filter(p => p.dia === diasInfo.idManana);
-    const totalPresupuestoManana = provsManana.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
-    
+  renderBannerHoy(proveedores, diasInfo) {
     const provsHoy = proveedores.filter(p => p.dia === diasInfo.idHoy);
     const provsHoyVinieron = provsHoy.filter(p => p.yaVino);
+    const totalPresupuestoHoy = provsHoy.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
     const totalPagadoHoy = provsHoyVinieron.reduce((acc, p) => acc + (parseFloat(p.montoPagadoReal) || 0), 0);
 
     return `
-      <div style="padding: 14px 24px 0 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px;">
-        <!-- Tarjeta Proveedores de Mañana -->
-        <div style="background: #ffffff; border: 1.5px solid #0284c7; border-radius: 8px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(2, 132, 199, 0.1);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="badge-dia-destacado manana">MAÑANA</span>
-              <span style="font-weight: 800; font-size: 0.92rem; color: #0c4a6e;">Proveedores de ${diasInfo.nombreManana}</span>
-            </div>
-            <span style="font-size: 0.8rem; font-weight: 700; color: #0284c7;">
-              Presupuesto: ${this.formatCurrency(totalPresupuestoManana)}
-            </span>
-          </div>
-
-          <div style="font-size: 0.8rem; color: #475569; margin-bottom: 8px;">
-            ${provsManana.length === 0 ? 'No hay proveedores programados para mañana.' : `<strong>${provsManana.length} proveedores</strong> programados para visita mañana:`}
-          </div>
-
-          ${provsManana.length > 0 ? `
-            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-              ${provsManana.map(p => {
-                const cant = Array.isArray(p.listaPedido) ? p.listaPedido.length : 0;
-                return `
-                  <button type="button" class="btn-chip-proveedor-manana" data-id="${p.id}" style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; color: #0369a1; cursor: pointer; display: flex; align-items: center; gap: 6px; text-align: left;">
-                    <span>${p.proveedor}</span>
-                    <span style="color: #64748b; font-weight: 600;">${this.formatCurrency(p.presupuestoAprox || p.preventaPresupuesto)}</span>
-                    <span style="background: #e0f2fe; padding: 1px 5px; border-radius: 4px; font-size: 0.7rem;">📋 ${cant}</span>
-                  </button>
-                `;
-              }).join('')}
-            </div>
-          ` : ''}
-        </div>
-
-        <!-- Tarjeta Proveedores de Hoy (Sincronizado con Hoja Diaria) -->
-        <div style="background: #ffffff; border: 1.5px solid #10b981; border-radius: 8px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <div style="padding: 14px 24px 0 24px;">
+        <div style="background: #ffffff; border: 1.5px solid #10b981; border-radius: 8px; padding: 14px 18px; box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1);">
+          <!-- Cabecera del Banner de Hoy -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="badge-dia-destacado hoy">HOY</span>
-              <span style="font-weight: 800; font-size: 0.92rem; color: #064e3b;">Visitas de Hoy (${diasInfo.nombreHoy})</span>
+              <span style="font-weight: 800; font-size: 1rem; color: #064e3b;">Agenda de Hoy (${diasInfo.nombreHoy})</span>
+              <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">• ${provsHoy.length} proveedores programados</span>
             </div>
-            <span style="font-size: 0.8rem; font-weight: 700; color: #059669;">
-              ${provsHoyVinieron.length}/${provsHoy.length} ya vinieron
-            </span>
-          </div>
-
-          <div style="font-size: 0.8rem; color: #475569; margin-bottom: 8px;">
-            Pagado hoy en hoja diaria: <strong style="color: #047857;">${this.formatCurrency(totalPagadoHoy)}</strong>
-          </div>
-
-          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-            ${provsHoy.map(p => `
-              <button type="button" class="btn-chip-proveedor-manana" data-id="${p.id}" style="background: ${p.yaVino ? '#ecfdf5' : '#f8fafc'}; border: 1px solid ${p.yaVino ? '#a7f3d0' : '#cbd5e1'}; border-radius: 6px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; color: ${p.yaVino ? '#065f46' : '#334155'}; cursor: pointer; display: flex; align-items: center; gap: 6px; ${p.yaVino ? 'text-decoration: line-through;' : ''}">
-                <span>${p.proveedor}</span>
-                ${p.yaVino ? `<span style="text-decoration:none; font-size:0.7rem; color:#047857;">✓ ${p.horaVino || 'vino'}</span>` : `<span style="font-size:0.7rem; color:#64748b;">${p.hora || '10:00'}</span>`}
+            
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <button type="button" id="btnAgregarProveedorHoyBanner" class="btn-primary" style="font-size: 0.78rem; height: 30px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px; background: #065f46; border-color: #065f46; cursor: pointer;">
+                <span>+</span> Agregar Proveedor a Hoy
               </button>
-            `).join('')}
+            </div>
+          </div>
+
+          <!-- Métricas del Día de Hoy -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px;">
+              <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b;">Proveedores Atendidos</div>
+              <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">${provsHoyVinieron.length} / ${provsHoy.length} ya vinieron</div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px;">
+              <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b;">Presupuesto Total Hoy</div>
+              <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">${this.formatCurrency(totalPresupuestoHoy)}</div>
+            </div>
+
+            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 8px 12px;">
+              <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #065f46;">Pagado en Hoja Diaria</div>
+              <div style="font-size: 1.05rem; font-weight: 800; color: #047857;">${this.formatCurrency(totalPagadoHoy)}</div>
+            </div>
+          </div>
+
+          <!-- Chips de Proveedores de Hoy (clic para ver pedido) -->
+          <div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
+              Proveedores de hoy (haz clic para abrir lista de pedido):
+            </div>
+            ${provsHoy.length === 0 ? `
+              <div style="font-size: 0.8rem; color: #94a3b8; font-style: italic;">
+                No hay proveedores programados para hoy. Haz clic en "+ Agregar Proveedor a Hoy" para registrar uno.
+              </div>
+            ` : `
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${provsHoy.map(p => {
+                  const cant = Array.isArray(p.listaPedido) ? p.listaPedido.length : 0;
+                  return `
+                    <button type="button" class="btn-chip-proveedor-hoy" data-id="${p.id}" style="background: ${p.yaVino ? '#ecfdf5' : '#f8fafc'}; border: 1px solid ${p.yaVino ? '#a7f3d0' : '#cbd5e1'}; border-radius: 6px; padding: 5px 12px; font-size: 0.8rem; font-weight: 700; color: ${p.yaVino ? '#065f46' : '#1e293b'}; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s ease;">
+                      <span class="${p.yaVino ? 'nombre-prov-tachado' : ''}">${p.proveedor}</span>
+                      <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">${this.formatCurrency(p.presupuestoAprox || p.preventaPresupuesto)}</span>
+                      <span style="background: ${p.yaVino ? '#d1fae5' : '#e2e8f0'}; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; color: ${p.yaVino ? '#065f46' : '#475569'};">📋 ${cant} art.</span>
+                      ${p.yaVino ? `<span class="badge-vino-hora">✓ Vino ${p.horaVino}</span>` : `<span style="font-size:0.72rem; color:#64748b;">⏰ ${p.hora || '10:00'}</span>`}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            `}
           </div>
         </div>
       </div>
@@ -178,19 +186,19 @@ export class PipelineModule {
     const proveedores = stateManager.data.proveedores;
     const filtrados = this.filtrarProveedores(proveedores);
     const diasInfo = this.getDiasInfo();
+    const diasOrdenados = this.getDiasOrdenadosDesdeHoy();
 
-    let html = this.renderBannerProximos(proveedores, diasInfo);
+    let html = this.renderBannerHoy(proveedores, diasInfo);
     html += `<div class="kanban-board" id="kanbanBoard">`;
 
-    DIAS_SEMANA.forEach(dia => {
+    diasOrdenados.forEach(dia => {
       const provsDia = filtrados.filter(p => p.dia === dia.id);
       const totalPresupuesto = provsDia.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
       const totalCompletados = provsDia.filter(p => p.yaVino || p.estado === 'pagado' || p.estado === 'recibido').length;
       const porcentaje = provsDia.length > 0 ? Math.round((totalCompletados / provsDia.length) * 100) : 0;
 
-      const esManana = dia.id === diasInfo.idManana;
       const esHoy = dia.id === diasInfo.idHoy;
-      const claseColExtra = esManana ? 'col-manana' : (esHoy ? 'col-hoy' : '');
+      const claseColExtra = esHoy ? 'col-hoy' : '';
 
       html += `
         <div class="kanban-column ${claseColExtra}" data-dia="${dia.id}">
@@ -199,23 +207,30 @@ export class PipelineModule {
               <div class="column-day" style="display: flex; align-items: center; gap: 6px;">
                 <span>${dia.icono}</span>
                 <span>${dia.nombre}</span>
-                ${esManana ? '<span class="badge-dia-destacado manana">MAÑANA</span>' : ''}
                 ${esHoy ? '<span class="badge-dia-destacado hoy">HOY</span>' : ''}
               </div>
-              <span style="background: #e2e8f0; font-size: 0.72rem; font-weight: 800; padding: 2px 6px; border-radius: 4px;">${provsDia.length} prov.</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="background: #e2e8f0; font-size: 0.72rem; font-weight: 800; padding: 2px 6px; border-radius: 4px;">${provsDia.length} prov.</span>
+                <button type="button" class="btn-agregar-prov-col" data-dia="${dia.id}" title="Agregar proveedor para el ${dia.nombre}" style="background: #0f172a; color: #ffffff; border: none; border-radius: 4px; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 800; cursor: pointer; line-height: 1;">
+                  +
+                </button>
+              </div>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #475569;">
               <span>Presupuesto Aprox:</span>
               <span class="column-total-budget">${this.formatCurrency(totalPresupuesto)}</span>
             </div>
             <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 8px; overflow: hidden;">
-              <div class="column-progress-fill" style="width: ${porcentaje}%; height: 100%; background: ${esHoy ? '#10b981' : (esManana ? '#0284c7' : '#1e3a8a')};"></div>
+              <div class="column-progress-fill" style="width: ${porcentaje}%; height: 100%; background: ${esHoy ? '#10b981' : '#1e3a8a'};"></div>
             </div>
           </div>
           <div style="padding: 10px; display: flex; flex-direction: column; gap: 10px;" data-dia="${dia.id}" id="col-${dia.id}">
             ${provsDia.length === 0 ? `
-              <div style="text-align: center; color: #94a3b8; padding: 24px 10px; font-size: 0.78rem; border: 1.5px dashed #cbd5e1; border-radius: 6px;">
-                Sin proveedores programados
+              <div style="text-align: center; color: #94a3b8; padding: 20px 10px; font-size: 0.78rem; border: 1.5px dashed #cbd5e1; border-radius: 6px;">
+                <div>Sin proveedores</div>
+                <button type="button" class="btn-secondary btn-agregar-prov-col" data-dia="${dia.id}" style="margin-top: 8px; font-size: 0.72rem; padding: 3px 8px; cursor: pointer;">
+                  + Agregar
+                </button>
               </div>
             ` : provsDia.map(p => this.renderDealCard(p)).join('')}
           </div>
@@ -369,14 +384,34 @@ export class PipelineModule {
       });
     });
 
-    // Clic en los chips de acceso rápido del banner superior
-    this.container.querySelectorAll('.btn-chip-proveedor-manana').forEach(btn => {
+    // Clic en los chips de acceso rápido del banner superior de hoy
+    this.container.querySelectorAll('.btn-chip-proveedor-hoy').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = btn.getAttribute('data-id');
         const prov = stateManager.data.proveedores.find(p => p.id === id);
         if (prov && this.onOpenPedidoModal) {
           this.onOpenPedidoModal(prov);
+        }
+      });
+    });
+
+    // Botón agregar proveedor para hoy en el banner superior
+    this.container.querySelector('#btnAgregarProveedorHoyBanner')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const diasInfo = this.getDiasInfo();
+      if (this.onOpenEditModal) {
+        this.onOpenEditModal({ dia: diasInfo.idHoy });
+      }
+    });
+
+    // Botones + en cada columna de día
+    this.container.querySelectorAll('.btn-agregar-prov-col').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dia = btn.getAttribute('data-dia');
+        if (this.onOpenEditModal) {
+          this.onOpenEditModal({ dia });
         }
       });
     });
