@@ -100,7 +100,6 @@ class App {
     const pageTitle = document.getElementById('pageTitle');
     const pageSubtitle = document.getElementById('pageSubtitle');
     const viewSwitcher = document.getElementById('viewSwitcher');
-    const btnActionTop = document.getElementById('btnQuickActionTop');
 
     // Ocultar todos los contenedores de vista
     if (hojaContainer) hojaContainer.classList.remove('active');
@@ -112,23 +111,11 @@ class App {
       if (pageTitle) pageTitle.innerHTML = '📄 Hoja Diaria Minisúper Fénix';
       if (pageSubtitle) pageSubtitle.innerText = 'Formato físico digitalizado: Compras, Conteo Pan/Tortilla, Arqueo, Retiros y Máquinas';
       if (viewSwitcher) viewSwitcher.style.display = 'none';
-      if (btnActionTop) {
-        btnActionTop.innerHTML = `
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span>+ Agregar Compra</span>
-        `;
-      }
     } else if (view === 'pipeline') {
       if (pipeContainer) pipeContainer.classList.add('active');
       if (pageTitle) pageTitle.innerHTML = '🗓️ Agenda Semanal de Proveedores';
       if (pageSubtitle) pageSubtitle.innerText = 'Organización de visitas y presupuestos de Lunes a Domingo';
       if (viewSwitcher) viewSwitcher.style.display = 'flex';
-      if (btnActionTop) {
-        btnActionTop.innerHTML = `
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span>+ Proveedor</span>
-        `;
-      }
     } else {
       if (opsContainer) opsContainer.classList.add('active');
       if (pageTitle) pageTitle.innerHTML = '🏦 Centro de Cortes, Caja y Arqueo';
@@ -167,15 +154,7 @@ class App {
       if (this.pipelineModule) this.pipelineModule.setVistaModo('lista');
     });
 
-    // Botón rojo de acción rápida superior
-    const btnAction = document.getElementById('btnQuickActionTop');
-    btnAction?.addEventListener('click', () => {
-      if (this.currentView === 'pipeline') {
-        this.modalManager.openProveedorModal();
-      } else {
-        this.modalManager.openNuevoPagoModal();
-      }
-    });
+
   }
 
   updateGlobalHeaderStats() {
