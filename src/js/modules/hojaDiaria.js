@@ -416,10 +416,7 @@ export class HojaDiariaModule {
             <!-- 2. CORTE Y ARQUEO (3 Columnas - SIEMPRE DESBLOQUEADO) -->
             <div class="hoja-subcuadro" style="margin-top: 14px;">
               <div class="subcuadro-titulo-flex">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span>CORTE Y ARQUEO</span>
-                  <span class="badge-arqueo-libre" title="Esta sección siempre se mantiene desbloqueada para registrar conteos físicos y arqueos de turno">🔓 Desbloqueado</span>
-                </div>
+                <span>CORTE Y ARQUEO</span>
                 <span style="font-size: 0.72rem; color: #64748b; font-weight: normal;">* Monedas en cantidad total ($)</span>
               </div>
 
