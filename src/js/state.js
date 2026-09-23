@@ -46,6 +46,23 @@ export const CATALOGO_PROVEEDORES_PREDETERMINADOS = [
   'Yakult'
 ];
 
+// Nombres fijos oficiales de proveedores de pan y tortilla (no se deben de cambiar)
+export const PROVEEDORES_PAN_OFICIALES = [
+  'PAN CELIA',
+  'PAN MIRELLA',
+  'PAN ESPACIO',
+  'PAN CELIA (Turno 2)',
+  'PAN MIRELLA (Turno 2)',
+  'PAN ESPACIO (Turno 2)'
+];
+
+export const PROVEEDORES_TORTILLA_OFICIALES = [
+  'TORTILLA IDEAL',
+  'TORTILLA AMARILLA',
+  'TORT. MONREAL',
+  'TORTILLA IDEAL'
+];
+
 // Datos iniciales con los datos reales de la hoja en papel física
 const SEED_DATA = {
   dia: 'Martes',
@@ -56,21 +73,33 @@ const SEED_DATA = {
   cantidadInicial: 1500,
   cajeroActual: 'Don Manuel (Encargado)',
 
+  // Catálogos recordatorios de precio por pieza y kilo
+  preciosGuardadosPan: {
+    'PAN CELIA': 4.05,
+    'PAN MIRELLA': 5.50,
+    'PAN ESPACIO': 5.50
+  },
+  preciosGuardadosTortilla: {
+    'TORTILLA IDEAL': 22.00,
+    'TORTILLA AMARILLA': 22.00,
+    'TORT. MONREAL': 23.00
+  },
+
   // 1. Conteo Pan y Tortilla (Hoja Física)
   conteoPan: [
-    { id: 'cp-1', proveedor: 'PAN CELIA', bol: 70, dul: 50, camb: 5, total: 85 },
-    { id: 'cp-2', proveedor: 'PAN MIRELLA', bol: 40, dul: 25, camb: 15, total: 50 },
-    { id: 'cp-3', proveedor: 'PAN ESPACIO', bol: 30, dul: 50, camb: 11, total: 69 },
-    { id: 'cp-4', proveedor: 'PAN CELIA (Turno 2)', bol: 0, dul: 0, camb: 0, total: 0 },
-    { id: 'cp-5', proveedor: 'PAN MIRELLA (Turno 2)', bol: 0, dul: 0, camb: 0, total: 0 },
-    { id: 'cp-6', proveedor: 'PAN ESPACIO (Turno 2)', bol: 0, dul: 0, camb: 0, total: 0 }
+    { id: 'cp-1', proveedor: 'PAN CELIA', bol: 70, dul: 50, camb: 5, total: 115, precioPieza: 4.05, costo: 465.75 },
+    { id: 'cp-2', proveedor: 'PAN MIRELLA', bol: 40, dul: 25, camb: 15, total: 50, precioPieza: 5.50, costo: 275 },
+    { id: 'cp-3', proveedor: 'PAN ESPACIO', bol: 30, dul: 50, camb: 11, total: 69, precioPieza: 5.50, costo: 379.5 },
+    { id: 'cp-4', proveedor: 'PAN CELIA (Turno 2)', bol: '', dul: '', camb: '', total: '', precioPieza: 4.05, costo: '' },
+    { id: 'cp-5', proveedor: 'PAN MIRELLA (Turno 2)', bol: '', dul: '', camb: '', total: '', precioPieza: 5.50, costo: '' },
+    { id: 'cp-6', proveedor: 'PAN ESPACIO (Turno 2)', bol: '', dul: '', camb: '', total: '', precioPieza: 5.50, costo: '' }
   ],
 
   conteoTortilla: [
-    { id: 'ct-1', proveedor: 'TORTILLA IDEAL', camb: 0, nuev: 15, total: 20 },
-    { id: 'ct-2', proveedor: 'TORTILLA AMARILLA', camb: 0, nuev: 5, total: 5 },
-    { id: 'ct-3', proveedor: 'TORT. MONREAL', camb: 0, nuev: 7.5, total: 12 },
-    { id: 'ct-4', proveedor: 'TORTILLA IDEAL', camb: 0, nuev: 2, total: 3 }
+    { id: 'ct-1', proveedor: 'TORTILLA IDEAL', camb: '', nuev: 20, total: 20, precioKilo: 22.00, costo: 440 },
+    { id: 'ct-2', proveedor: 'TORTILLA AMARILLA', camb: '', nuev: 5, total: 5, precioKilo: 22.00, costo: 110 },
+    { id: 'ct-3', proveedor: 'TORT. MONREAL', camb: '', nuev: 10, total: 10, precioKilo: 23.00, costo: 230 },
+    { id: 'ct-4', proveedor: 'TORTILLA IDEAL', camb: '', nuev: 3, total: 3, precioKilo: 22.00, costo: 66 }
   ],
 
   // 2. Compras y Proveedores Pagados (Renglones 1 al 30 de la hoja física con horas de registro)
@@ -339,20 +368,43 @@ class StateManager {
           });
         }
 
-        // Limpieza de ceros iniciales en conteoPan y conteoTortilla
+        // Catálogos recordatorios de precios
+        if (!merged.preciosGuardadosPan) merged.preciosGuardadosPan = { ...SEED_DATA.preciosGuardadosPan };
+        if (!merged.preciosGuardadosTortilla) merged.preciosGuardadosTortilla = { ...SEED_DATA.preciosGuardadosTortilla };
+
+        // Limpieza y cálculo de conteoPan y conteoTortilla con nombres oficiales fijos
         if (Array.isArray(merged.conteoPan)) {
-          merged.conteoPan.forEach(p => {
+          merged.conteoPan.forEach((p, idx) => {
+            p.proveedor = PROVEEDORES_PAN_OFICIALES[idx] || p.proveedor;
             if (p.bol === 0 || p.bol === '0') p.bol = '';
             if (p.dul === 0 || p.dul === '0') p.dul = '';
             if (p.camb === 0 || p.camb === '0') p.camb = '';
-            if (p.total === 0 || p.total === '0') p.total = '';
+            const bol = parseFloat(p.bol) || 0;
+            const dul = parseFloat(p.dul) || 0;
+            const camb = parseFloat(p.camb) || 0;
+            const tot = Math.max(0, bol + dul - camb);
+            p.total = (bol > 0 || dul > 0 || camb > 0) ? tot : '';
+            if (p.precioPieza === undefined || p.precioPieza === '') {
+              p.precioPieza = merged.preciosGuardadosPan[p.proveedor] || '';
+            }
+            const precio = parseFloat(p.precioPieza) || 0;
+            p.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && (bol > 0 || dul > 0) ? 0 : '');
           });
         }
         if (Array.isArray(merged.conteoTortilla)) {
-          merged.conteoTortilla.forEach(t => {
+          merged.conteoTortilla.forEach((t, idx) => {
+            t.proveedor = PROVEEDORES_TORTILLA_OFICIALES[idx] || t.proveedor;
             if (t.camb === 0 || t.camb === '0') t.camb = '';
             if (t.nuev === 0 || t.nuev === '0') t.nuev = '';
-            if (t.total === 0 || t.total === '0') t.total = '';
+            const camb = parseFloat(t.camb) || 0;
+            const nuev = parseFloat(t.nuev) || 0;
+            const tot = Math.max(0, nuev - camb);
+            t.total = (nuev > 0 || camb > 0) ? tot : '';
+            if (t.precioKilo === undefined || t.precioKilo === '') {
+              t.precioKilo = merged.preciosGuardadosTortilla[t.proveedor] || '';
+            }
+            const precio = parseFloat(t.precioKilo) || 0;
+            t.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && nuev > 0 ? 0 : '');
           });
         }
 
@@ -395,18 +447,37 @@ class StateManager {
               });
             }
             if (Array.isArray(h.conteoPan)) {
-              h.conteoPan.forEach(p => {
+              h.conteoPan.forEach((p, idx) => {
+                p.proveedor = PROVEEDORES_PAN_OFICIALES[idx] || p.proveedor;
                 if (p.bol === 0 || p.bol === '0') p.bol = '';
                 if (p.dul === 0 || p.dul === '0') p.dul = '';
                 if (p.camb === 0 || p.camb === '0') p.camb = '';
-                if (p.total === 0 || p.total === '0') p.total = '';
+                const bol = parseFloat(p.bol) || 0;
+                const dul = parseFloat(p.dul) || 0;
+                const camb = parseFloat(p.camb) || 0;
+                const tot = Math.max(0, bol + dul - camb);
+                p.total = (bol > 0 || dul > 0 || camb > 0) ? tot : '';
+                if (p.precioPieza === undefined || p.precioPieza === '') {
+                  p.precioPieza = merged.preciosGuardadosPan[p.proveedor] || '';
+                }
+                const precio = parseFloat(p.precioPieza) || 0;
+                p.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && (bol > 0 || dul > 0) ? 0 : '');
               });
             }
             if (Array.isArray(h.conteoTortilla)) {
-              h.conteoTortilla.forEach(t => {
+              h.conteoTortilla.forEach((t, idx) => {
+                t.proveedor = PROVEEDORES_TORTILLA_OFICIALES[idx] || t.proveedor;
                 if (t.camb === 0 || t.camb === '0') t.camb = '';
                 if (t.nuev === 0 || t.nuev === '0') t.nuev = '';
-                if (t.total === 0 || t.total === '0') t.total = '';
+                const camb = parseFloat(t.camb) || 0;
+                const nuev = parseFloat(t.nuev) || 0;
+                const tot = Math.max(0, nuev - camb);
+                t.total = (nuev > 0 || camb > 0) ? tot : '';
+                if (t.precioKilo === undefined || t.precioKilo === '') {
+                  t.precioKilo = merged.preciosGuardadosTortilla[t.proveedor] || '';
+                }
+                const precio = parseFloat(t.precioKilo) || 0;
+                t.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && nuev > 0 ? 0 : '');
               });
             }
           });
@@ -477,18 +548,18 @@ class StateManager {
       ano: anoNum,
       cantidadInicial: 0,
       conteoPan: [
-        { id: 'cp-1', proveedor: 'PAN CELIA', bol: '', dul: '', camb: '', total: '' },
-        { id: 'cp-2', proveedor: 'PAN MIRELLA', bol: '', dul: '', camb: '', total: '' },
-        { id: 'cp-3', proveedor: 'PAN ESPACIO', bol: '', dul: '', camb: '', total: '' },
-        { id: 'cp-4', proveedor: 'PAN CELIA (Turno 2)', bol: '', dul: '', camb: '', total: '' },
-        { id: 'cp-5', proveedor: 'PAN MIRELLA (Turno 2)', bol: '', dul: '', camb: '', total: '' },
-        { id: 'cp-6', proveedor: 'PAN ESPACIO (Turno 2)', bol: '', dul: '', camb: '', total: '' }
+        { id: 'cp-1', proveedor: 'PAN CELIA', bol: '', dul: '', camb: '', total: '', precioPieza: this.data.preciosGuardadosPan?.['PAN CELIA'] || '', costo: '' },
+        { id: 'cp-2', proveedor: 'PAN MIRELLA', bol: '', dul: '', camb: '', total: '', precioPieza: this.data.preciosGuardadosPan?.['PAN MIRELLA'] || '', costo: '' },
+        { id: 'cp-3', proveedor: 'PAN ESPACIO', bol: '', dul: '', camb: '', total: '', precioPieza: this.data.preciosGuardadosPan?.['PAN ESPACIO'] || '', costo: '' },
+        { id: 'cp-4', proveedor: 'PAN CELIA (Turno 2)', bol: '', dul: '', camb: '', total: '', precioPieza: this.data.preciosGuardadosPan?.['PAN CELIA (Turno 2)'] || this.data.preciosGuardadosPan?.['PAN CELIA'] || '', costo: '' },
+        { id: 'cp-5', proveedor: 'PAN MIRELLA (Turno 2)', bol: '', dul: '', camb: '', total: '', precioPieza: this.data.preciosGuardadosPan?.['PAN MIRELLA (Turno 2)'] || this.data.preciosGuardadosPan?.['PAN MIRELLA'] || '', costo: '' },
+        { id: 'cp-6', proveedor: 'PAN ESPACIO (Turno 2)', bol: '', dul: '', camb: '', total: '', precioPieza: this.data.preciosGuardadosPan?.['PAN ESPACIO (Turno 2)'] || this.data.preciosGuardadosPan?.['PAN ESPACIO'] || '', costo: '' }
       ],
       conteoTortilla: [
-        { id: 'ct-1', proveedor: 'TORTILLA IDEAL', camb: '', nuev: '', total: '' },
-        { id: 'ct-2', proveedor: 'TORTILLA AMARILLA', camb: '', nuev: '', total: '' },
-        { id: 'ct-3', proveedor: 'TORT. MONREAL', camb: '', nuev: '', total: '' },
-        { id: 'ct-4', proveedor: 'TORTILLA IDEAL', camb: '', nuev: '', total: '' }
+        { id: 'ct-1', proveedor: 'TORTILLA IDEAL', camb: '', nuev: '', total: '', precioKilo: this.data.preciosGuardadosTortilla?.['TORTILLA IDEAL'] || '', costo: '' },
+        { id: 'ct-2', proveedor: 'TORTILLA AMARILLA', camb: '', nuev: '', total: '', precioKilo: this.data.preciosGuardadosTortilla?.['TORTILLA AMARILLA'] || '', costo: '' },
+        { id: 'ct-3', proveedor: 'TORT. MONREAL', camb: '', nuev: '', total: '', precioKilo: this.data.preciosGuardadosTortilla?.['TORT. MONREAL'] || '', costo: '' },
+        { id: 'ct-4', proveedor: 'TORTILLA IDEAL', camb: '', nuev: '', total: '', precioKilo: this.data.preciosGuardadosTortilla?.['TORTILLA IDEAL'] || '', costo: '' }
       ],
       comprasProveedores: [],
       prestamosPendientes: [],
@@ -642,11 +713,16 @@ class StateManager {
     if (this.data.conteoPan && this.data.conteoPan[index]) {
       this.data.conteoPan[index] = { ...this.data.conteoPan[index], ...campos };
       const p = this.data.conteoPan[index];
+      p.proveedor = PROVEEDORES_PAN_OFICIALES[index] || p.proveedor;
+
       const bol = parseFloat(p.bol) || 0;
       const dul = parseFloat(p.dul) || 0;
       const camb = parseFloat(p.camb) || 0;
       const tot = Math.max(0, bol + dul - camb);
       p.total = (bol > 0 || dul > 0 || camb > 0) ? tot : '';
+
+      const precio = parseFloat(p.precioPieza) || 0;
+      p.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && (bol > 0 || dul > 0) ? 0 : '');
       this.saveState();
     }
   }
@@ -656,10 +732,58 @@ class StateManager {
     if (this.data.conteoTortilla && this.data.conteoTortilla[index]) {
       this.data.conteoTortilla[index] = { ...this.data.conteoTortilla[index], ...campos };
       const t = this.data.conteoTortilla[index];
+      t.proveedor = PROVEEDORES_TORTILLA_OFICIALES[index] || t.proveedor;
+
       const camb = parseFloat(t.camb) || 0;
       const nuev = parseFloat(t.nuev) || 0;
       const tot = Math.max(0, nuev - camb);
       t.total = (nuev > 0 || camb > 0) ? tot : '';
+
+      const precio = parseFloat(t.precioKilo) || 0;
+      t.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && nuev > 0 ? 0 : '');
+      this.saveState();
+    }
+  }
+
+  guardarPrecioConteoPan(index, precioPieza) {
+    if (!this.esHojaEditable()) return;
+    if (this.data.conteoPan && this.data.conteoPan[index]) {
+      const p = this.data.conteoPan[index];
+      const precio = parseFloat(precioPieza) || 0;
+      p.precioPieza = precio > 0 ? precio : '';
+      p.proveedor = PROVEEDORES_PAN_OFICIALES[index] || p.proveedor;
+
+      const bol = parseFloat(p.bol) || 0;
+      const dul = parseFloat(p.dul) || 0;
+      const camb = parseFloat(p.camb) || 0;
+      const tot = Math.max(0, bol + dul - camb);
+      p.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && (bol > 0 || dul > 0) ? 0 : '');
+
+      if (!this.data.preciosGuardadosPan) this.data.preciosGuardadosPan = {};
+      if (p.proveedor && precio > 0) {
+        this.data.preciosGuardadosPan[p.proveedor] = precio;
+      }
+      this.saveState();
+    }
+  }
+
+  guardarPrecioConteoTortilla(index, precioKilo) {
+    if (!this.esHojaEditable()) return;
+    if (this.data.conteoTortilla && this.data.conteoTortilla[index]) {
+      const t = this.data.conteoTortilla[index];
+      const precio = parseFloat(precioKilo) || 0;
+      t.precioKilo = precio > 0 ? precio : '';
+      t.proveedor = PROVEEDORES_TORTILLA_OFICIALES[index] || t.proveedor;
+
+      const camb = parseFloat(t.camb) || 0;
+      const nuev = parseFloat(t.nuev) || 0;
+      const tot = Math.max(0, nuev - camb);
+      t.costo = (tot > 0 && precio > 0) ? (tot * precio) : (precio > 0 && nuev > 0 ? 0 : '');
+
+      if (!this.data.preciosGuardadosTortilla) this.data.preciosGuardadosTortilla = {};
+      if (t.proveedor && precio > 0) {
+        this.data.preciosGuardadosTortilla[t.proveedor] = precio;
+      }
       this.saveState();
     }
   }

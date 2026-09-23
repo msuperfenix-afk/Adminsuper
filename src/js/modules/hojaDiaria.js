@@ -193,10 +193,11 @@ export class HojaDiariaModule {
                   <thead>
                     <tr>
                       <th>PROVEEDOR PAN</th>
-                      <th style="width: 50px;">BOL</th>
-                      <th style="width: 50px;">DUL</th>
-                      <th style="width: 55px;">CAMB</th>
-                      <th style="width: 60px;">TOTAL</th>
+                      <th style="width: 44px;" title="Bolillos recibidos">BOL</th>
+                      <th style="width: 44px;" title="Dulces recibidos">DUL</th>
+                      <th style="width: 48px;" title="Cambios o devoluciones">CAMB</th>
+                      <th style="width: 52px;" title="Total Piezas (Bolillos + Dulces - Cambios)">TOTAL</th>
+                      <th style="width: 78px;" title="Costo calculado (Piezas × Precio por pieza)">COSTO</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -205,13 +206,24 @@ export class HojaDiariaModule {
                       const dulVal = (parseFloat(p.dul) || 0) > 0 ? p.dul : '';
                       const cambVal = (parseFloat(p.camb) || 0) > 0 ? p.camb : '';
                       const totVal = (parseFloat(p.total) || 0) > 0 ? p.total : '';
+                      const costoVal = (parseFloat(p.costo) || 0) > 0 
+                        ? this.formatMoney(p.costo) 
+                        : ((parseFloat(p.precioPieza) || 0) > 0 ? '$0.00' : '-');
                       return `
                         <tr>
-                          <td><input type="text" class="cell-input" data-pan="${idx}" data-field="proveedor" value="${p.proveedor}" ${editableGeneral ? '' : 'disabled'}></td>
+                          <td>
+                            <div class="prov-celda-fija">
+                              <span class="prov-nombre-fijo">${p.proveedor}</span>
+                              <button type="button" class="btn-info-costo" data-info-pan="${idx}" title="Configurar precio por pieza y ver costo">
+                                <span class="icono-i-circulo">i</span>
+                              </button>
+                            </div>
+                          </td>
                           <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="bol" value="${bolVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
                           <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="dul" value="${dulVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
                           <td><input type="number" class="cell-input text-center text-red" data-pan="${idx}" data-field="camb" value="${cambVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
-                          <td class="cell-total font-bold">${totVal}</td>
+                          <td class="cell-total font-bold text-center">${totVal}</td>
+                          <td class="cell-costo font-bold text-right" data-costo-pan="${idx}" title="Clic para ver o cambiar precio">${costoVal}</td>
                         </tr>
                       `;
                     }).join('')}
@@ -227,9 +239,10 @@ export class HojaDiariaModule {
                   <thead>
                     <tr>
                       <th>PROVEEDOR TORTILLA</th>
-                      <th style="width: 65px;">CAMB</th>
-                      <th style="width: 65px;">NUEV</th>
-                      <th style="width: 65px;">TOTAL</th>
+                      <th style="width: 58px;" title="Cambios o merma">CAMB</th>
+                      <th style="width: 58px;" title="Kilos nuevos recibidos">NUEV</th>
+                      <th style="width: 58px;" title="Total Kilos a pagar (Nuevas - Cambios)">TOTAL</th>
+                      <th style="width: 78px;" title="Costo calculado (Kilos × Precio por kilo)">COSTO</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -237,12 +250,23 @@ export class HojaDiariaModule {
                       const cambVal = (parseFloat(t.camb) || 0) > 0 ? t.camb : '';
                       const nuevVal = (parseFloat(t.nuev) || 0) > 0 ? t.nuev : '';
                       const totVal = (parseFloat(t.total) || 0) > 0 ? t.total : '';
+                      const costoVal = (parseFloat(t.costo) || 0) > 0 
+                        ? this.formatMoney(t.costo) 
+                        : ((parseFloat(t.precioKilo) || 0) > 0 ? '$0.00' : '-');
                       return `
                         <tr>
-                          <td><input type="text" class="cell-input" data-tort="${idx}" data-field="proveedor" value="${t.proveedor}" ${editableGeneral ? '' : 'disabled'}></td>
+                          <td>
+                            <div class="prov-celda-fija">
+                              <span class="prov-nombre-fijo">${t.proveedor}</span>
+                              <button type="button" class="btn-info-costo" data-info-tort="${idx}" title="Configurar precio por kilo y ver costo">
+                                <span class="icono-i-circulo">i</span>
+                              </button>
+                            </div>
+                          </td>
                           <td><input type="number" step="0.5" class="cell-input text-center text-red" data-tort="${idx}" data-field="camb" value="${cambVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
                           <td><input type="number" step="0.5" class="cell-input text-center" data-tort="${idx}" data-field="nuev" value="${nuevVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
-                          <td class="cell-total font-bold">${totVal}</td>
+                          <td class="cell-total font-bold text-center">${totVal}</td>
+                          <td class="cell-costo font-bold text-right" data-costo-tort="${idx}" title="Clic para ver o cambiar precio">${costoVal}</td>
                         </tr>
                       `;
                     }).join('')}
@@ -715,10 +739,42 @@ export class HojaDiariaModule {
         if (row && p) {
           const totalEl = row.querySelector('.cell-total');
           if (totalEl) totalEl.textContent = (parseFloat(p.total) || 0) > 0 ? p.total : '';
+          const costoEl = row.querySelector('.cell-costo');
+          if (costoEl) {
+            costoEl.textContent = (parseFloat(p.costo) || 0) > 0 
+              ? this.formatMoney(p.costo) 
+              : ((parseFloat(p.precioPieza) || 0) > 0 ? '$0.00' : '-');
+          }
         }
       };
       input.addEventListener('change', actualizarPan);
       input.addEventListener('input', actualizarPan);
+    });
+
+    // Botón 'i' y clic en celda de costo para Panaderos (Asignar precio por pieza)
+    const abrirModalPan = (idx) => {
+      if (window.adminFenixApp?.modalManager) {
+        window.adminFenixApp.modalManager.openCostoPanaderoModal(idx, () => {
+          this.render();
+        });
+      }
+    };
+
+    this.container.querySelectorAll('[data-info-pan]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-info-pan'));
+        abrirModalPan(idx);
+      });
+    });
+
+    this.container.querySelectorAll('[data-costo-pan]').forEach(td => {
+      td.addEventListener('click', (e) => {
+        e.preventDefault();
+        const idx = parseInt(td.getAttribute('data-costo-pan'));
+        abrirModalPan(idx);
+      });
     });
 
     // Tortillerías
@@ -733,10 +789,42 @@ export class HojaDiariaModule {
         if (row && t) {
           const totalEl = row.querySelector('.cell-total');
           if (totalEl) totalEl.textContent = (parseFloat(t.total) || 0) > 0 ? t.total : '';
+          const costoEl = row.querySelector('.cell-costo');
+          if (costoEl) {
+            costoEl.textContent = (parseFloat(t.costo) || 0) > 0 
+              ? this.formatMoney(t.costo) 
+              : ((parseFloat(t.precioKilo) || 0) > 0 ? '$0.00' : '-');
+          }
         }
       };
       input.addEventListener('change', actualizarTort);
       input.addEventListener('input', actualizarTort);
+    });
+
+    // Botón 'i' y clic en celda de costo para Tortillerías (Asignar precio por kilo)
+    const abrirModalTort = (idx) => {
+      if (window.adminFenixApp?.modalManager) {
+        window.adminFenixApp.modalManager.openCostoTortilleriaModal(idx, () => {
+          this.render();
+        });
+      }
+    };
+
+    this.container.querySelectorAll('[data-info-tort]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-info-tort'));
+        abrirModalTort(idx);
+      });
+    });
+
+    this.container.querySelectorAll('[data-costo-tort]').forEach(td => {
+      td.addEventListener('click', (e) => {
+        e.preventDefault();
+        const idx = parseInt(td.getAttribute('data-costo-tort'));
+        abrirModalTort(idx);
+      });
     });
 
     // 1. Clic en Renglón Guardado de Proveedores (Abre Modal de Detalles con Hora, Tipo de Pago, etc.)
