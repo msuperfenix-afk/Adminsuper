@@ -2566,31 +2566,235 @@ input:disabled {
 }
 
 /* ======================================================
-   MODO IMPRESIÓN (IDÉNTICO A LA HOJA FÍSICA)
+   MODO IMPRESIÓN (CONSERVACIÓN ESTRICTA EN UNA SOLA HOJA)
    ====================================================== */
+@page {
+  size: letter portrait;
+  margin: 5mm 6mm 5mm 6mm;
+}
+
 @media print {
-  body {
-    background: #ffffff !important;
-    overflow: visible !important;
+  *, *::before, *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
-  .sidebar, .top-bar, .filter-bar, .hoja-header-actions, .modal-overlay, .barra-navegacion-dias, .banner-aviso-historial, .banner-aviso-monto-inicial {
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ocultar elementos no imprimibles de interfaz y controles */
+  .sidebar,
+  .top-bar,
+  .filter-bar,
+  .hoja-header-actions,
+  .modal-overlay,
+  .barra-navegacion-dias,
+  .badge-guardado-verde,
+  .banner-aviso-historial,
+  .banner-aviso-monto-inicial,
+  .fila-agregar-mas,
+  .btn-solo-plus,
+  .badge-hint-click-info,
+  .btn-info-costo {
     display: none !important;
   }
-  .app-layout, .main-area, .view-container {
+
+  .app-layout,
+  .main-area,
+  .view-container {
+    display: block !important;
     height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
     padding: 0 !important;
     margin: 0 !important;
+    width: 100% !important;
   }
+
+  /* Contenedor principal con factor de ajuste y compactación vertical */
   .hoja-papel-container {
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
+    margin: 0 auto !important;
     max-width: 100% !important;
     width: 100% !important;
+    zoom: 0.85; /* Ajuste proporcional de escala en impresión */
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
-  input {
+
+  /* Encabezado ultra-compacto */
+  .hoja-header {
+    padding: 2px 4px 6px !important;
+    margin-bottom: 6px !important;
+    border-bottom: 1.5px solid #0f172a !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .hoja-logo-img {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .hoja-titulo-principal {
+    font-size: 1.1rem !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+  }
+
+  .hoja-subtitulo {
+    font-size: 0.6rem !important;
+    letter-spacing: 0.3px !important;
+  }
+
+  .hoja-header-datos {
+    gap: 12px !important;
+  }
+
+  .hoja-campo-linea,
+  .hoja-campo-fecha {
+    font-size: 0.8rem !important;
+    gap: 4px !important;
+  }
+
+  .hoja-texto-fijo-dia,
+  .hoja-texto-fijo-fecha {
+    font-size: 0.84rem !important;
+  }
+
+  .hoja-campo-inicial {
+    padding: 2px 6px !important;
+    font-size: 0.72rem !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  .hoja-input-money {
+    width: 70px !important;
+    height: 20px !important;
+    font-size: 0.76rem !important;
+    border: none !important;
+  }
+
+  /* Grilla principal en 2 columnas ajustada a 1 hoja */
+  .hoja-grid-layout {
+    display: grid !important;
+    grid-template-columns: 1.15fr 0.95fr !important;
+    gap: 10px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .hoja-seccion-header {
+    padding: 3px 6px !important;
+    font-size: 0.68rem !important;
+    margin-bottom: 4px !important;
+    border: 1px solid #94a3b8 !important;
+    background: #f1f5f9 !important;
+  }
+
+  .hoja-subcuadro {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 3px !important;
+    margin-bottom: 6px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .subcuadro-titulo,
+  .subcuadro-titulo-flex {
+    padding: 3px 6px !important;
+    font-size: 0.68rem !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+  }
+
+  /* Desactivar scrolls y expandir tablas limpiamente */
+  .tabla-scroll-proveedores,
+  .tabla-scroll-pendientes,
+  .tabla-scroll-retiros {
+    max-height: none !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .tabla-scroll-proveedores thead th,
+  .tabla-scroll-pendientes thead th,
+  .tabla-scroll-retiros thead th {
+    position: static !important;
+  }
+
+  /* Celdas de tablas contables compactas para 1 sola hoja */
+  .hoja-tabla-conteo th,
+  .hoja-tabla-proveedores th,
+  .hoja-tabla-pendientes th,
+  .hoja-tabla-arqueo th,
+  .hoja-tabla-retiros th {
+    padding: 2px 4px !important;
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  .hoja-tabla-conteo td,
+  .hoja-tabla-proveedores td,
+  .hoja-tabla-pendientes td,
+  .hoja-tabla-arqueo td,
+  .hoja-tabla-retiros td {
+    padding: 1.5px 3px !important;
+    font-size: 0.64rem !important;
+    line-height: 1.15 !important;
+    border: 1px solid #e2e8f0 !important;
+    height: auto !important;
+  }
+
+  .cell-input {
+    padding: 1px 2px !important;
+    font-size: 0.66rem !important;
+    height: auto !important;
     border: none !important;
     background: transparent !important;
+  }
+
+  .cell-costo,
+  .cell-total {
+    font-size: 0.66rem !important;
+    padding: 1px 3px !important;
+  }
+
+  .prov-celda-fija {
+    min-height: 18px !important;
+    padding: 0 !important;
+  }
+
+  .corte-totales-compact {
+    padding: 4px 6px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .corte-reparto-box {
+    padding: 3px 6px !important;
+    font-size: 0.65rem !important;
+  }
+
+  /* Evitar saltos de página dentro de renglones o bloques */
+  tr, .reparto-item, .hoja-col-izquierda, .hoja-col-derecha {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
