@@ -173,37 +173,43 @@ const SEED_DATA = {
       id: 'col-1',
       nombre: 'Arqueo 1 (Turno 1)',
       tarjetas: 2450,
+      tarjetaYomp: 0,
       sistema: 29500,
       billetes: 8500,
       mon1: 180,
       mon2: 240,
       mon5: 450,
       mon10: 890,
-      morralla: 1760
+      morralla: 1760,
+      bloqueado: true
     },
     {
       id: 'col-2',
       nombre: 'Arqueo 2 (Turno 2)',
       tarjetas: 3800,
+      tarjetaYomp: 0,
       sistema: 15400,
       billetes: 11200,
       mon1: 95,
       mon2: 160,
       mon5: 350,
       mon10: 600,
-      morralla: 1205
+      morralla: 1205,
+      bloqueado: true
     },
     {
       id: 'col-3',
       nombre: 'Arqueo 3 (Cierre)',
       tarjetas: 0,
+      tarjetaYomp: 0,
       sistema: 0,
       billetes: 0,
       mon1: 0,
       mon2: 0,
       mon5: 0,
       mon10: 0,
-      morralla: 0
+      morralla: 0,
+      bloqueado: false
     }
   ],
 
@@ -880,9 +886,9 @@ class StateManager {
       comprasProveedores: [],
       prestamosPendientes: [],
       arqueoColumnas: [
-        { id: 'col-1', nombre: 'Arqueo 1 (Turno 1)', tarjetas: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0 },
-        { id: 'col-2', nombre: 'Arqueo 2 (Turno 2)', tarjetas: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0 },
-        { id: 'col-3', nombre: 'Arqueo 3 (Cierre)', tarjetas: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0 }
+        { id: 'col-1', nombre: 'Arqueo 1 (Turno 1)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false },
+        { id: 'col-2', nombre: 'Arqueo 2 (Turno 2)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false },
+        { id: 'col-3', nombre: 'Arqueo 3 (Cierre)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false }
       ],
       retiros: [],
       cascada: { monedas: 0, premios: 0, total: 0, totalCorte: 0, porcentajeEllos: 60, porcentajeNosotros: 40, ellosTotal: 0, nosotrosTotal: 0 },
@@ -1431,13 +1437,48 @@ class StateManager {
   }
 
   updateArqueoColumna(colIndex, campos) {
-    // Corte y Arqueo SIEMPRE desbloqueado aunque no sea del día o no haya monto inicial
     if (this.data.arqueoColumnas && this.data.arqueoColumnas[colIndex]) {
       const col = this.data.arqueoColumnas[colIndex];
+      // Si la columna ya está bloqueada/cerrada, no se puede modificar
+      if (col.bloqueado) {
+        return col;
+      }
       Object.assign(col, campos);
       col.morralla = this.calcularMorralla(col.mon1, col.mon2, col.mon5, col.mon10);
       this.saveState();
+      return col;
     }
+    return null;
+  }
+
+  guardarArqueoColumnaSeguro(colIndex, campos, bloquear = true) {
+    if (this.data.arqueoColumnas && this.data.arqueoColumnas[colIndex]) {
+      const col = this.data.arqueoColumnas[colIndex];
+      // Si ya está bloqueado, no permitir alterar
+      if (col.bloqueado) {
+        return col;
+      }
+
+      col.tarjetas = parseFloat(campos.tarjetas) || 0;
+      col.tarjetaYomp = parseFloat(campos.tarjetaYomp) || 0;
+      col.sistema = parseFloat(campos.sistema) || 0;
+      col.billetes = parseFloat(campos.billetes) || 0;
+      col.mon1 = parseFloat(campos.mon1) || 0;
+      col.mon2 = parseFloat(campos.mon2) || 0;
+      col.mon5 = parseFloat(campos.mon5) || 0;
+      col.mon10 = parseFloat(campos.mon10) || 0;
+      col.morralla = this.calcularMorralla(col.mon1, col.mon2, col.mon5, col.mon10);
+
+      if (bloquear) {
+        col.bloqueado = true;
+        col.horaCierre = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        col.cajero = this.data.cajeroActual || 'Encargado';
+      }
+
+      this.saveState();
+      return col;
+    }
+    return null;
   }
 
   // Métodos de compatibilidad con CajaOperacionesModule

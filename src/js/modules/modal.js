@@ -846,6 +846,219 @@ export class ModalManager {
   }
 
   // ==========================================
+  // MODAL: CAPTURA DE CORTE Y ARQUEO POR COLUMNA (HOJA DIARIA)
+  // ==========================================
+  openCapturaArqueoColumnaModal(colIndex, onGuardado = null) {
+    if (!stateManager.data.arqueoColumnas || !stateManager.data.arqueoColumnas[colIndex]) return;
+    const col = stateManager.data.arqueoColumnas[colIndex];
+    const colNombre = col.nombre || `Cantidad ${colIndex + 1}`;
+    const estaBloqueado = !!col.bloqueado;
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 }).format(parseFloat(v) || 0);
+
+    if (estaBloqueado) {
+      // MODO SOLO LECTURA: EL ARQUEO YA FUE GUARDADO Y CERRADO
+      const body = `
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 8px; padding: 12px 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.72rem; font-weight: 800; background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px;">
+                ✓ ARQUEO GUARDADO Y CERRADO
+              </span>
+              <span style="font-size: 0.75rem; color: #166534; font-weight: 700;">
+                ⏰ ${col.horaCierre || 'Registrado'}
+              </span>
+            </div>
+            <p style="margin: 6px 0 0; font-size: 0.76rem; color: #15803d;">
+              Este arqueo ya fue completado y guardado. Los valores contables se encuentran protegidos contra alteraciones.
+            </p>
+          </div>
+
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.86rem;">
+              <tbody>
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 9px 12px; font-weight: 700; color: #0f172a;">TARJETAS</td>
+                  <td style="padding: 9px 12px; text-align: right; font-weight: 700;">${fmt(col.tarjetas)}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f1f5f9; background: #fafafa;">
+                  <td style="padding: 9px 12px; font-weight: 700; color: #0f172a;">TARJETA YOMP</td>
+                  <td style="padding: 9px 12px; text-align: right; font-weight: 700;">${fmt(col.tarjetaYomp)}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 9px 12px; font-weight: 700; color: #0f172a;">SISTEMA (POS)</td>
+                  <td style="padding: 9px 12px; text-align: right; font-weight: 700;">${fmt(col.sistema)}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f1f5f9; background: #fafafa;">
+                  <td style="padding: 9px 12px; font-weight: 700; color: #0f172a;">BILLETES</td>
+                  <td style="padding: 9px 12px; text-align: right; font-weight: 700;">${fmt(col.billetes)}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 7px 12px; color: #475569;">MON. 1 ($ en monedas)</td>
+                  <td style="padding: 7px 12px; text-align: right;">${fmt(col.mon1)}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f1f5f9; background: #fafafa;">
+                  <td style="padding: 7px 12px; color: #475569;">MON. 2 ($ en monedas)</td>
+                  <td style="padding: 7px 12px; text-align: right;">${fmt(col.mon2)}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 7px 12px; color: #475569;">MON. 5 ($ en monedas)</td>
+                  <td style="padding: 7px 12px; text-align: right;">${fmt(col.mon5)}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f1f5f9; background: #fafafa;">
+                  <td style="padding: 7px 12px; color: #475569;">MON. 10 ($ en monedas)</td>
+                  <td style="padding: 7px 12px; text-align: right;">${fmt(col.mon10)}</td>
+                </tr>
+                <tr style="background: #f8fafc; font-weight: 800;">
+                  <td style="padding: 10px 12px; color: #0f172a;">MORRALLA (Suma)</td>
+                  <td style="padding: 10px 12px; text-align: right; color: #0f172a; font-size: 0.95rem;">${fmt(col.morralla)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      const footer = `
+        <button type="button" class="btn-primary" id="btnCerrarModalArqBloq" style="background: #0f172a; min-width: 100px;">Cerrar</button>
+      `;
+
+      this.open(`🔒 ${colNombre}`, body, footer);
+      document.getElementById('btnCerrarModalArqBloq')?.addEventListener('click', () => this.close());
+      return;
+    }
+
+    // MODO EDICIÓN / CAPTURA: AÚN NO GUARDADO
+    const body = `
+      <form id="formCapturaArqueoCol" style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; color: #1e3a8a;">
+          <strong>🏦 Captura de Arqueo y Corte: ${colNombre}</strong>
+          <p style="margin: 3px 0 0; color: #475569; font-size: 0.74rem;">
+            Ingresa las cantidades de cada concepto solicitado. Al presionar <strong>"Guardar y Cerrar Arqueo"</strong>, los valores quedarán registrados y la columna ya no se podrá modificar.
+          </p>
+        </div>
+
+        <!-- TARJETAS Y SISTEMA -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">💳 TARJETAS ($ MXN)</label>
+              <input type="number" step="0.5" class="form-control font-bold" id="inpColTarjetas" placeholder="0.00" value="${col.tarjetas || ''}" style="font-size: 0.95rem;">
+              <small style="color: #64748b; font-size: 0.72rem;">Terminal bancaria</small>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">📱 TARJETA YOMP ($ MXN)</label>
+              <input type="number" step="0.5" class="form-control font-bold" id="inpColTarjetaYomp" placeholder="0.00" value="${col.tarjetaYomp || ''}" style="font-size: 0.95rem; border-color: #93c5fd;">
+              <small style="color: #64748b; font-size: 0.72rem;">Terminal / cobros Yomp</small>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">🖥️ SISTEMA (POS) ($ MXN)</label>
+              <input type="number" step="0.5" class="form-control font-bold" id="inpColSistema" placeholder="0.00" value="${col.sistema || ''}" style="font-size: 0.95rem;">
+              <small style="color: #64748b; font-size: 0.72rem;">Venta registrada en software</small>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 700; color: #0f172a;">💵 BILLETES EN CAJA ($ MXN)</label>
+              <input type="number" step="10" class="form-control font-bold" id="inpColBilletes" placeholder="0.00" value="${col.billetes || ''}" style="font-size: 0.95rem;">
+              <small style="color: #64748b; font-size: 0.72rem;">Total acumulado en billetes</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTEO DE MONEDAS (CANTIDAD TOTAL EN PESOS) -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+          <div style="font-weight: 700; font-size: 0.84rem; color: #0f172a; margin-bottom: 8px;">
+            🪙 MONEDAS (Monto total en pesos)
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 600; font-size: 0.8rem;">MON. 1 ($ en monedas)</label>
+              <input type="number" step="1" min="0" class="form-control calc-mon-col" id="inpColMon1" placeholder="0.00" value="${col.mon1 || ''}">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 600; font-size: 0.8rem;">MON. 2 ($ en monedas)</label>
+              <input type="number" step="1" min="0" class="form-control calc-mon-col" id="inpColMon2" placeholder="0.00" value="${col.mon2 || ''}">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 600; font-size: 0.8rem;">MON. 5 ($ en monedas)</label>
+              <input type="number" step="1" min="0" class="form-control calc-mon-col" id="inpColMon5" placeholder="0.00" value="${col.mon5 || ''}">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-weight: 600; font-size: 0.8rem;">MON. 10 ($ en monedas)</label>
+              <input type="number" step="1" min="0" class="form-control calc-mon-col" id="inpColMon10" placeholder="0.00" value="${col.mon10 || ''}">
+            </div>
+          </div>
+
+          <!-- MORRALLA CALCULADA EN VIVO (SUMA DE MONEDAS) -->
+          <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">MORRALLA (Suma de monedas):</span>
+            <span id="displayModalMorrallaSuma" style="font-weight: 800; font-size: 1.1rem; color: #0284c7;">
+              ${fmt(col.morralla)}
+            </span>
+          </div>
+        </div>
+
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 12px; font-size: 0.74rem; color: #92400e;">
+          ⚠️ <strong>Nota:</strong> Al hacer clic en <em>"Guardar y Cerrar Arqueo"</em>, esta columna se sellará contablemente y ya no se podrá modificar.
+        </div>
+      </form>
+    `;
+
+    const footer = `
+      <button type="button" class="btn-secondary" id="btnCancelArqCol">Cancelar</button>
+      <button type="button" class="btn-primary" id="btnSaveArqCol" style="min-width: 180px; background: #0f172a;">
+        ✓ Guardar y Cerrar Arqueo
+      </button>
+    `;
+
+    this.open(`🏦 ${colNombre}`, body, footer);
+
+    // Cálculo dinámico de morralla en vivo
+    const inpM1 = document.getElementById('inpColMon1');
+    const inpM2 = document.getElementById('inpColMon2');
+    const inpM5 = document.getElementById('inpColMon5');
+    const inpM10 = document.getElementById('inpColMon10');
+    const dispMorralla = document.getElementById('displayModalMorrallaSuma');
+
+    const actualizarMorrallaEnVivo = () => {
+      const v1 = parseFloat(inpM1?.value) || 0;
+      const v2 = parseFloat(inpM2?.value) || 0;
+      const v5 = parseFloat(inpM5?.value) || 0;
+      const v10 = parseFloat(inpM10?.value) || 0;
+      const totalM = v1 + v2 + v5 + v10;
+      if (dispMorralla) dispMorralla.textContent = fmt(totalM);
+    };
+
+    [inpM1, inpM2, inpM5, inpM10].forEach(inp => {
+      inp?.addEventListener('input', actualizarMorrallaEnVivo);
+      inp?.addEventListener('change', actualizarMorrallaEnVivo);
+    });
+
+    document.getElementById('btnCancelArqCol')?.addEventListener('click', () => this.close());
+    document.getElementById('btnSaveArqCol')?.addEventListener('click', () => {
+      if (!confirm(`¿Confirmas cerrar y guardar el arqueo de ${colNombre}? Una vez guardado ya no se podrá modificar.`)) {
+        return;
+      }
+
+      const datos = {
+        tarjetas: parseFloat(document.getElementById('inpColTarjetas')?.value) || 0,
+        tarjetaYomp: parseFloat(document.getElementById('inpColTarjetaYomp')?.value) || 0,
+        sistema: parseFloat(document.getElementById('inpColSistema')?.value) || 0,
+        billetes: parseFloat(document.getElementById('inpColBilletes')?.value) || 0,
+        mon1: parseFloat(inpM1?.value) || 0,
+        mon2: parseFloat(inpM2?.value) || 0,
+        mon5: parseFloat(inpM5?.value) || 0,
+        mon10: parseFloat(inpM10?.value) || 0
+      };
+
+      stateManager.guardarArqueoColumnaSeguro(colIndex, datos, true);
+      this.close();
+      if (onGuardado) onGuardado();
+    });
+  }
+
+  // ==========================================
   // 6. MODAL: NUEVO PENDIENTE DE PAGO
   // ==========================================
   openNuevoPendienteModal() {

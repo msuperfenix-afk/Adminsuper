@@ -868,6 +868,31 @@ input, button, select, textarea {
   background: #f8fafc;
 }
 
+/* Interacción y hover en Arqueo y Corte */
+.cell-clickable-arq {
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.cell-clickable-arq:hover {
+  background-color: #f1f5f9 !important;
+  color: #0284c7;
+}
+
+.cell-clickable-arq.arq-bloqueado:hover {
+  background-color: #f0fdf4 !important;
+  color: #15803d;
+}
+
+.btn-abrir-arqueo-col {
+  transition: background-color 0.15s ease;
+}
+
+.btn-abrir-arqueo-col:hover {
+  background-color: #f1f5f9 !important;
+}
+
 .cell-total {
   text-align: center;
   background: #fafafa;

@@ -413,11 +413,11 @@ export class HojaDiariaModule {
               </div>
             </div>
 
-            <!-- 2. CORTE Y ARQUEO (3 Columnas - SIEMPRE DESBLOQUEADO) -->
+            <!-- 2. CORTE Y ARQUEO (3 Columnas - Captura por Modal y Bloqueo Definitivo) -->
             <div class="hoja-subcuadro" style="margin-top: 14px;">
               <div class="subcuadro-titulo-flex">
                 <span>CORTE Y ARQUEO</span>
-                <span style="font-size: 0.72rem; color: #64748b; font-weight: normal;">* Monedas en cantidad total ($)</span>
+                <span style="font-size: 0.72rem; color: #64748b; font-weight: normal;">* Da clic en la columna para capturar o revisar arqueo</span>
               </div>
 
               <div class="tabla-responsive-wrap">
@@ -425,64 +425,93 @@ export class HojaDiariaModule {
                   <thead>
                     <tr>
                       <th style="text-align: left;">CONCEPTO</th>
-                      <th style="width: 95px; text-align: center;">CANTIDAD 1</th>
-                      <th style="width: 95px; text-align: center;">CANTIDAD 2</th>
-                      <th style="width: 95px; text-align: center;">CANTIDAD 3</th>
+                      ${d.arqueoColumnas.map((col, idx) => `
+                        <th style="width: 105px; text-align: center; cursor: pointer; user-select: none;" class="btn-abrir-arqueo-col" data-col-arq="${idx}" title="Clic para ${col.bloqueado ? 'ver arqueo guardado (protegido)' : 'capturar cantidades de esta columna'}">
+                          <div style="font-size: 0.78rem; font-weight: 700;">CANTIDAD ${idx + 1}</div>
+                          ${col.bloqueado ? `
+                            <span style="display: inline-block; font-size: 0.65rem; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-top: 3px;">
+                              🔒 Cerrado ${col.horaCierre || ''}
+                            </span>
+                          ` : `
+                            <span style="display: inline-block; font-size: 0.65rem; background: #eff6ff; color: #1d4ed8; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-top: 3px;">
+                              + Capturar
+                            </span>
+                          `}
+                        </th>
+                      `).join('')}
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td class="font-bold">TARJETAS</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="tarjetas" value="${col.tarjetas || ''}"></td>
+                        <td class="text-right font-bold cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; padding: 6px 8px;" title="Clic para abrir captura">
+                          ${parseFloat(col.tarjetas) > 0 ? this.formatMoney(col.tarjetas) : '<span style="color:#94a3b8; font-weight: normal;">$0.00</span>'}
+                        </td>
+                      `).join('')}
+                    </tr>
+                    <tr>
+                      <td class="font-bold">TARJETA YOMP</td>
+                      ${d.arqueoColumnas.map((col, idx) => `
+                        <td class="text-right font-bold cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; padding: 6px 8px;" title="Clic para abrir captura">
+                          ${parseFloat(col.tarjetaYomp) > 0 ? this.formatMoney(col.tarjetaYomp) : '<span style="color:#94a3b8; font-weight: normal;">$0.00</span>'}
+                        </td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td class="font-bold">SISTEMA (POS)</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="sistema" value="${col.sistema || ''}"></td>
+                        <td class="text-right font-bold cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; padding: 6px 8px;" title="Clic para abrir captura">
+                          ${parseFloat(col.sistema) > 0 ? this.formatMoney(col.sistema) : '<span style="color:#94a3b8; font-weight: normal;">$0.00</span>'}
+                        </td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td class="font-bold">BILLETES</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="10" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="billetes" value="${col.billetes || ''}"></td>
+                        <td class="text-right font-bold cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; padding: 6px 8px;" title="Clic para abrir captura">
+                          ${parseFloat(col.billetes) > 0 ? this.formatMoney(col.billetes) : '<span style="color:#94a3b8; font-weight: normal;">$0.00</span>'}
+                        </td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td>MON. 1 ($ en monedas)</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon1" value="${col.mon1 || ''}"></td>
+                        <td class="text-right cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; padding: 5px 8px;" title="Clic para abrir captura">
+                          ${parseFloat(col.mon1) > 0 ? this.formatMoney(col.mon1) : '<span style="color:#94a3b8;">$0.00</span>'}
+                        </td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td>MON. 2 ($ en monedas)</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon2" value="${col.mon2 || ''}"></td>
+                        <td class="text-right cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; padding: 5px 8px;" title="Clic para abrir captura">
+                          ${parseFloat(col.mon2) > 0 ? this.formatMoney(col.mon2) : '<span style="color:#94a3b8;">$0.00</span>'}
+                        </td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td>MON. 5 ($ en monedas)</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon5" value="${col.mon5 || ''}"></td>
+                        <td class="text-right cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; padding: 5px 8px;" title="Clic para abrir captura">
+                          ${parseFloat(col.mon5) > 0 ? this.formatMoney(col.mon5) : '<span style="color:#94a3b8;">$0.00</span>'}
+                        </td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td>MON. 10 ($ en monedas)</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon10" value="${col.mon10 || ''}"></td>
+                        <td class="text-right cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; padding: 5px 8px;" title="Clic para abrir captura">
+                          ${parseFloat(col.mon10) > 0 ? this.formatMoney(col.mon10) : '<span style="color:#94a3b8;">$0.00</span>'}
+                        </td>
                       `).join('')}
                     </tr>
-                    <tr>
+                    <tr style="background: #f8fafc;">
                       <td class="font-bold">MORRALLA (Suma)</td>
-                      ${d.arqueoColumnas.map(col => `
-                        <td class="text-right font-bold" style="color: #0f172a; padding: 6px;">${this.formatMoney(col.morralla)}</td>
-                      `).join('')}
-                    </tr>
-                    <tr class="fila-gran-total">
-                      <td class="font-bold">TOTAL EFECTIVO</td>
-                      ${d.arqueoColumnas.map(col => `
-                        <td class="text-right font-bold" style="color: #0f172a; padding: 6px;">${this.formatMoney((col.billetes || 0) + (col.morralla || 0))}</td>
+                      ${d.arqueoColumnas.map((col, idx) => `
+                        <td class="text-right font-bold cell-clickable-arq ${col.bloqueado ? 'arq-bloqueado' : ''}" data-col-arq="${idx}" style="cursor: pointer; color: #0284c7; padding: 7px 8px;" title="Clic para abrir captura">
+                          ${this.formatMoney(col.morralla)}
+                        </td>
                       `).join('')}
                     </tr>
                   </tbody>
@@ -844,12 +873,16 @@ export class HojaDiariaModule {
       }
     });
 
-    // 6. Conteo y Arqueo por Columnas
-    this.container.querySelectorAll('[data-arq-col]').forEach(input => {
-      input.addEventListener('change', (e) => {
-        const colIdx = parseInt(e.target.getAttribute('data-arq-col'));
-        const field = e.target.getAttribute('data-field');
-        stateManager.updateArqueoColumna(colIdx, { [field]: e.target.value });
+    // 6. Conteo y Arqueo por Columnas (Abre Modal de Captura Segura / Bloqueo)
+    this.container.querySelectorAll('[data-col-arq]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const colIdx = parseInt(el.getAttribute('data-col-arq'));
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openCapturaArqueoColumnaModal(colIdx, () => {
+            this.render();
+          });
+        }
       });
     });
 
