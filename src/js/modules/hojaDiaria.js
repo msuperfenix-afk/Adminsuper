@@ -735,6 +735,10 @@ export class HojaDiariaModule {
       if (window.adminFenixApp?.modalManager) {
         window.adminFenixApp.modalManager.openCostoPanaderoModal(idx, () => {
           this.render();
+          setTimeout(() => {
+            const container = this.container.querySelector('.tabla-scroll-proveedores');
+            if (container) container.scrollTop = container.scrollHeight;
+          }, 60);
         });
       }
     };
@@ -761,6 +765,10 @@ export class HojaDiariaModule {
       if (window.adminFenixApp?.modalManager) {
         window.adminFenixApp.modalManager.openCostoTortilleriaModal(idx, () => {
           this.render();
+          setTimeout(() => {
+            const container = this.container.querySelector('.tabla-scroll-proveedores');
+            if (container) container.scrollTop = container.scrollHeight;
+          }, 60);
         });
       }
     };

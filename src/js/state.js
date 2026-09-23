@@ -816,6 +816,11 @@ class StateManager {
         this.data.preciosGuardadosPan[p.proveedor] = precio;
       }
 
+      // Pasar automáticamente el costo a la tabla de proveedores
+      if (p.costo > 0) {
+        this.sincronizarProveedorConteo(p.proveedor, p.costo);
+      }
+
       this.saveState();
       return true;
     }
@@ -847,10 +852,75 @@ class StateManager {
         this.data.preciosGuardadosTortilla[t.proveedor] = precio;
       }
 
+      // Pasar automáticamente el costo a la tabla de proveedores
+      if (t.costo > 0) {
+        this.sincronizarProveedorConteo(t.proveedor, t.costo);
+      }
+
       this.saveState();
       return true;
     }
     return false;
+  }
+
+  // Sincronizar / Trasladar costo de pan o tortilla a la tabla de proveedores pagados
+  sincronizarProveedorConteo(nombreProveedorConteo, costoTotal) {
+    if (!this.data.comprasProveedores) this.data.comprasProveedores = [];
+    const costo = parseFloat(costoTotal) || 0;
+    if (costo <= 0) return;
+
+    // Normalizar texto para comparación sin acentos ni puntos
+    const norm = (s) => (s || '')
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/\./g, '')
+      .trim();
+
+    const provNorm = norm(nombreProveedorConteo);
+
+    // Buscar si ya existe un renglón en comprasProveedores que corresponda a este proveedor
+    let indexEncontrado = this.data.comprasProveedores.findIndex(c => {
+      const cNorm = norm(c.proveedor);
+      if (cNorm === provNorm) return true;
+      
+      const pT2 = provNorm.includes('2') || provNorm.includes('turno');
+      const cT2 = cNorm.includes('2') || cNorm.includes('turno');
+      if (pT2 !== cT2) return false;
+
+      if (provNorm.includes('monreal') && cNorm.includes('monreal')) return true;
+      if (provNorm.includes('ideal') && cNorm.includes('ideal')) return true;
+      if (provNorm.includes('celia') && cNorm.includes('celia')) return true;
+      if (provNorm.includes('mirella') && cNorm.includes('mirella')) return true;
+      if (provNorm.includes('espacio') && cNorm.includes('espacio')) return true;
+      if (provNorm.includes('amarilla') && cNorm.includes('amarilla')) return true;
+      return false;
+    });
+
+    const ahora = new Date();
+    const horaActual = ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    if (indexEncontrado >= 0) {
+      // Actualizar monto pagado del renglón existente
+      const reg = this.data.comprasProveedores[indexEncontrado];
+      reg.pagado = costo;
+      reg.bloqueado = true;
+      if (!reg.hora) reg.hora = horaActual;
+    } else {
+      // Agregar nuevo renglón a la relación de proveedores pagados
+      const notaNum = this.data.comprasProveedores.length + 1;
+      this.data.comprasProveedores.push({
+        nota: notaNum,
+        proveedor: nombreProveedorConteo,
+        pagado: costo,
+        tipoPago: 'Efectivo',
+        hora: horaActual,
+        fechaRegistro: this.data.fecha,
+        bloqueado: true
+      });
+    }
+
+    // Renumerar notas consecutivas
+    this.data.comprasProveedores.forEach((r, i) => { r.nota = i + 1; });
   }
 
   // 3. Compras y Proveedores Pagados (Hoja Diaria)
