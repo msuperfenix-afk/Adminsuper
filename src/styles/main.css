@@ -3653,16 +3653,13 @@ input:disabled {
 
 /* Tablets y pantallas medianas (<= 1024px) */
 @media screen and (max-width: 1024px) {
-  .hoja-header-grid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
-    gap: 10px !important;
-  }
-
-  .hoja-tablas-grid {
+  .hoja-grid-layout {
     grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 0 10px 16px !important;
   }
 
-  .stats-charts-grid {
+  .stats-two-cols-grid {
     grid-template-columns: 1fr !important;
   }
 
@@ -3678,7 +3675,7 @@ input:disabled {
     overflow: hidden;
   }
 
-  /* El layout general pasa a barra de navegación inferior fija para celular */
+  /* Layout pasa a barra de navegación inferior móvil */
   .app-layout {
     flex-direction: column-reverse;
     height: 100vh;
@@ -3687,15 +3684,15 @@ input:disabled {
     overflow: hidden;
   }
 
-  /* Barra de navegación inferior móvil estilo Bottom App Bar */
+  /* Barra de navegación inferior móvil tipo Bottom Bar */
   .sidebar {
     width: 100%;
-    height: 56px;
-    min-height: 56px;
+    height: 52px;
+    min-height: 52px;
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    padding: 0 10px;
+    padding: 0 6px;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     border-right: none;
     border-top: 1px solid #1e293b;
@@ -3716,46 +3713,51 @@ input:disabled {
   }
 
   .nav-item {
-    width: 48px;
-    height: 42px;
-    border-radius: 8px;
+    width: 44px;
+    height: 38px;
+    border-radius: 6px;
+  }
+
+  .nav-item svg {
+    width: 19px;
+    height: 19px;
   }
 
   .nav-item::after {
-    display: none !important; /* Deshabilitar tooltips flotantes en pantallas táctiles */
+    display: none !important;
   }
 
   .sidebar-footer {
     display: none !important;
   }
 
-  /* Área principal ajustada al tamaño disponible */
+  /* Área principal ajustada al viewport */
   .main-area {
     flex: 1;
-    height: calc(100dvh - 56px);
+    height: calc(100dvh - 52px);
     overflow: hidden;
     display: flex;
     flex-direction: column;
   }
 
-  /* Barra superior compacta con safe-area superior */
+  /* Barra superior compacta */
   .top-bar {
-    height: 50px;
-    padding: 0 12px;
+    height: 46px;
+    padding: 0 8px;
     padding-top: env(safe-area-inset-top, 0px);
-    gap: 8px;
+    gap: 6px;
   }
 
   .brand-header-flex {
-    gap: 8px;
+    gap: 6px;
   }
 
   .header-logo {
-    height: 28px;
+    height: 26px;
   }
 
   .page-title-group h1 {
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     gap: 4px;
   }
 
@@ -3764,147 +3766,663 @@ input:disabled {
   }
 
   .top-bar-right {
-    gap: 6px;
+    gap: 4px;
   }
 
   .btn-outline-header,
   .topbar-action-btn {
-    padding: 5px 8px !important;
+    padding: 4px 6px !important;
+    font-size: 0.68rem !important;
+    height: 28px;
+  }
+
+  /* Vistas con scroll táctil suave */
+  .view-container,
+  .hoja-papel-container,
+  .pipeline-view-container,
+  .provdb-container,
+  .stats-module-layout {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px !important;
+  }
+
+  /* ======================================================
+     REDUCCIÓN Y AJUSTE DE LA HOJA CONTABLE DIARIA EN MÓVIL
+     ====================================================== */
+  .hoja-papel-container {
+    margin: 0 !important;
+    max-width: 100% !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Barra de navegación de días (LUN a DOM) compacta */
+  .barra-navegacion-dias {
+    padding: 5px 6px !important;
+    gap: 4px !important;
+  }
+
+  .btn-dia-selector {
+    min-width: 32px !important;
+    padding: 2px 3px !important;
+    font-size: 0.65rem !important;
+    border-radius: 4px !important;
+  }
+
+  .btn-dia-selector strong {
+    font-size: 0.6rem !important;
+  }
+
+  .btn-dia-selector span {
+    font-size: 0.74rem !important;
+  }
+
+  .btn-abrir-calendario-icono {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 4px !important;
+  }
+
+  .btn-abrir-calendario-icono svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .input-fecha-picker {
+    padding: 2px 6px !important;
+    font-size: 0.7rem !important;
+    height: 26px;
+  }
+
+  .badge-guardado-verde {
+    padding: 2px 6px !important;
+    font-size: 0.65rem !important;
+    gap: 4px !important;
+  }
+
+  .punto-verde-guardado {
+    width: 6px !important;
+    height: 6px !important;
+  }
+
+  /* Encabezado membrete compacto */
+  .hoja-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 6px 8px !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .hoja-logo-img {
+    height: 30px !important;
+  }
+
+  .hoja-titulo-principal {
+    font-size: 0.98rem !important;
+  }
+
+  .hoja-subtitulo {
+    font-size: 0.58rem !important;
+  }
+
+  .hoja-header-datos {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px 8px !important;
+    justify-content: space-between !important;
+  }
+
+  .header-dato-label {
+    font-size: 0.68rem !important;
+  }
+
+  .hoja-texto-fijo-dia,
+  .hoja-texto-fijo-fecha {
+    font-size: 0.8rem !important;
+  }
+
+  .hoja-campo-inicial {
+    padding: 2px 6px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .hoja-input-money {
+    width: 68px !important;
+    height: 22px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .btn-fenix-print {
+    padding: 3px 6px !important;
+    font-size: 0.68rem !important;
+    height: 26px;
+  }
+
+  .btn-fenix-print svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  /* Banners de historial y monto inicial */
+  .banner-aviso-historial,
+  .banner-aviso-monto-inicial {
+    margin: 4px 6px !important;
+    padding: 6px 8px !important;
+  }
+
+  .banner-titulo-historial,
+  .banner-titulo-inicial {
+    font-size: 0.7rem !important;
+  }
+
+  .banner-sub-historial,
+  .banner-sub-inicial {
+    font-size: 0.66rem !important;
+  }
+
+  /* Cuadrícula principal apilada */
+  .hoja-grid-layout {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 0 4px 12px !important;
+  }
+
+  .hoja-seccion-header {
+    font-size: 0.7rem !important;
+    padding: 3px 6px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .hoja-subcuadro {
+    margin-bottom: 6px !important;
+    border-radius: 4px !important;
+  }
+
+  .subcuadro-titulo,
+  .subcuadro-titulo-flex {
+    padding: 3px 6px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .badge-hint-click-info {
+    display: none !important;
+  }
+
+  .badge-desglose-pagos {
+    font-size: 0.64rem !important;
+    gap: 3px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .badge-item-pago,
+  .badge-total-pagado {
+    padding: 1px 4px !important;
+    font-size: 0.64rem !important;
+  }
+
+  /* ======================================================
+     REDUCCIÓN PROFUNDA DE CELDAS Y TABLAS DE HOJA DIARIA
+     ====================================================== */
+  .hoja-tabla-conteo,
+  .hoja-tabla-proveedores,
+  .hoja-tabla-pendientes,
+  .hoja-tabla-arqueo,
+  .hoja-tabla-retiros {
+    font-size: 0.68rem !important;
+  }
+
+  .hoja-tabla-conteo th,
+  .hoja-tabla-proveedores th,
+  .hoja-tabla-pendientes th,
+  .hoja-tabla-arqueo th,
+  .hoja-tabla-retiros th {
+    padding: 3px 3px !important;
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.2px !important;
+  }
+
+  .hoja-tabla-conteo td,
+  .hoja-tabla-proveedores td,
+  .hoja-tabla-pendientes td,
+  .hoja-tabla-arqueo td,
+  .hoja-tabla-retiros td {
+    padding: 2px 3px !important;
+    font-size: 0.68rem !important;
+    line-height: 1.15 !important;
+  }
+
+  /* Tabla de Compras y Proveedores compacta */
+  .tabla-scroll-proveedores {
+    max-height: 260px !important;
+  }
+
+  .prov-nombre-fijo,
+  .prov-texto-fijo {
+    font-size: 0.72rem !important;
+    padding: 0 !important;
+    line-height: 1.15 !important;
+  }
+
+  .badge-hora-hint {
+    font-size: 0.6rem !important;
+  }
+
+  .btn-logo-pago {
+    width: 20px !important;
+    height: 16px !important;
+    font-size: 0.6rem !important;
+    border-radius: 2px !important;
+  }
+
+  .btn-solo-plus {
+    width: 20px !important;
+    height: 17px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .celda-agregar-mas {
+    padding: 2px !important;
+  }
+
+  /* Tabla de Préstamos compacta */
+  .tabla-scroll-pendientes {
+    max-height: 130px !important;
+  }
+
+  .check-prestamo-pagado {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  .prestamo-prov {
     font-size: 0.72rem !important;
   }
 
-  /* Contenedores de vistas con scroll táctil suave */
-  .view-container,
-  .hoja-diaria-wrapper,
-  .pipeline-view-container,
-  .provdb-view-container,
-  .stats-view-container {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-    padding: 10px !important;
+  .prestamo-nota {
+    font-size: 0.62rem !important;
   }
 
-  /* Hoja Diaria en móvil */
-  .hoja-header-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-  }
-
-  .hoja-tabla-wrap {
+  /* Tabla de Arqueo y Corte compacta */
+  .hoja-tabla-arqueo {
     overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
   }
 
-  .hoja-tabla-scroll {
-    min-width: 500px;
+  .hoja-tabla-arqueo th.btn-abrir-arqueo-col {
+    width: 66px !important;
+    min-width: 66px !important;
+    padding: 2px 1px !important;
   }
 
-  /* Pipeline semanal en móvil */
-  .pipeline-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
+  .hoja-tabla-arqueo th.btn-abrir-arqueo-col div {
+    font-size: 0.64rem !important;
   }
 
-  .pipeline-header-actions {
-    flex-direction: column;
-    gap: 6px;
+  .hoja-tabla-arqueo th.btn-abrir-arqueo-col span {
+    font-size: 0.55rem !important;
+    padding: 1px 3px !important;
+    margin-top: 1px !important;
   }
 
-  .pipeline-scroll {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-    padding-bottom: 12px;
+  .hoja-tabla-arqueo td {
+    padding: 2px 3px !important;
+    font-size: 0.68rem !important;
   }
 
-  .pipeline-col {
-    min-width: 280px !important;
-    max-width: 320px !important;
-    scroll-snap-align: start;
+  /* Tabla de Retiros compacta */
+  .tabla-scroll-retiros {
+    max-height: 130px !important;
   }
 
-  /* Base de datos de proveedores en móvil */
+  /* Tabla de Conteo Pan y Tortilla compacta */
+  .prov-celda-fija {
+    min-height: 20px !important;
+    gap: 3px !important;
+  }
+
+  .btn-info-costo {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+  }
+
+  .icono-i-circulo {
+    font-size: 0.6rem !important;
+  }
+
+  .celda-conteo-val {
+    font-size: 0.7rem !important;
+    padding: 2px 2px !important;
+  }
+
+  .cell-costo {
+    font-size: 0.7rem !important;
+  }
+
+  .grid-dos-campos,
+  .grid-tres-campos {
+    padding: 4px 6px !important;
+    gap: 4px !important;
+  }
+
+  .grid-dos-campos label,
+  .grid-tres-campos label {
+    font-size: 0.64rem !important;
+  }
+
+  .field-static-val {
+    font-size: 0.78rem !important;
+    padding: 1px 0 !important;
+  }
+
+  .reparto-item {
+    padding: 3px 6px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .cell-input {
+    font-size: 0.72rem !important;
+    padding: 1px 2px !important;
+  }
+
+  /* ======================================================
+     REDUCCIÓN Y AJUSTE DE BASE DE DATOS DE PROVEEDORES
+     ====================================================== */
+  .provdb-container {
+    padding: 4px !important;
+  }
+
   .provdb-kpis-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
   }
 
-  .provdb-filters-bar {
+  .provdb-kpi-card {
+    padding: 6px 8px !important;
+    border-radius: 6px !important;
+  }
+
+  .provdb-kpi-num {
+    font-size: 1.05rem !important;
+  }
+
+  .provdb-kpi-label {
+    font-size: 0.64rem !important;
+  }
+
+  .provdb-kpi-badge {
+    font-size: 0.58rem !important;
+    padding: 1px 4px !important;
+  }
+
+  .provdb-toolbar {
     flex-direction: column !important;
+    padding: 6px !important;
+    gap: 6px !important;
     align-items: stretch !important;
-    gap: 8px !important;
   }
 
-  .provdb-search-box {
+  .provdb-search-wrap {
     min-width: 100% !important;
   }
 
-  .provdb-table-wrap {
+  .provdb-search-input {
+    height: 32px !important;
+    font-size: 0.78rem !important;
+    padding: 4px 8px !important;
+  }
+
+  .provdb-filters-wrap {
+    gap: 4px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .provdb-filter-select {
+    padding: 3px 6px !important;
+    font-size: 0.72rem !important;
+    height: 28px !important;
+    flex: 1 !important;
+    min-width: 110px !important;
+  }
+
+  .provdb-table-card {
+    border-radius: 4px !important;
+  }
+
+  .provdb-table-header-info {
+    padding: 4px 8px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .provdb-table-responsive {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
   }
 
   .provdb-table {
-    min-width: 700px;
+    min-width: 600px !important;
+    font-size: 0.7rem !important;
   }
 
-  /* Estadísticas en móvil */
-  .stats-kpis-grid {
-    grid-template-columns: 1fr 1fr !important;
+  .provdb-table th {
+    padding: 4px 6px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .provdb-table td {
+    padding: 3px 6px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .provdb-act-btn {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.7rem !important;
+    padding: 0 !important;
+  }
+
+  .badge-cat {
+    padding: 1px 4px !important;
+    font-size: 0.62rem !important;
+  }
+
+  /* ======================================================
+     REDUCCIÓN Y AJUSTE DE AGENDA SEMANAL (PIPELINE)
+     ====================================================== */
+  .kanban-board {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
     gap: 8px !important;
+    padding: 6px 4px 12px !important;
   }
 
-  .stats-periodo-badge {
-    display: none !important;
+  .kanban-column {
+    min-width: calc(100vw - 32px) !important;
+    max-width: calc(100vw - 32px) !important;
+    scroll-snap-align: center;
+    border-radius: 6px !important;
   }
 
-  /* Modales responsivos y adaptados al viewport táctil */
+  .column-header {
+    padding: 6px 8px !important;
+  }
+
+  .column-day {
+    font-size: 0.82rem !important;
+  }
+
+  .column-cards-scroll {
+    max-height: calc(100dvh - 210px) !important;
+    padding: 4px !important;
+    gap: 4px !important;
+  }
+
+  .deal-card {
+    padding: 6px 8px !important;
+    border-radius: 4px !important;
+  }
+
+  .deal-name {
+    font-size: 0.8rem !important;
+  }
+
+  .card-action-btn {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 0.68rem !important;
+  }
+
+  /* ======================================================
+     REDUCCIÓN Y AJUSTE DE ESTADÍSTICAS
+     ====================================================== */
+  .stats-tab-nav {
+    padding: 4px !important;
+    gap: 4px !important;
+  }
+
+  .stats-tab-btn {
+    padding: 5px 8px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .stats-tab-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .stats-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .stats-kpi-card {
+    padding: 6px 8px !important;
+    border-radius: 6px !important;
+  }
+
+  .kpi-value {
+    font-size: 1.05rem !important;
+  }
+
+  .kpi-label {
+    font-size: 0.64rem !important;
+  }
+
+  .kpi-subtext {
+    font-size: 0.62rem !important;
+  }
+
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ======================================================
+     REDUCCIÓN Y AJUSTE DE MODALES EN MÓVIL
+     ====================================================== */
   .modal-container {
-    width: 95vw !important;
-    max-width: 95vw !important;
-    max-height: 90dvh !important;
+    width: 96vw !important;
+    max-width: 96vw !important;
+    max-height: 92dvh !important;
     margin: auto !important;
-    border-radius: 8px !important;
+    border-radius: 6px !important;
   }
 
   .modal-header {
-    padding: 12px 14px !important;
+    padding: 8px 12px !important;
   }
 
   .modal-title {
-    font-size: 0.95rem !important;
+    font-size: 0.88rem !important;
   }
 
   .modal-body {
-    padding: 12px 14px !important;
-    max-height: calc(90dvh - 110px) !important;
+    padding: 8px 10px !important;
+    max-height: calc(92dvh - 90px) !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
   }
 
   .modal-footer {
-    padding: 10px 14px !important;
+    padding: 6px 10px !important;
+    gap: 6px !important;
+  }
+
+  .modal-footer button {
+    padding: 5px 10px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .form-control {
+    height: 32px !important;
+    padding: 4px 8px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .form-label {
+    font-size: 0.72rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  .fila-item-pedido input {
+    height: 26px !important;
+    font-size: 0.74rem !important;
+    padding: 2px 6px !important;
   }
 }
 
 /* Teléfonos muy compactos (<= 480px) */
 @media screen and (max-width: 480px) {
-  .hoja-header-grid {
-    grid-template-columns: 1fr !important;
+  .barra-navegacion-dias {
+    padding: 4px !important;
+  }
+
+  .btn-dia-selector {
+    min-width: 28px !important;
+    padding: 1px 2px !important;
+  }
+
+  .btn-dia-selector strong {
+    font-size: 0.55rem !important;
+  }
+
+  .btn-dia-selector span {
+    font-size: 0.68rem !important;
   }
 
   .provdb-kpis-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr 1fr !important;
   }
 
-  .stats-kpis-grid {
-    grid-template-columns: 1fr !important;
+  .stats-kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
   }
 
-  .pipeline-col {
-    min-width: calc(100vw - 36px) !important;
+  .hoja-tabla-conteo th,
+  .hoja-tabla-proveedores th,
+  .hoja-tabla-pendientes th,
+  .hoja-tabla-arqueo th,
+  .hoja-tabla-retiros th {
+    font-size: 0.58rem !important;
+    padding: 2px 2px !important;
+  }
+
+  .hoja-tabla-conteo td,
+  .hoja-tabla-proveedores td,
+  .hoja-tabla-pendientes td,
+  .hoja-tabla-arqueo td,
+  .hoja-tabla-retiros td {
+    font-size: 0.64rem !important;
+    padding: 2px 2px !important;
   }
 }
+
 
 
