@@ -1249,62 +1249,62 @@ export class ModalManager {
 
     const body = `
       <div style="padding: 4px 0;">
-        <div style="display: flex; align-items: center; justify-content: space-between; background: ${tipoPago === 'Transferencia' ? '#eff6ff' : '#f0fdf4'}; border: 1.5px solid ${tipoPago === 'Transferencia' ? '#93c5fd' : '#86efac'}; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 6px; margin-bottom: 14px;">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-size: 2rem;">${tipoPago === 'Transferencia' ? '🏦' : '💵'}</span>
+            <span style="font-size: 1.8rem;">${tipoPago === 'Transferencia' ? '🏦' : '💵'}</span>
             <div>
-              <div style="font-size: 0.76rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Tipo de Pago Realizado</div>
-              <div style="font-size: 1.1rem; font-weight: 800; color: #0f172a;">Pago con ${tipoPago}</div>
+              <div style="font-size: 0.72rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Tipo de Pago</div>
+              <div style="font-size: 1rem; font-weight: 700; color: #0f172a;">Pago con ${tipoPago}</div>
             </div>
           </div>
           <div style="text-align: right;">
-            <div style="font-size: 0.76rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Importe Pagado</div>
-            <div style="font-size: 1.4rem; font-weight: 900; color: #b91c1c;">${formatMoney(pagado)}</div>
+            <div style="font-size: 0.72rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Importe Pagado</div>
+            <div style="font-size: 1.3rem; font-weight: 800; color: #0f172a;">${formatMoney(pagado)}</div>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 14px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 12px;">
           <div>
-            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">No. de Nota / Renglón</span>
-            <strong style="font-size: 0.95rem; color: #0f172a;">Nota #${numNota}</strong>
+            <span style="display: block; font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase;">No. de Nota / Renglón</span>
+            <strong style="font-size: 0.9rem; color: #0f172a;">Nota #${numNota}</strong>
           </div>
 
           <div>
-            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Proveedor / Empresa</span>
-            <strong style="font-size: 0.95rem; color: #1e3a8a;">${proveedor}</strong>
+            <span style="display: block; font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Proveedor / Empresa</span>
+            <strong style="font-size: 0.9rem; color: #0f172a;">${proveedor}</strong>
           </div>
 
           <div>
-            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Hora de Registro</span>
-            <strong style="font-size: 0.95rem; color: #0369a1; display: inline-flex; align-items: center; gap: 4px;">
+            <span style="display: block; font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Hora de Registro</span>
+            <strong style="font-size: 0.9rem; color: #334155; display: inline-flex; align-items: center; gap: 4px;">
               <span>⏰</span> ${hora}
             </strong>
           </div>
 
           <div>
-            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Fecha de Comprobante</span>
-            <strong style="font-size: 0.95rem; color: #0f172a;">📅 ${fechaReg}</strong>
+            <span style="display: block; font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Fecha de Comprobante</span>
+            <strong style="font-size: 0.9rem; color: #0f172a;">📅 ${fechaReg}</strong>
           </div>
 
           <div>
-            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Cajero / Encargado</span>
-            <span style="font-size: 0.88rem; color: #334155; font-weight: 600;">${stateManager.data.cajeroActual || 'Don Manuel (Encargado)'}</span>
+            <span style="display: block; font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Cajero / Encargado</span>
+            <span style="font-size: 0.85rem; color: #334155; font-weight: 600;">${stateManager.data.cajeroActual || 'Don Manuel'}</span>
           </div>
 
           <div>
-            <span style="display: block; font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Protección de Datos</span>
-            <span style="display: inline-block; background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; padding: 2px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 700;">🔒 Congelado</span>
+            <span style="display: block; font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Estado de Auditoría</span>
+            <span style="display: inline-block; background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 3px; font-size: 0.72rem; font-weight: 600;">🔒 Guardado</span>
           </div>
         </div>
 
-        <div style="margin-top: 14px; background: #f8fafc; border-left: 3px solid #1e3a8a; padding: 8px 12px; font-size: 0.74rem; color: #475569;">
-          Por normas de auditoría interna, los renglones guardados quedan bloqueados contra modificaciones posteriores. La hora exacta se conserva para el historial.
+        <div style="margin-top: 12px; background: #f8fafc; border-left: 3px solid #64748b; padding: 8px 12px; font-size: 0.72rem; color: #64748b;">
+          Por control de auditoría interna, los renglones guardados quedan protegidos contra alteraciones.
         </div>
       </div>
     `;
 
     const footer = `
-      <button type="button" class="btn-primary" id="btnCerrarDetallesProv" style="background: #0f172a; min-width: 110px;">Cerrar Detalle</button>
+      <button type="button" class="btn-primary" id="btnCerrarDetallesProv" style="background: #1e293b; min-width: 100px;">Cerrar</button>
     `;
 
     this.open(`📄 Detalle del Proveedor: ${proveedor}`, body, footer);
@@ -1380,11 +1380,10 @@ export class ModalManager {
 
       return `
         <div class="calendario-historial-wrap">
-          <div style="background: #f1f5f9; border-left: 4px solid #1e3a8a; padding: 10px 14px; border-radius: 4px; margin-bottom: 14px; font-size: 0.78rem; color: #334155;">
+          <div style="background: #f8fafc; border-left: 3px solid #64748b; padding: 10px 14px; border-radius: 4px; margin-bottom: 14px; font-size: 0.76rem; color: #334155;">
             <strong>📅 Historial de Hojas Contables Diarias</strong>
             <p style="margin: 4px 0 0; color: #64748b;">
-              Selecciona cualquier fecha para consultar su hoja diaria.
-              <strong>Regla contable:</strong> Solo la hoja de <em>HOY</em> puede ser editada; los días pasados se cargan en modo seguro de solo lectura.
+              Selecciona cualquier fecha para consultar su hoja contable. Solo el día de <em>HOY</em> es editable; las fechas pasadas se abren en modo de solo lectura.
             </p>
           </div>
 

@@ -265,7 +265,7 @@ export class HojaDiariaModule {
                               </span>
                             </td>
                             <td style="text-align: right;">
-                              <span class="font-bold text-red" style="font-size: 0.86rem; padding-right: 4px;">
+                              <span class="font-bold" style="font-size: 0.84rem; padding-right: 4px; color: #0f172a;">
                                 ${this.formatMoney(row.pagado)}
                               </span>
                             </td>
@@ -346,7 +346,7 @@ export class HojaDiariaModule {
                             ${pres.nota ? `<span class="prestamo-nota">${pres.nota}</span>` : ''}
                           </div>
                         </td>
-                        <td class="text-right font-bold ${pres.liquidado ? 'prestamo-monto-liquidado' : 'text-red'}">
+                        <td class="text-right font-bold ${pres.liquidado ? 'prestamo-monto-liquidado' : ''}" style="color: #0f172a;">
                           ${this.formatMoney(pres.pendiente)}
                         </td>
                       </tr>
@@ -388,10 +388,10 @@ export class HojaDiariaModule {
                       <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="tarjetas" value="${col.tarjetas || ''}" ${editable ? '' : 'disabled'}></td>
                     `).join('')}
                   </tr>
-                  <tr style="background: #eff6ff;">
-                    <td class="font-bold" style="color: #1e3a8a;">SISTEMA (POS)</td>
+                  <tr>
+                    <td class="font-bold">SISTEMA (POS)</td>
                     ${d.arqueoColumnas.map((col, idx) => `
-                      <td><input type="number" step="0.5" class="cell-input text-right font-bold text-blue" data-arq-col="${idx}" data-field="sistema" value="${col.sistema || ''}" ${editable ? '' : 'disabled'}></td>
+                      <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="sistema" value="${col.sistema || ''}" ${editable ? '' : 'disabled'}></td>
                     `).join('')}
                   </tr>
                   <tr>
@@ -424,10 +424,10 @@ export class HojaDiariaModule {
                       <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon10" value="${col.mon10 || ''}" ${editable ? '' : 'disabled'}></td>
                     `).join('')}
                   </tr>
-                  <tr style="background: #f8fafc;">
-                    <td class="font-bold" style="color: #0369a1;">MORRALLA (Suma)</td>
+                  <tr>
+                    <td class="font-bold">MORRALLA (Suma)</td>
                     ${d.arqueoColumnas.map(col => `
-                      <td class="text-right font-bold" style="color: #0369a1; padding: 6px;">${this.formatMoney(col.morralla)}</td>
+                      <td class="text-right font-bold" style="color: #0f172a; padding: 6px;">${this.formatMoney(col.morralla)}</td>
                     `).join('')}
                   </tr>
                   <tr class="fila-gran-total">
@@ -444,7 +444,7 @@ export class HojaDiariaModule {
             <div class="hoja-subcuadro" style="margin-top: 14px;">
               <div class="subcuadro-titulo-flex">
                 <span>RETIROS</span>
-                <span style="font-weight: 700; color: #b91c1c; font-size: 0.78rem;">Total Retiros: ${this.formatMoney(totales.totalRetiros)}</span>
+                <span style="font-weight: 700; color: #334155; font-size: 0.78rem;">Total Retiros: ${this.formatMoney(totales.totalRetiros)}</span>
               </div>
               <div class="tabla-scroll-retiros">
                 <table class="hoja-tabla-retiros">
@@ -459,7 +459,7 @@ export class HojaDiariaModule {
                     ${d.retiros.map((ret, idx) => `
                       <tr class="fila-bloqueada" title="Retiro registrado (Protegido contra cambios)">
                         <td class="font-bold text-center" style="color: #64748b;">#${idx + 1}</td>
-                        <td class="text-right font-bold text-red" style="font-size: 0.86rem;">${this.formatMoney(ret.monto)}</td>
+                        <td class="text-right font-bold" style="font-size: 0.84rem; color: #0f172a;">${this.formatMoney(ret.monto)}</td>
                         <td>
                           <div style="display: flex; align-items: baseline; gap: 6px;">
                             <strong style="color: #0f172a;">${ret.nombre || ret.responsable || 'Encargado'}</strong>
