@@ -28,7 +28,9 @@ export class HojaDiariaModule {
     const conectadoFirebase = isFirebaseConectado();
     const configFirebase = getFirebaseConfigActual();
     const hoyISO = stateManager.getFechaHoy();
-    const editable = stateManager.esHojaEditable();
+    const esHoy = stateManager.esHojaEditable();
+    const tieneMontoInicial = stateManager.tieneCantidadInicial();
+    const editableGeneral = esHoy && tieneMontoInicial;
 
     // Obtener los días de la semana actual (Lunes a Domingo) para la barra rápida
     const hoy = new Date(d.fecha ? d.fecha + 'T12:00:00' : Date.now());
@@ -89,7 +91,7 @@ export class HojaDiariaModule {
           </div>
         </div>
 
-        ${!editable ? `
+        ${!esHoy ? `
           <!-- BANNER DE AVISO: MODO HISTORIAL (SOLO LECTURA) -->
           <div class="banner-aviso-historial">
             <div class="banner-aviso-contenido">
@@ -99,6 +101,7 @@ export class HojaDiariaModule {
                 <div class="banner-sub-historial">
                   Estás revisando la hoja histórica del <strong>${d.dia || ''} ${d.diaNum || ''} de ${d.mes || ''} de ${d.ano || ''}</strong>.
                   Por integridad contable, solo se permite editar la hoja del <strong>día de hoy (${hoyISO})</strong>.
+                  <em>(La sección de Corte y Arqueo se mantiene siempre desbloqueada para conteos físicos).</em>
                 </div>
               </div>
             </div>
@@ -106,7 +109,21 @@ export class HojaDiariaModule {
               📅 Ir a Hoja de Hoy (${hoyISO})
             </button>
           </div>
-        ` : ''}
+        ` : (!tieneMontoInicial ? `
+          <!-- BANNER DE AVISO: FALTA MONTO INICIAL -->
+          <div class="banner-aviso-monto-inicial">
+            <div class="banner-aviso-contenido">
+              <span class="icono-alerta-inicial">⚠️</span>
+              <div>
+                <div class="banner-titulo-inicial">PASO REQUERIDO: INGRESA LA CANTIDAD INICIAL DE CAJA</div>
+                <div class="banner-sub-inicial">
+                  Para comenzar a registrar proveedores, préstamos, retiros y conteos del día, ingresa el monto en el campo <strong>CANTIDAD INICIAL</strong>.
+                  <em>(La sección de Corte y Arqueo está siempre disponible).</em>
+                </div>
+              </div>
+            </div>
+          </div>
+        ` : '')}
 
         <!-- ENCABEZADO DE LA HOJA (Idéntico al membrete físico) -->
         <header class="hoja-header">
@@ -146,7 +163,7 @@ export class HojaDiariaModule {
               <label>CANTIDAD INICIAL:</label>
               <div class="input-money-wrap">
                 <span>$</span>
-                <input type="number" step="10" class="hoja-input-money" id="inputCantidadInicial" value="${d.cantidadInicial}" ${editable ? '' : 'disabled'}>
+                <input type="number" step="10" min="0" class="hoja-input-money ${esHoy && !tieneMontoInicial ? 'alerta-falta-inicial' : ''}" id="inputCantidadInicial" value="${d.cantidadInicial || ''}" placeholder="0.00" ${esHoy ? '' : 'disabled'}>
               </div>
             </div>
 
@@ -185,10 +202,10 @@ export class HojaDiariaModule {
                   <tbody>
                     ${d.conteoPan.map((p, idx) => `
                       <tr>
-                        <td><input type="text" class="cell-input" data-pan="${idx}" data-field="proveedor" value="${p.proveedor}" ${editable ? '' : 'disabled'}></td>
-                        <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="bol" value="${p.bol}" ${editable ? '' : 'disabled'}></td>
-                        <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="dul" value="${p.dul}" ${editable ? '' : 'disabled'}></td>
-                        <td><input type="number" class="cell-input text-center text-red" data-pan="${idx}" data-field="camb" value="${p.camb}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="text" class="cell-input" data-pan="${idx}" data-field="proveedor" value="${p.proveedor}" ${editableGeneral ? '' : 'disabled'}></td>
+                        <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="bol" value="${p.bol}" ${editableGeneral ? '' : 'disabled'}></td>
+                        <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="dul" value="${p.dul}" ${editableGeneral ? '' : 'disabled'}></td>
+                        <td><input type="number" class="cell-input text-center text-red" data-pan="${idx}" data-field="camb" value="${p.camb}" ${editableGeneral ? '' : 'disabled'}></td>
                         <td class="cell-total font-bold">${p.total}</td>
                       </tr>
                     `).join('')}
@@ -212,9 +229,9 @@ export class HojaDiariaModule {
                   <tbody>
                     ${d.conteoTortilla.map((t, idx) => `
                       <tr>
-                        <td><input type="text" class="cell-input" data-tort="${idx}" data-field="proveedor" value="${t.proveedor}" ${editable ? '' : 'disabled'}></td>
-                        <td><input type="number" step="0.5" class="cell-input text-center text-red" data-tort="${idx}" data-field="camb" value="${t.camb}" ${editable ? '' : 'disabled'}></td>
-                        <td><input type="number" step="0.5" class="cell-input text-center" data-tort="${idx}" data-field="nuev" value="${t.nuev}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="text" class="cell-input" data-tort="${idx}" data-field="proveedor" value="${t.proveedor}" ${editableGeneral ? '' : 'disabled'}></td>
+                        <td><input type="number" step="0.5" class="cell-input text-center text-red" data-tort="${idx}" data-field="camb" value="${t.camb}" ${editableGeneral ? '' : 'disabled'}></td>
+                        <td><input type="number" step="0.5" class="cell-input text-center" data-tort="${idx}" data-field="nuev" value="${t.nuev}" ${editableGeneral ? '' : 'disabled'}></td>
                         <td class="cell-total font-bold">${t.total}</td>
                       </tr>
                     `).join('')}
@@ -223,7 +240,6 @@ export class HojaDiariaModule {
               </div>
             </div>
 
-            <!-- 2. TABLA DE COMPRAS / PROVEEDORES (Renglones 1 al 30) -->
             <!-- 2. TABLA DE COMPRAS / PROVEEDORES (Con scroll y botón + en último renglón) -->
             <div class="hoja-subcuadro" style="margin-top: 14px;">
               <div class="subcuadro-titulo-flex">
@@ -246,65 +262,50 @@ export class HojaDiariaModule {
                     </tr>
                   </thead>
                   <tbody>
-                    ${d.comprasProveedores.map((row, idx) => {
-                      const estaBloqueado = row.bloqueado || (row.proveedor && (row.pagado > 0 || row.pagado));
-                      if (estaBloqueado) {
+                    ${(() => {
+                      const comprasReg = (d.comprasProveedores || []).filter(r => (r.proveedor && r.proveedor.trim() !== '') || (parseFloat(r.pagado) > 0));
+                      if (comprasReg.length === 0) {
                         return `
-                          <tr class="fila-bloqueada ${row.pagado > 0 ? 'fila-con-pago' : ''}" 
-                            data-ver-detalle-prov="${idx}" 
-                            style="cursor: pointer;" 
-                            title="Clic para ver hora de registro (⏰ ${row.hora || 'Registrado'}) y detalles">
-                            <td class="text-center font-bold" style="color: #64748b;">${row.nota}</td>
-                            <td class="celda-bloqueada-prov">
-                              <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <span class="prov-texto-fijo font-bold">${row.proveedor}</span>
-                                <span class="badge-hora-hint" title="Hora de registro: ${row.hora || 'Guardada'}">ℹ️</span>
-                              </div>
-                            </td>
-                            <td style="text-align: center; padding: 2px;">
-                              <span class="btn-logo-pago ${(row.tipoPago || 'Efectivo') === 'Transferencia' ? 'es-transf' : 'es-efec'}" 
-                                style="cursor: pointer;" 
-                                title="${(row.tipoPago || 'Efectivo') === 'Transferencia' ? 'Transferencia Bancaria' : 'Efectivo de Caja'} (Clic para detalles)">
-                                ${(row.tipoPago || 'Efectivo') === 'Transferencia' ? '🏦' : '💵'}
-                              </span>
-                            </td>
-                            <td style="text-align: right;">
-                              <span class="font-bold" style="font-size: 0.84rem; padding-right: 4px; color: #0f172a;">
-                                ${this.formatMoney(row.pagado)}
-                              </span>
+                          <tr class="fila-sin-registros">
+                            <td colspan="4" class="texto-sin-registros">
+                              Sin proveedores registrados. Pulsa el botón <strong>+</strong> para añadir el primer registro.
                             </td>
                           </tr>
                         `;
-                      } else {
-                        if (editable) {
-                          return `
-                            <tr class="fila-disponible-captura" data-captura-prov="${idx}" title="Clic aquí para añadir registro seguro">
-                              <td class="text-center font-bold" style="color: #94a3b8;">${row.nota}</td>
-                              <td class="celda-placeholder-clic">
-                                <span class="placeholder-clic">+ Clic para registrar proveedor...</span>
-                              </td>
-                              <td style="text-align: center; color: #cbd5e1; font-size: 0.8rem;">-</td>
-                              <td style="text-align: right; color: #cbd5e1; font-size: 0.82rem; padding-right: 6px;">$ 0.00</td>
-                            </tr>
-                          `;
-                        } else {
-                          return `
-                            <tr class="fila-vacia-historico">
-                              <td class="text-center font-bold" style="color: #cbd5e1;">${row.nota}</td>
-                              <td style="color: #94a3b8; font-size: 0.8rem; padding: 4px 6px; font-style: italic;">Renglón sin registro</td>
-                              <td style="text-align: center; color: #cbd5e1; font-size: 0.8rem;">-</td>
-                              <td style="text-align: right; color: #cbd5e1; font-size: 0.82rem; padding-right: 6px;">-</td>
-                            </tr>
-                          `;
-                        }
                       }
-                    }).join('')}
+                      return comprasReg.map((row, idx) => `
+                        <tr class="fila-bloqueada ${row.pagado > 0 ? 'fila-con-pago' : ''}" 
+                          data-ver-detalle-prov="${idx}" 
+                          style="cursor: pointer;" 
+                          title="Clic para ver hora de registro (⏰ ${row.hora || 'Registrado'}) y detalles">
+                          <td class="text-center font-bold" style="color: #64748b;">${idx + 1}</td>
+                          <td class="celda-bloqueada-prov">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                              <span class="prov-texto-fijo font-bold">${row.proveedor}</span>
+                              <span class="badge-hora-hint" title="Hora de registro: ${row.hora || 'Guardada'}">ℹ️</span>
+                            </div>
+                          </td>
+                          <td style="text-align: center; padding: 2px;">
+                            <span class="btn-logo-pago ${(row.tipoPago || 'Efectivo') === 'Transferencia' ? 'es-transf' : 'es-efec'}" 
+                              style="cursor: pointer;" 
+                              title="${(row.tipoPago || 'Efectivo') === 'Transferencia' ? 'Transferencia Bancaria' : 'Efectivo de Caja'} (Clic para detalles)">
+                              ${(row.tipoPago || 'Efectivo') === 'Transferencia' ? '🏦' : '💵'}
+                            </span>
+                          </td>
+                          <td style="text-align: right;">
+                            <span class="font-bold" style="font-size: 0.84rem; padding-right: 4px; color: #0f172a;">
+                              ${this.formatMoney(row.pagado)}
+                            </span>
+                          </td>
+                        </tr>
+                      `).join('');
+                    })()}
 
-                    ${editable ? `
+                    ${esHoy ? `
                       <!-- ÚLTIMO RENGLÓN CON SOLO EL SIGNO + -->
                       <tr class="fila-agregar-mas">
                         <td colspan="4" class="celda-agregar-mas">
-                          <button type="button" class="btn-solo-plus" id="btnPlusProveedor" title="Agregar">+</button>
+                          <button type="button" class="btn-solo-plus" id="btnPlusProveedor" ${editableGeneral ? '' : 'disabled'} title="${editableGeneral ? 'Registrar proveedor (+)' : 'Ingresa primero la cantidad inicial de caja'}">+</button>
                         </td>
                       </tr>
                     ` : ''}
@@ -330,37 +331,46 @@ export class HojaDiariaModule {
                     <tr>
                       <th style="width: 48px; text-align: center;" title="Casilla de Pagado: marca como pagado y tacha/subraya">PAGADO</th>
                       <th>PROVEEDOR / CONCEPTO</th>
-                      <th style="width: 115px; text-align: right;">PENDIENTE ($)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${d.prestamosPendientes.map((pres, idx) => `
-                      <tr class="fila-bloqueada ${pres.liquidado ? 'prestamo-liquidado' : ''}">
-                        <td style="text-align: center; vertical-align: middle; padding: 2px;">
-                          <input type="checkbox" 
-                            class="check-prestamo-pagado" 
-                            data-check-liquidado="${idx}" 
-                            ${pres.liquidado ? 'checked' : ''} 
-                            ${editable ? '' : 'disabled'}
-                            title="${pres.liquidado ? 'Pagado (Clic para desmarcar)' : 'Pendiente (Clic para marcar como pagado)'}">
-                        </td>
-                        <td>
-                          <div class="prestamo-desc">
-                            <strong class="prestamo-prov">${pres.proveedor}</strong>
-                            ${pres.nota ? `<span class="prestamo-nota">${pres.nota}</span>` : ''}
-                          </div>
-                        </td>
-                        <td class="text-right font-bold ${pres.liquidado ? 'prestamo-monto-liquidado' : ''}" style="color: #0f172a;">
-                          ${this.formatMoney(pres.pendiente)}
-                        </td>
-                      </tr>
-                    `).join('')}
+                      <th style="width: 115px; text-al                  <tbody>
+                    ${(() => {
+                      const prestamosReg = (d.prestamosPendientes || []).filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0));
+                      if (prestamosReg.length === 0) {
+                        return `
+                          <tr class="fila-sin-registros">
+                            <td colspan="3" class="texto-sin-registros">
+                              Sin préstamos o pendientes registrados.
+                            </td>
+                          </tr>
+                        `;
+                      }
+                      return prestamosReg.map((pres, idx) => `
+                        <tr class="fila-bloqueada ${pres.liquidado ? 'prestamo-liquidado' : ''}">
+                          <td style="text-align: center; vertical-align: middle; padding: 2px;">
+                            <input type="checkbox" 
+                              class="check-prestamo-pagado" 
+                              data-check-liquidado="${idx}" 
+                              ${pres.liquidado ? 'checked' : ''} 
+                              ${editableGeneral ? '' : 'disabled'}
+                              title="${pres.liquidado ? 'Pagado (Clic para desmarcar)' : 'Pendiente (Clic para marcar como pagado)'}">
+                          </td>
+                          <td>
+                            <div class="prestamo-desc">
+                              <strong class="prestamo-prov">${pres.proveedor}</strong>
+                              ${pres.nota ? `<span class="prestamo-nota">${pres.nota}</span>` : ''}
+                            </div>
+                          </td>
+                          <td class="text-right font-bold ${pres.liquidado ? 'prestamo-monto-liquidado' : ''}" style="color: #0f172a;">
+                            ${this.formatMoney(pres.pendiente)}
+                          </td>
+                        </tr>
+                      `).join('');
+                    })()}
 
-                    ${editable ? `
+                    ${esHoy ? `
                       <!-- ÚLTIMO RENGLÓN CON SOLO EL SIGNO + -->
                       <tr class="fila-agregar-mas">
                         <td colspan="3" class="celda-agregar-mas">
-                          <button type="button" class="btn-solo-plus" id="btnPlusPrestamo" title="Agregar">+</button>
+                          <button type="button" class="btn-solo-plus" id="btnPlusPrestamo" ${editableGeneral ? '' : 'disabled'} title="${editableGeneral ? 'Registrar préstamo (+)' : 'Ingresa primero la cantidad inicial de caja'}">+</button>
                         </td>
                       </tr>
                     ` : ''}
@@ -369,10 +379,13 @@ export class HojaDiariaModule {
               </div>
             </div>
 
-            <!-- 2. CORTE Y ARQUEO (3 Columnas) -->
+            <!-- 2. CORTE Y ARQUEO (3 Columnas - SIEMPRE DESBLOQUEADO) -->
             <div class="hoja-subcuadro" style="margin-top: 14px;">
               <div class="subcuadro-titulo-flex">
-                <span>CORTE Y ARQUEO</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span>CORTE Y ARQUEO</span>
+                  <span class="badge-arqueo-libre" title="Esta sección siempre se mantiene desbloqueada para registrar conteos físicos y arqueos de turno">🔓 Desbloqueado</span>
+                </div>
                 <span style="font-size: 0.72rem; color: #64748b; font-weight: normal;">* Monedas en cantidad total ($)</span>
               </div>
 
@@ -390,43 +403,43 @@ export class HojaDiariaModule {
                     <tr>
                       <td class="font-bold">TARJETAS</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="tarjetas" value="${col.tarjetas || ''}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="tarjetas" value="${col.tarjetas || ''}"></td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td class="font-bold">SISTEMA (POS)</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="sistema" value="${col.sistema || ''}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" step="0.5" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="sistema" value="${col.sistema || ''}"></td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td class="font-bold">BILLETES</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="10" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="billetes" value="${col.billetes || ''}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" step="10" class="cell-input text-right font-bold" data-arq-col="${idx}" data-field="billetes" value="${col.billetes || ''}"></td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td>MON. 1 ($ en monedas)</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon1" value="${col.mon1 || ''}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon1" value="${col.mon1 || ''}"></td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td>MON. 2 ($ en monedas)</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon2" value="${col.mon2 || ''}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon2" value="${col.mon2 || ''}"></td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td>MON. 5 ($ en monedas)</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon5" value="${col.mon5 || ''}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon5" value="${col.mon5 || ''}"></td>
                       `).join('')}
                     </tr>
                     <tr>
                       <td>MON. 10 ($ en monedas)</td>
                       ${d.arqueoColumnas.map((col, idx) => `
-                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon10" value="${col.mon10 || ''}" ${editable ? '' : 'disabled'}></td>
+                        <td><input type="number" step="1" class="cell-input text-right" data-arq-col="${idx}" data-field="mon10" value="${col.mon10 || ''}"></td>
                       `).join('')}
                     </tr>
                     <tr>
@@ -462,24 +475,36 @@ export class HojaDiariaModule {
                     </tr>
                   </thead>
                   <tbody>
-                    ${d.retiros.map((ret, idx) => `
-                      <tr class="fila-bloqueada" title="Retiro registrado (Protegido contra cambios)">
-                        <td class="font-bold text-center" style="color: #64748b;">#${idx + 1}</td>
-                        <td class="text-right font-bold" style="font-size: 0.84rem; color: #0f172a;">${this.formatMoney(ret.monto)}</td>
-                        <td>
-                          <div style="display: flex; align-items: baseline; gap: 6px;">
-                            <strong style="color: #0f172a;">${ret.nombre || ret.responsable || 'Encargado'}</strong>
-                            ${ret.concepto || ret.motivo ? `<span style="color: #64748b; font-size: 0.74rem;">(${ret.concepto || ret.motivo})</span>` : ''}
-                          </div>
-                        </td>
-                      </tr>
-                    `).join('')}
+                    ${(() => {
+                      const retirosReg = (d.retiros || []).filter(r => (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== '') || (r.concepto && r.concepto.trim() !== ''));
+                      if (retirosReg.length === 0) {
+                        return `
+                          <tr class="fila-sin-registros">
+                            <td colspan="3" class="texto-sin-registros">
+                              Sin retiros registrados en esta hoja.
+                            </td>
+                          </tr>
+                        `;
+                      }
+                      return retirosReg.map((ret, idx) => `
+                        <tr class="fila-bloqueada" title="Retiro registrado (Protegido contra cambios)">
+                          <td class="font-bold text-center" style="color: #64748b;">#${idx + 1}</td>
+                          <td class="text-right font-bold" style="font-size: 0.84rem; color: #0f172a;">${this.formatMoney(ret.monto)}</td>
+                          <td>
+                            <div style="display: flex; align-items: baseline; gap: 6px;">
+                              <strong style="color: #0f172a;">${ret.nombre || ret.responsable || 'Encargado'}</strong>
+                              ${ret.concepto || ret.motivo ? `<span style="color: #64748b; font-size: 0.74rem;">(${ret.concepto || ret.motivo})</span>` : ''}
+                            </div>
+                          </td>
+                        </tr>
+                      `).join('');
+                    })()}
 
-                    ${editable ? `
+                    ${esHoy ? `
                       <!-- ÚLTIMO RENGLÓN CON SOLO EL SIGNO + -->
                       <tr class="fila-agregar-mas">
                         <td colspan="3" class="celda-agregar-mas">
-                          <button type="button" class="btn-solo-plus" id="btnPlusRetiro" title="Agregar">+</button>
+                          <button type="button" class="btn-solo-plus" id="btnPlusRetiro" ${editableGeneral ? '' : 'disabled'} title="${editableGeneral ? 'Registrar retiro (+)' : 'Ingresa primero la cantidad inicial de caja'}">+</button>
                         </td>
                       </tr>
                     ` : ''}
@@ -494,11 +519,11 @@ export class HojaDiariaModule {
               <div class="grid-tres-campos">
                 <div>
                   <label>MONEDAS:</label>
-                  <input type="number" class="cell-input text-right font-bold" id="cascadaMonedas" value="${d.cascada.monedas}" ${editable ? '' : 'disabled'}>
+                  <input type="number" class="cell-input text-right font-bold" id="cascadaMonedas" value="${d.cascada.monedas}" ${editableGeneral ? '' : 'disabled'}>
                 </div>
                 <div>
                   <label>PREMIOS:</label>
-                  <input type="number" class="cell-input text-right font-bold text-red" id="cascadaPremios" value="${d.cascada.premios}" ${editable ? '' : 'disabled'}>
+                  <input type="number" class="cell-input text-right font-bold text-red" id="cascadaPremios" value="${d.cascada.premios}" ${editableGeneral ? '' : 'disabled'}>
                 </div>
                 <div>
                   <label>TOTAL:</label>
@@ -523,7 +548,7 @@ export class HojaDiariaModule {
               <div class="grid-dos-campos">
                 <div>
                   <label>MONEDAS:</label>
-                  <input type="number" class="cell-input text-right font-bold" id="munecosMonedas" value="${d.maquinaMunecos.monedas}" ${editable ? '' : 'disabled'}>
+                  <input type="number" class="cell-input text-right font-bold" id="munecosMonedas" value="${d.maquinaMunecos.monedas}" ${editableGeneral ? '' : 'disabled'}>
                 </div>
                 <div>
                   <label>TOTAL CORTE:</label>
@@ -556,15 +581,15 @@ export class HojaDiariaModule {
                   <tbody>
                     <tr>
                       <td>MAQUINA 1 $1</td>
-                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq1" value="${d.maquinasIndividuales.maq1_1}" ${editable ? '' : 'disabled'}></td>
+                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq1" value="${d.maquinasIndividuales.maq1_1}" ${editableGeneral ? '' : 'disabled'}></td>
                     </tr>
                     <tr>
                       <td>MAQUINA 2 $1</td>
-                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq2" value="${d.maquinasIndividuales.maq2_1}" ${editable ? '' : 'disabled'}></td>
+                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq2" value="${d.maquinasIndividuales.maq2_1}" ${editableGeneral ? '' : 'disabled'}></td>
                     </tr>
                     <tr>
                       <td>MAQUINA 3 $5</td>
-                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq3" value="${d.maquinasIndividuales.maq3_5}" ${editable ? '' : 'disabled'}></td>
+                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq3" value="${d.maquinasIndividuales.maq3_5}" ${editableGeneral ? '' : 'disabled'}></td>
                     </tr>
                   </tbody>
                   <tfoot>
@@ -589,7 +614,7 @@ export class HojaDiariaModule {
 
               <div style="margin-top: 8px;">
                 <label style="font-size: 0.72rem; font-weight: 700; color: #475569;">NOTA:</label>
-                <input type="text" class="cell-input" id="indivNota" value="${d.maquinasIndividuales.nota || ''}" placeholder="Anotaciones..." ${editable ? '' : 'disabled'}>
+                <input type="text" class="cell-input" id="indivNota" value="${d.maquinasIndividuales.nota || ''}" placeholder="Anotaciones..." ${editableGeneral ? '' : 'disabled'}>
               </div>
             </div>
 
@@ -651,8 +676,15 @@ export class HojaDiariaModule {
     });
 
     // Encabezado: Cantidad inicial de caja
-    document.getElementById('inputCantidadInicial')?.addEventListener('change', (e) => {
-      stateManager.updateCantidadInicial(e.target.value);
+    const inputCant = document.getElementById('inputCantidadInicial');
+    const guardarCantidadInicial = () => {
+      if (!inputCant) return;
+      stateManager.updateCantidadInicial(inputCant.value);
+      this.render();
+    };
+    inputCant?.addEventListener('change', guardarCantidadInicial);
+    inputCant?.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') guardarCantidadInicial();
     });
 
     // Botón Imprimir
@@ -685,48 +717,27 @@ export class HojaDiariaModule {
       rowEl.addEventListener('click', (e) => {
         e.preventDefault();
         const idx = parseInt(rowEl.getAttribute('data-ver-detalle-prov'));
-        const compra = stateManager.data.comprasProveedores[idx];
+        const comprasReg = (stateManager.data.comprasProveedores || []).filter(r => (r.proveedor && r.proveedor.trim() !== '') || (parseFloat(r.pagado) > 0));
+        const compra = comprasReg[idx];
         if (compra && window.adminFenixApp?.modalManager) {
           window.adminFenixApp.modalManager.openDetallesProveedorModal(compra, stateManager.data.fecha);
         }
       });
     });
 
-    // 1.1 Clic en Renglón Disponible de Compras / Proveedores (Abre Modal de Captura Segura)
-    this.container.querySelectorAll('[data-captura-prov]').forEach(rowEl => {
-      rowEl.addEventListener('click', (e) => {
-        e.preventDefault();
-        const idx = parseInt(rowEl.getAttribute('data-captura-prov'));
-        const rowData = stateManager.data.comprasProveedores[idx];
-        if (window.adminFenixApp?.modalManager) {
-          window.adminFenixApp.modalManager.openCapturaProveedorModal({
-            index: idx,
-            nota: rowData?.nota || (idx + 1),
-            proveedor: '',
-            pagado: 0,
-            tipoPago: 'Efectivo'
-          }, () => {
-            this.render();
-          });
-        }
-      });
-    });
-
-    // 2. Botón + Proveedor en último renglón
+    // 2. Botón + Proveedor en último renglón (Abre Modal de Captura Segura)
     document.getElementById('btnPlusProveedor')?.addEventListener('click', (e) => {
       e.preventDefault();
-      // Buscar primer renglón disponible o crear uno nuevo
-      const provs = stateManager.data.comprasProveedores;
-      let targetIdx = provs.findIndex(p => !p.proveedor && (!p.pagado || p.pagado == 0));
-      if (targetIdx === -1) {
-        stateManager.addFilaCompraProveedor('', 0, 'Efectivo');
-        targetIdx = stateManager.data.comprasProveedores.length - 1;
+      if (!stateManager.puedeEditarCamposGenerales()) {
+        alert('Por favor ingresa primero la Cantidad Inicial de caja en el encabezado.');
+        document.getElementById('inputCantidadInicial')?.focus();
+        return;
       }
-      const targetRow = stateManager.data.comprasProveedores[targetIdx];
+      const provs = (stateManager.data.comprasProveedores || []).filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pagado) > 0));
+      const siguienteNota = provs.length + 1;
       if (window.adminFenixApp?.modalManager) {
         window.adminFenixApp.modalManager.openCapturaProveedorModal({
-          index: targetIdx,
-          nota: targetRow?.nota || (targetIdx + 1),
+          nota: siguienteNota,
           proveedor: '',
           pagado: 0,
           tipoPago: 'Efectivo'
@@ -752,9 +763,15 @@ export class HojaDiariaModule {
     // 4. Botón + Préstamo / Pendiente en último renglón (Abre Modal de Captura Segura)
     document.getElementById('btnPlusPrestamo')?.addEventListener('click', (e) => {
       e.preventDefault();
+      if (!stateManager.puedeEditarCamposGenerales()) {
+        alert('Por favor ingresa primero la Cantidad Inicial de caja en el encabezado.');
+        document.getElementById('inputCantidadInicial')?.focus();
+        return;
+      }
+      const prestamosReg = (stateManager.data.prestamosPendientes || []).filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0));
       if (window.adminFenixApp?.modalManager) {
         window.adminFenixApp.modalManager.openCapturaPrestamoModal({
-          index: stateManager.data.prestamosPendientes.length,
+          index: prestamosReg.length,
           proveedor: '',
           pendiente: 0,
           nota: ''
@@ -771,9 +788,15 @@ export class HojaDiariaModule {
     // 5. Botón + Retiro en último renglón (Abre Modal de Captura Segura)
     document.getElementById('btnPlusRetiro')?.addEventListener('click', (e) => {
       e.preventDefault();
+      if (!stateManager.puedeEditarCamposGenerales()) {
+        alert('Por favor ingresa primero la Cantidad Inicial de caja en el encabezado.');
+        document.getElementById('inputCantidadInicial')?.focus();
+        return;
+      }
+      const retirosReg = (stateManager.data.retiros || []).filter(r => (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== ''));
       if (window.adminFenixApp?.modalManager) {
         window.adminFenixApp.modalManager.openCapturaRetiroModal({
-          index: stateManager.data.retiros.length,
+          index: retirosReg.length,
           monto: 0,
           nombre: stateManager.data.cajeroActual || 'Don Manuel',
           concepto: 'Caja Fuerte'

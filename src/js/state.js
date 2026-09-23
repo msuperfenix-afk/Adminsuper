@@ -94,17 +94,7 @@ const SEED_DATA = {
     { nota: 17, proveedor: 'Bonafont', pagado: 599, tipoPago: 'Efectivo', hora: '12:00 p. m.', fechaRegistro: '2026-09-15', bloqueado: true },
     { nota: 18, proveedor: 'Huevo San Juan', pagado: 1036, tipoPago: 'Efectivo', hora: '12:15 p. m.', fechaRegistro: '2026-09-15', bloqueado: true },
     { nota: 19, proveedor: 'Tortilla Ideal', pagado: 66, tipoPago: 'Efectivo', hora: '12:30 p. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 20, proveedor: 'Lala', pagado: 1180, tipoPago: 'Efectivo', hora: '12:45 p. m.', fechaRegistro: '2026-09-15', bloqueado: true },
-    { nota: 21, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
-    { nota: 22, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
-    { nota: 23, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
-    { nota: 24, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
-    { nota: 25, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
-    { nota: 26, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
-    { nota: 27, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
-    { nota: 28, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
-    { nota: 29, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false },
-    { nota: 30, proveedor: '', pagado: 0, tipoPago: 'Efectivo', hora: '', fechaRegistro: '', bloqueado: false }
+    { nota: 20, proveedor: 'Lala', pagado: 1180, tipoPago: 'Efectivo', hora: '12:45 p. m.', fechaRegistro: '2026-09-15', bloqueado: true }
   ],
 
   // 3. Préstamos o Pendientes de Pago
@@ -316,9 +306,11 @@ class StateManager {
             if (t.proveedor === 'TORT. SAN JOSE') t.proveedor = 'TORTILLA AMARILLA';
           });
         }
-        // Normalización y migración de tipoPago, hora y bloqueo seguro en comprasProveedores
+        // Limpieza y normalización de comprasProveedores (sin campos vacíos predeterminados)
         if (Array.isArray(merged.comprasProveedores)) {
+          merged.comprasProveedores = merged.comprasProveedores.filter(c => (c.proveedor && c.proveedor.trim() !== '') || (parseFloat(c.pagado) > 0));
           merged.comprasProveedores.forEach((c, idx) => {
+            c.nota = idx + 1;
             if (!c.tipoPago) c.tipoPago = 'Efectivo';
             if (!c.hora && c.proveedor) {
               const baseHour = 8 + Math.floor(idx / 4);
@@ -332,14 +324,16 @@ class StateManager {
             }
           });
         }
-        // Normalización de préstamos y retiros
+        // Limpieza de préstamos y retiros
         if (Array.isArray(merged.prestamosPendientes)) {
+          merged.prestamosPendientes = merged.prestamosPendientes.filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0));
           merged.prestamosPendientes.forEach(p => {
             if (p.liquidado === undefined) p.liquidado = false;
             if (p.bloqueado === undefined) p.bloqueado = true;
           });
         }
         if (Array.isArray(merged.retiros)) {
+          merged.retiros = merged.retiros.filter(r => (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== ''));
           merged.retiros.forEach(r => {
             if (r.bloqueado === undefined) r.bloqueado = true;
           });
@@ -354,7 +348,9 @@ class StateManager {
         if (merged.hojasPorFecha) {
           Object.values(merged.hojasPorFecha).forEach(h => {
             if (Array.isArray(h.comprasProveedores)) {
+              h.comprasProveedores = h.comprasProveedores.filter(c => (c.proveedor && c.proveedor.trim() !== '') || (parseFloat(c.pagado) > 0));
               h.comprasProveedores.forEach((c, idx) => {
+                c.nota = idx + 1;
                 if (!c.tipoPago) c.tipoPago = 'Efectivo';
                 if (!c.hora && c.proveedor) {
                   const baseHour = 8 + Math.floor(idx / 4);
@@ -369,12 +365,14 @@ class StateManager {
               });
             }
             if (Array.isArray(h.prestamosPendientes)) {
+              h.prestamosPendientes = h.prestamosPendientes.filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0));
               h.prestamosPendientes.forEach(p => {
                 if (p.liquidado === undefined) p.liquidado = false;
                 if (p.bloqueado === undefined) p.bloqueado = true;
               });
             }
             if (Array.isArray(h.retiros)) {
+              h.retiros = h.retiros.filter(r => (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== ''));
               h.retiros.forEach(r => {
                 if (r.bloqueado === undefined) r.bloqueado = true;
               });
@@ -445,7 +443,7 @@ class StateManager {
       diaNum,
       mes: mesNombre,
       ano: anoNum,
-      cantidadInicial: 1500,
+      cantidadInicial: 0,
       conteoPan: [
         { id: 'cp-1', proveedor: 'PAN CELIA', bol: 0, dul: 0, camb: 0, total: 0 },
         { id: 'cp-2', proveedor: 'PAN MIRELLA', bol: 0, dul: 0, camb: 0, total: 0 },
@@ -460,20 +458,14 @@ class StateManager {
         { id: 'ct-3', proveedor: 'TORT. MONREAL', camb: 0, nuev: 0, total: 0 },
         { id: 'ct-4', proveedor: 'TORTILLA IDEAL', camb: 0, nuev: 0, total: 0 }
       ],
-      comprasProveedores: Array.from({ length: 30 }, (_, i) => ({ nota: i + 1, proveedor: '', pagado: 0, tipoPago: 'Efectivo' })),
-      prestamosPendientes: [
-        { id: 'pres-1', proveedor: '', pendiente: 0, pagado: 0, nota: '' },
-        { id: 'pres-2', proveedor: '', pendiente: 0, pagado: 0, nota: '' }
-      ],
+      comprasProveedores: [],
+      prestamosPendientes: [],
       arqueoColumnas: [
         { id: 'col-1', nombre: 'Arqueo 1 (Turno 1)', tarjetas: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0 },
         { id: 'col-2', nombre: 'Arqueo 2 (Turno 2)', tarjetas: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0 },
         { id: 'col-3', nombre: 'Arqueo 3 (Cierre)', tarjetas: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0 }
       ],
-      retiros: [
-        { id: 'ret-1', monto: 0, nombre: '', concepto: '' },
-        { id: 'ret-2', monto: 0, nombre: '', concepto: '' }
-      ],
+      retiros: [],
       cascada: { monedas: 0, premios: 0, total: 0, totalCorte: 0, porcentajeEllos: 60, porcentajeNosotros: 40, ellosTotal: 0, nosotrosTotal: 0 },
       maquinaMunecos: { monedas: 0, total: 0, totalCorte: 0, porcentajeEllos: 60, porcentajeNosotros: 40, ellosTotal: 0, nosotrosTotal: 0 },
       maquinasIndividuales: { maq1_1: 0, maq2_1: 0, maq3_5: 0, total: 0, porcentajeProveedor: 60, porcentajeNosotros: 40, proveedorTotal: 0, nosotrosTotal: 0, nota: '' }
@@ -534,6 +526,14 @@ class StateManager {
 
   esHojaEditable(fecha = this.data.fecha) {
     return fecha === getFechaHoyLocal();
+  }
+
+  tieneCantidadInicial() {
+    return (parseFloat(this.data.cantidadInicial) || 0) > 0;
+  }
+
+  puedeEditarCamposGenerales(fecha = this.data.fecha) {
+    return this.esHojaEditable(fecha) && this.tieneCantidadInicial();
   }
 
   getResumenFechasHistorial() {
@@ -606,7 +606,7 @@ class StateManager {
 
   // 2. Conteo Pan y Tortilla
   updateConteoPan(index, campos) {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     if (this.data.conteoPan && this.data.conteoPan[index]) {
       this.data.conteoPan[index] = { ...this.data.conteoPan[index], ...campos };
       const p = this.data.conteoPan[index];
@@ -616,7 +616,7 @@ class StateManager {
   }
 
   updateConteoTortilla(index, campos) {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     if (this.data.conteoTortilla && this.data.conteoTortilla[index]) {
       this.data.conteoTortilla[index] = { ...this.data.conteoTortilla[index], ...campos };
       const t = this.data.conteoTortilla[index];
@@ -627,7 +627,7 @@ class StateManager {
 
   // 3. Compras y Proveedores Pagados (Hoja Diaria)
   updateCompraProveedor(index, campoOVal, valor) {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     if (this.data.comprasProveedores && this.data.comprasProveedores[index]) {
       const row = this.data.comprasProveedores[index];
       if (typeof campoOVal === 'object') {
@@ -642,7 +642,7 @@ class StateManager {
   }
 
   addFilaCompraProveedor(proveedor = '', pagado = 0, tipoPago = 'Efectivo') {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     const nota = this.data.comprasProveedores.length + 1;
     this.data.comprasProveedores.push({
       nota,
@@ -657,8 +657,8 @@ class StateManager {
   }
 
   guardarCompraProveedorSegura({ index, proveedor, pagado, tipoPago, hora }) {
-    if (!this.esHojaEditable()) {
-      console.warn('Solo se puede editar la hoja del día actual.');
+    if (!this.puedeEditarCamposGenerales()) {
+      console.warn('Solo se puede editar la hoja del día actual y habiendo registrado el monto inicial.');
       return false;
     }
     const pNom = (proveedor || '').trim();
@@ -667,8 +667,13 @@ class StateManager {
     const ahora = new Date();
     const pHora = hora || ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
 
+    // Filtrar registros vacíos residuales
+    this.data.comprasProveedores = (this.data.comprasProveedores || []).filter(r => 
+      (r.proveedor && r.proveedor.trim() !== '') || (parseFloat(r.pagado) > 0)
+    );
+
     const obj = {
-      nota: (index !== undefined && index !== null && index >= 0) ? index + 1 : this.data.comprasProveedores.length + 1,
+      nota: (index !== undefined && index !== null && index >= 0 && index < this.data.comprasProveedores.length) ? index + 1 : this.data.comprasProveedores.length + 1,
       proveedor: pNom,
       pagado: pMonto,
       tipoPago: pTipo,
@@ -680,14 +685,10 @@ class StateManager {
     if (index !== undefined && index !== null && index >= 0 && index < this.data.comprasProveedores.length) {
       this.data.comprasProveedores[index] = obj;
     } else {
-      const idxVacio = this.data.comprasProveedores.findIndex(r => !r.proveedor && !r.bloqueado);
-      if (idxVacio !== -1) {
-        obj.nota = idxVacio + 1;
-        this.data.comprasProveedores[idxVacio] = obj;
-      } else {
-        this.data.comprasProveedores.push(obj);
-      }
+      this.data.comprasProveedores.push(obj);
     }
+
+    this.data.comprasProveedores.forEach((r, i) => { r.nota = i + 1; });
 
     // Agregar también a pagosDia para registro histórico
     this.addPagoDia({
@@ -718,6 +719,7 @@ class StateManager {
 
   // 4. Préstamos o Pendientes de Pago
   updatePrestamo(index, campos) {
+    if (!this.puedeEditarCamposGenerales()) return;
     if (this.data.prestamosPendientes && this.data.prestamosPendientes[index]) {
       this.data.prestamosPendientes[index] = { ...this.data.prestamosPendientes[index], ...campos };
       this.saveState();
@@ -725,6 +727,7 @@ class StateManager {
   }
 
   addFilaPrestamo(proveedor = '', pendiente = 0, pagado = 0, nota = '') {
+    if (!this.puedeEditarCamposGenerales()) return;
     this.data.prestamosPendientes.push({
       id: 'pres-' + Date.now(),
       proveedor,
@@ -738,13 +741,18 @@ class StateManager {
   }
 
   guardarPrestamoSeguro({ index, proveedor, pendiente, nota }) {
-    if (!this.esHojaEditable()) {
-      console.warn('Solo se puede editar la hoja del día actual.');
+    if (!this.puedeEditarCamposGenerales()) {
+      console.warn('Solo se puede editar la hoja del día actual y habiendo registrado el monto inicial.');
       return false;
     }
     const pNom = (proveedor || '').trim();
     const pMonto = parseFloat(pendiente) || 0;
     const pNota = (nota || '').trim();
+
+    // Filtrar registros vacíos residuales
+    this.data.prestamosPendientes = (this.data.prestamosPendientes || []).filter(p => 
+      (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0)
+    );
 
     const nuevoObj = {
       id: 'pres-' + Date.now(),
@@ -770,7 +778,7 @@ class StateManager {
   }
 
   togglePrestamoLiquidado(index) {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     if (this.data.prestamosPendientes && this.data.prestamosPendientes[index]) {
       const p = this.data.prestamosPendientes[index];
       p.liquidado = !p.liquidado;
@@ -784,7 +792,7 @@ class StateManager {
   }
 
   deleteFilaPrestamo(index) {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     if (this.data.prestamosPendientes && this.data.prestamosPendientes[index]) {
       this.data.prestamosPendientes.splice(index, 1);
       this.saveState();
@@ -792,7 +800,7 @@ class StateManager {
   }
 
   addPrestamo(proveedor, pendiente, pagado = 0, nota = '') {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     this.guardarPrestamoSeguro({ proveedor, pendiente, nota });
   }
 
@@ -802,7 +810,7 @@ class StateManager {
   }
 
   updateArqueoColumna(colIndex, campos) {
-    if (!this.esHojaEditable()) return;
+    // Corte y Arqueo SIEMPRE desbloqueado aunque no sea del día o no haya monto inicial
     if (this.data.arqueoColumnas && this.data.arqueoColumnas[colIndex]) {
       const col = this.data.arqueoColumnas[colIndex];
       Object.assign(col, campos);
@@ -908,7 +916,7 @@ class StateManager {
 
   // 6. Retiros
   updateRetiro(index, campos) {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     if (this.data.retiros && this.data.retiros[index]) {
       this.data.retiros[index] = { ...this.data.retiros[index], ...campos };
       this.saveState();
@@ -916,7 +924,7 @@ class StateManager {
   }
 
   addFilaRetiro(monto = 0, nombre = '', concepto = '') {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     this.data.retiros.push({
       id: 'ret-' + Date.now(),
       monto: parseFloat(monto) || 0,
@@ -928,13 +936,18 @@ class StateManager {
   }
 
   guardarRetiroSeguro({ index, monto, nombre, concepto }) {
-    if (!this.esHojaEditable()) {
-      console.warn('Solo se puede editar la hoja del día actual.');
+    if (!this.puedeEditarCamposGenerales()) {
+      console.warn('Solo se puede editar la hoja del día actual y habiendo registrado el monto inicial.');
       return false;
     }
     const rMonto = parseFloat(monto) || 0;
     const rNom = (nombre || this.data.cajeroActual || 'Don Manuel').trim();
     const rConc = (concepto || 'Retiro de caja').trim();
+
+    // Filtrar registros vacíos residuales
+    this.data.retiros = (this.data.retiros || []).filter(r => 
+      (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== '')
+    );
 
     const nuevoObj = {
       id: 'ret-' + Date.now(),
@@ -963,7 +976,7 @@ class StateManager {
   }
 
   deleteFilaRetiro(index) {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     if (this.data.retiros && this.data.retiros[index]) {
       this.data.retiros.splice(index, 1);
       this.saveState();
@@ -994,7 +1007,7 @@ class StateManager {
 
   // 7. Máquinas Cascada y Muñecos
   updateCascada(campos) {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     Object.assign(this.data.cascada, campos);
     const m = parseFloat(this.data.cascada.monedas) || 0;
     const p = parseFloat(this.data.cascada.premios) || 0;
@@ -1007,7 +1020,7 @@ class StateManager {
   }
 
   updateMaquinaMunecos(campos) {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     Object.assign(this.data.maquinaMunecos, campos);
     const m = parseFloat(this.data.maquinaMunecos.monedas) || 0;
     this.data.maquinaMunecos.total = m;
@@ -1018,7 +1031,7 @@ class StateManager {
   }
 
   updateMaquinasIndividuales(campos) {
-    if (!this.esHojaEditable()) return;
+    if (!this.puedeEditarCamposGenerales()) return;
     Object.assign(this.data.maquinasIndividuales, campos);
     const q1 = parseFloat(this.data.maquinasIndividuales.maq1_1) || 0;
     const q2 = parseFloat(this.data.maquinasIndividuales.maq2_1) || 0;

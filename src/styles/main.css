@@ -1353,6 +1353,79 @@ input, button, select, textarea {
   background: #1e293b;
 }
 
+/* Banner de Aviso de Monto Inicial Requerido */
+.banner-aviso-monto-inicial {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #f59e0b;
+  padding: 10px 16px;
+  border-radius: 4px;
+  margin: 12px 20px 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.icono-alerta-inicial {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.banner-titulo-inicial {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #92400e;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.banner-sub-inicial {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.banner-sub-inicial strong {
+  color: #1e293b;
+}
+
+/* Alerta visual en el input de Cantidad Inicial cuando está vacío */
+.hoja-input-money.alerta-falta-inicial {
+  background-color: #fffbeb !important;
+  border-color: #f59e0b !important;
+  color: #b45309 !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+/* Badge de Corte y Arqueo Desbloqueado */
+.badge-arqueo-libre {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #0369a1;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  padding: 2px 7px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Fila de tabla sin registros */
+.fila-sin-registros td {
+  padding: 14px 10px !important;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-style: italic;
+  background: #fafafa;
+}
+
+.texto-sin-registros strong {
+  color: #475569;
+}
+
 /* Badge hint de hora en la celda de proveedor */
 .badge-hora-hint {
   font-size: 0.72rem;
@@ -1830,8 +1903,9 @@ input:disabled {
     padding: 3px 8px;
   }
 
-  /* Banner de Historial */
-  .banner-aviso-historial {
+  /* Banner de Historial y Monto Inicial en Móvil */
+  .banner-aviso-historial,
+  .banner-aviso-monto-inicial {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
