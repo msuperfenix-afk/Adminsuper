@@ -200,15 +200,21 @@ export class HojaDiariaModule {
                     </tr>
                   </thead>
                   <tbody>
-                    ${d.conteoPan.map((p, idx) => `
-                      <tr>
-                        <td><input type="text" class="cell-input" data-pan="${idx}" data-field="proveedor" value="${p.proveedor}" ${editableGeneral ? '' : 'disabled'}></td>
-                        <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="bol" value="${p.bol}" ${editableGeneral ? '' : 'disabled'}></td>
-                        <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="dul" value="${p.dul}" ${editableGeneral ? '' : 'disabled'}></td>
-                        <td><input type="number" class="cell-input text-center text-red" data-pan="${idx}" data-field="camb" value="${p.camb}" ${editableGeneral ? '' : 'disabled'}></td>
-                        <td class="cell-total font-bold">${p.total}</td>
-                      </tr>
-                    `).join('')}
+                    ${d.conteoPan.map((p, idx) => {
+                      const bolVal = (parseFloat(p.bol) || 0) > 0 ? p.bol : '';
+                      const dulVal = (parseFloat(p.dul) || 0) > 0 ? p.dul : '';
+                      const cambVal = (parseFloat(p.camb) || 0) > 0 ? p.camb : '';
+                      const totVal = (parseFloat(p.total) || 0) > 0 ? p.total : '';
+                      return `
+                        <tr>
+                          <td><input type="text" class="cell-input" data-pan="${idx}" data-field="proveedor" value="${p.proveedor}" ${editableGeneral ? '' : 'disabled'}></td>
+                          <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="bol" value="${bolVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
+                          <td><input type="number" class="cell-input text-center" data-pan="${idx}" data-field="dul" value="${dulVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
+                          <td><input type="number" class="cell-input text-center text-red" data-pan="${idx}" data-field="camb" value="${cambVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
+                          <td class="cell-total font-bold">${totVal}</td>
+                        </tr>
+                      `;
+                    }).join('')}
                   </tbody>
                 </table>
               </div>
@@ -227,14 +233,19 @@ export class HojaDiariaModule {
                     </tr>
                   </thead>
                   <tbody>
-                    ${d.conteoTortilla.map((t, idx) => `
-                      <tr>
-                        <td><input type="text" class="cell-input" data-tort="${idx}" data-field="proveedor" value="${t.proveedor}" ${editableGeneral ? '' : 'disabled'}></td>
-                        <td><input type="number" step="0.5" class="cell-input text-center text-red" data-tort="${idx}" data-field="camb" value="${t.camb}" ${editableGeneral ? '' : 'disabled'}></td>
-                        <td><input type="number" step="0.5" class="cell-input text-center" data-tort="${idx}" data-field="nuev" value="${t.nuev}" ${editableGeneral ? '' : 'disabled'}></td>
-                        <td class="cell-total font-bold">${t.total}</td>
-                      </tr>
-                    `).join('')}
+                    ${d.conteoTortilla.map((t, idx) => {
+                      const cambVal = (parseFloat(t.camb) || 0) > 0 ? t.camb : '';
+                      const nuevVal = (parseFloat(t.nuev) || 0) > 0 ? t.nuev : '';
+                      const totVal = (parseFloat(t.total) || 0) > 0 ? t.total : '';
+                      return `
+                        <tr>
+                          <td><input type="text" class="cell-input" data-tort="${idx}" data-field="proveedor" value="${t.proveedor}" ${editableGeneral ? '' : 'disabled'}></td>
+                          <td><input type="number" step="0.5" class="cell-input text-center text-red" data-tort="${idx}" data-field="camb" value="${cambVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
+                          <td><input type="number" step="0.5" class="cell-input text-center" data-tort="${idx}" data-field="nuev" value="${nuevVal}" placeholder="" ${editableGeneral ? '' : 'disabled'}></td>
+                          <td class="cell-total font-bold">${totVal}</td>
+                        </tr>
+                      `;
+                    }).join('')}
                   </tbody>
                 </table>
               </div>
@@ -694,22 +705,38 @@ export class HojaDiariaModule {
 
     // Panaderos
     this.container.querySelectorAll('[data-pan]').forEach(input => {
-      input.addEventListener('change', (e) => {
+      const actualizarPan = (e) => {
         const idx = parseInt(e.target.getAttribute('data-pan'));
         const field = e.target.getAttribute('data-field');
         const val = e.target.value;
         stateManager.updateConteoPan(idx, { [field]: val });
-      });
+        const p = stateManager.data.conteoPan[idx];
+        const row = input.closest('tr');
+        if (row && p) {
+          const totalEl = row.querySelector('.cell-total');
+          if (totalEl) totalEl.textContent = (parseFloat(p.total) || 0) > 0 ? p.total : '';
+        }
+      };
+      input.addEventListener('change', actualizarPan);
+      input.addEventListener('input', actualizarPan);
     });
 
     // Tortillerías
     this.container.querySelectorAll('[data-tort]').forEach(input => {
-      input.addEventListener('change', (e) => {
+      const actualizarTort = (e) => {
         const idx = parseInt(e.target.getAttribute('data-tort'));
         const field = e.target.getAttribute('data-field');
         const val = e.target.value;
         stateManager.updateConteoTortilla(idx, { [field]: val });
-      });
+        const t = stateManager.data.conteoTortilla[idx];
+        const row = input.closest('tr');
+        if (row && t) {
+          const totalEl = row.querySelector('.cell-total');
+          if (totalEl) totalEl.textContent = (parseFloat(t.total) || 0) > 0 ? t.total : '';
+        }
+      };
+      input.addEventListener('change', actualizarTort);
+      input.addEventListener('input', actualizarTort);
     });
 
     // 1. Clic en Renglón Guardado de Proveedores (Abre Modal de Detalles con Hora, Tipo de Pago, etc.)

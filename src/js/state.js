@@ -339,6 +339,23 @@ class StateManager {
           });
         }
 
+        // Limpieza de ceros iniciales en conteoPan y conteoTortilla
+        if (Array.isArray(merged.conteoPan)) {
+          merged.conteoPan.forEach(p => {
+            if (p.bol === 0 || p.bol === '0') p.bol = '';
+            if (p.dul === 0 || p.dul === '0') p.dul = '';
+            if (p.camb === 0 || p.camb === '0') p.camb = '';
+            if (p.total === 0 || p.total === '0') p.total = '';
+          });
+        }
+        if (Array.isArray(merged.conteoTortilla)) {
+          merged.conteoTortilla.forEach(t => {
+            if (t.camb === 0 || t.camb === '0') t.camb = '';
+            if (t.nuev === 0 || t.nuev === '0') t.nuev = '';
+            if (t.total === 0 || t.total === '0') t.total = '';
+          });
+        }
+
         if (!merged.hojasPorFecha) merged.hojasPorFecha = {};
         // Guardar la hoja original del 15 de Septiembre en el historial si aún no existe
         if (!merged.hojasPorFecha['2026-09-15']) {
@@ -375,6 +392,21 @@ class StateManager {
               h.retiros = h.retiros.filter(r => (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== ''));
               h.retiros.forEach(r => {
                 if (r.bloqueado === undefined) r.bloqueado = true;
+              });
+            }
+            if (Array.isArray(h.conteoPan)) {
+              h.conteoPan.forEach(p => {
+                if (p.bol === 0 || p.bol === '0') p.bol = '';
+                if (p.dul === 0 || p.dul === '0') p.dul = '';
+                if (p.camb === 0 || p.camb === '0') p.camb = '';
+                if (p.total === 0 || p.total === '0') p.total = '';
+              });
+            }
+            if (Array.isArray(h.conteoTortilla)) {
+              h.conteoTortilla.forEach(t => {
+                if (t.camb === 0 || t.camb === '0') t.camb = '';
+                if (t.nuev === 0 || t.nuev === '0') t.nuev = '';
+                if (t.total === 0 || t.total === '0') t.total = '';
               });
             }
           });
@@ -445,18 +477,18 @@ class StateManager {
       ano: anoNum,
       cantidadInicial: 0,
       conteoPan: [
-        { id: 'cp-1', proveedor: 'PAN CELIA', bol: 0, dul: 0, camb: 0, total: 0 },
-        { id: 'cp-2', proveedor: 'PAN MIRELLA', bol: 0, dul: 0, camb: 0, total: 0 },
-        { id: 'cp-3', proveedor: 'PAN ESPACIO', bol: 0, dul: 0, camb: 0, total: 0 },
-        { id: 'cp-4', proveedor: 'PAN CELIA (Turno 2)', bol: 0, dul: 0, camb: 0, total: 0 },
-        { id: 'cp-5', proveedor: 'PAN MIRELLA (Turno 2)', bol: 0, dul: 0, camb: 0, total: 0 },
-        { id: 'cp-6', proveedor: 'PAN ESPACIO (Turno 2)', bol: 0, dul: 0, camb: 0, total: 0 }
+        { id: 'cp-1', proveedor: 'PAN CELIA', bol: '', dul: '', camb: '', total: '' },
+        { id: 'cp-2', proveedor: 'PAN MIRELLA', bol: '', dul: '', camb: '', total: '' },
+        { id: 'cp-3', proveedor: 'PAN ESPACIO', bol: '', dul: '', camb: '', total: '' },
+        { id: 'cp-4', proveedor: 'PAN CELIA (Turno 2)', bol: '', dul: '', camb: '', total: '' },
+        { id: 'cp-5', proveedor: 'PAN MIRELLA (Turno 2)', bol: '', dul: '', camb: '', total: '' },
+        { id: 'cp-6', proveedor: 'PAN ESPACIO (Turno 2)', bol: '', dul: '', camb: '', total: '' }
       ],
       conteoTortilla: [
-        { id: 'ct-1', proveedor: 'TORTILLA IDEAL', camb: 0, nuev: 0, total: 0 },
-        { id: 'ct-2', proveedor: 'TORTILLA AMARILLA', camb: 0, nuev: 0, total: 0 },
-        { id: 'ct-3', proveedor: 'TORT. MONREAL', camb: 0, nuev: 0, total: 0 },
-        { id: 'ct-4', proveedor: 'TORTILLA IDEAL', camb: 0, nuev: 0, total: 0 }
+        { id: 'ct-1', proveedor: 'TORTILLA IDEAL', camb: '', nuev: '', total: '' },
+        { id: 'ct-2', proveedor: 'TORTILLA AMARILLA', camb: '', nuev: '', total: '' },
+        { id: 'ct-3', proveedor: 'TORT. MONREAL', camb: '', nuev: '', total: '' },
+        { id: 'ct-4', proveedor: 'TORTILLA IDEAL', camb: '', nuev: '', total: '' }
       ],
       comprasProveedores: [],
       prestamosPendientes: [],
@@ -610,7 +642,11 @@ class StateManager {
     if (this.data.conteoPan && this.data.conteoPan[index]) {
       this.data.conteoPan[index] = { ...this.data.conteoPan[index], ...campos };
       const p = this.data.conteoPan[index];
-      p.total = Math.max(0, (parseFloat(p.bol) || 0) + (parseFloat(p.dul) || 0) - (parseFloat(p.camb) || 0));
+      const bol = parseFloat(p.bol) || 0;
+      const dul = parseFloat(p.dul) || 0;
+      const camb = parseFloat(p.camb) || 0;
+      const tot = Math.max(0, bol + dul - camb);
+      p.total = (bol > 0 || dul > 0 || camb > 0) ? tot : '';
       this.saveState();
     }
   }
@@ -620,7 +656,10 @@ class StateManager {
     if (this.data.conteoTortilla && this.data.conteoTortilla[index]) {
       this.data.conteoTortilla[index] = { ...this.data.conteoTortilla[index], ...campos };
       const t = this.data.conteoTortilla[index];
-      t.total = Math.max(0, (parseFloat(t.nuev) || 0) - (parseFloat(t.camb) || 0));
+      const camb = parseFloat(t.camb) || 0;
+      const nuev = parseFloat(t.nuev) || 0;
+      const tot = Math.max(0, nuev - camb);
+      t.total = (nuev > 0 || camb > 0) ? tot : '';
       this.saveState();
     }
   }
