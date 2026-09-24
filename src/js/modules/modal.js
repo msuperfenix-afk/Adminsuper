@@ -3361,5 +3361,343 @@ export class ModalManager {
 
     attachListeners();
   }
+
+  // ==========================================
+  // MODAL: CAPTURA FÁCIL DE CANTIDAD INICIAL DE CAJA
+  // ==========================================
+  openCapturaCantidadInicialModal(onGuardado) {
+    const valActual = stateManager.data.cantidadInicial || '';
+    const numActual = parseFloat(valActual) || 0;
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(v || 0);
+
+    const body = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #1e3a8a; border-radius: 6px; padding: 10px 14px;">
+          <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a;">FONDO INICIAL DE CAJA</div>
+          <div style="font-size: 0.76rem; color: #64748b; margin-top: 2px;">
+            Este monto representa el dinero en efectivo con el que se inicia la jornada diaria para dar cambio y controlar el arqueo.
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-weight: 800; font-size: 0.88rem; color: #0f172a;">
+            Monto de Cantidad Inicial ($ MXN) *
+          </label>
+          <div style="position: relative; display: flex; align-items: center;">
+            <span style="position: absolute; left: 14px; font-size: 1.3rem; font-weight: 800; color: #64748b; pointer-events: none;">$</span>
+            <input type="number" step="10" min="0" class="form-control" id="inputMontoInicialModal" 
+              value="${numActual > 0 ? numActual : ''}" placeholder="0.00" autofocus
+              style="padding-left: 32px; font-size: 1.4rem; font-weight: 800; height: 50px; text-align: right; color: #1e3a8a; border: 2px solid #94a3b8; border-radius: 6px;">
+          </div>
+        </div>
+
+        <!-- Botones de Acceso Rápido Táctil para Tablet -->
+        <div>
+          <div style="font-size: 0.72rem; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase;">
+            Valores Frecuentes de Apertura:
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button type="button" class="btn-secondary btn-chip-monto" data-monto="500" style="padding: 4px 10px; font-size: 0.8rem; font-weight: 700;">$500</button>
+            <button type="button" class="btn-secondary btn-chip-monto" data-monto="1000" style="padding: 4px 10px; font-size: 0.8rem; font-weight: 700;">$1,000</button>
+            <button type="button" class="btn-secondary btn-chip-monto" data-monto="1500" style="padding: 4px 10px; font-size: 0.8rem; font-weight: 700;">$1,500</button>
+            <button type="button" class="btn-secondary btn-chip-monto" data-monto="2000" style="padding: 4px 10px; font-size: 0.8rem; font-weight: 700;">$2,000</button>
+            <button type="button" class="btn-secondary btn-chip-monto" data-monto="2500" style="padding: 4px 10px; font-size: 0.8rem; font-weight: 700;">$2,500</button>
+            <button type="button" class="btn-secondary btn-chip-monto" data-monto="0" style="padding: 4px 10px; font-size: 0.8rem; color: #b91c1c;">Limpiar</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const footer = `
+      <button type="button" class="btn-secondary" id="btnCancelCantInicial">Cancelar</button>
+      <button type="button" class="btn-primary" id="btnSaveCantInicial" style="min-width: 170px;">
+        ✓ Guardar Cantidad Inicial
+      </button>
+    `;
+
+    this.open('Cantidad Inicial de Caja', body, footer);
+
+    const input = document.getElementById('inputMontoInicialModal');
+    setTimeout(() => {
+      input?.focus();
+      input?.select();
+    }, 80);
+
+    // Conectar botones chips rápidos
+    this.container.querySelectorAll('.btn-chip-monto').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const m = btn.getAttribute('data-monto');
+        if (input) {
+          input.value = m === '0' ? '' : m;
+          input.focus();
+        }
+      });
+    });
+
+    document.getElementById('btnCancelCantInicial')?.addEventListener('click', () => this.close());
+
+    const guardar = () => {
+      const val = parseFloat(input?.value) || 0;
+      stateManager.updateCantidadInicial(val);
+      this.close();
+      if (onGuardado) onGuardado();
+    };
+
+    document.getElementById('btnSaveCantInicial')?.addEventListener('click', guardar);
+    input?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        guardar();
+      }
+    });
+  }
+
+  // ==========================================
+  // MODAL: CAPTURA FÁCIL DE MÁQUINA DE MUÑECOS
+  // ==========================================
+  openCapturaMaquinaMunecosModal(onGuardado) {
+    const d = stateManager.data.maquinaMunecos || { monedas: 0, totalCorte: 0, porcentajeEllos: 60, porcentajeNosotros: 40 };
+    const numMonedas = parseFloat(d.monedas) || 0;
+    const pctEllos = d.porcentajeEllos || 60;
+    const pctNosotros = d.porcentajeNosotros || 40;
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(v || 0);
+
+    const body = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #1e3a8a; border-radius: 6px; padding: 10px 14px;">
+          <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a;">CORTE DE MÁQUINA DE PELUCHES</div>
+          <div style="font-size: 0.76rem; color: #64748b; margin-top: 2px;">
+            Ingresa el importe total recaudado en monedas de la máquina de muñecos. El sistema calcula automáticamente la comisión pactada.
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-weight: 800; font-size: 0.88rem; color: #0f172a;">
+            Total Monedas Recaudadas ($ MXN) *
+          </label>
+          <div style="position: relative; display: flex; align-items: center;">
+            <span style="position: absolute; left: 14px; font-size: 1.3rem; font-weight: 800; color: #64748b; pointer-events: none;">$</span>
+            <input type="number" step="5" min="0" class="form-control" id="inputMunecosModal" 
+              value="${numMonedas > 0 ? numMonedas : ''}" placeholder="0.00" autofocus
+              style="padding-left: 32px; font-size: 1.4rem; font-weight: 800; height: 50px; text-align: right; color: #1e3a8a; border: 2px solid #94a3b8; border-radius: 6px;">
+          </div>
+        </div>
+
+        <!-- Desglose de Reparto en Vivo -->
+        <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+            <span style="font-weight: 700; font-size: 0.84rem; color: #334155;">TOTAL CORTE:</span>
+            <strong style="font-size: 1.1rem; color: #0f172a;" id="displayModalMunTotal">${fmt(numMonedas)}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.82rem; color: #64748b;">ELLOS (${pctEllos}%):</span>
+            <strong style="font-size: 0.95rem; color: #334155;" id="displayModalMunEllos">${fmt((numMonedas * pctEllos) / 100)}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 6px 10px; border-radius: 6px;">
+            <span style="font-size: 0.84rem; font-weight: 700; color: #166534;">NOSOTROS (${pctNosotros}%):</span>
+            <strong style="font-size: 1.05rem; font-weight: 800; color: #15803d;" id="displayModalMunNosotros">${fmt((numMonedas * pctNosotros) / 100)}</strong>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const footer = `
+      <button type="button" class="btn-secondary" id="btnCancelMunecos">Cancelar</button>
+      <button type="button" class="btn-primary" id="btnSaveMunecos" style="min-width: 170px;">
+        ✓ Guardar Corte Muñecos
+      </button>
+    `;
+
+    this.open('Corte: Máquina de Muñecos (Peluches)', body, footer);
+
+    const input = document.getElementById('inputMunecosModal');
+    const dispTotal = document.getElementById('displayModalMunTotal');
+    const dispEllos = document.getElementById('displayModalMunEllos');
+    const dispNosotros = document.getElementById('displayModalMunNosotros');
+
+    const recalcular = () => {
+      const v = parseFloat(input?.value) || 0;
+      if (dispTotal) dispTotal.textContent = fmt(v);
+      if (dispEllos) dispEllos.textContent = fmt((v * pctEllos) / 100);
+      if (dispNosotros) dispNosotros.textContent = fmt((v * pctNosotros) / 100);
+    };
+
+    input?.addEventListener('input', recalcular);
+    setTimeout(() => {
+      input?.focus();
+      input?.select();
+    }, 80);
+
+    document.getElementById('btnCancelMunecos')?.addEventListener('click', () => this.close());
+
+    const guardar = () => {
+      const v = parseFloat(input?.value) || 0;
+      stateManager.updateMaquinaMunecos({
+        monedas: v,
+        porcentajeEllos: pctEllos,
+        porcentajeNosotros: pctNosotros
+      });
+      this.close();
+      if (onGuardado) onGuardado();
+    };
+
+    document.getElementById('btnSaveMunecos')?.addEventListener('click', guardar);
+    input?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        guardar();
+      }
+    });
+  }
+
+  // ==========================================
+  // MODAL: CAPTURA FÁCIL DE MÁQUINAS INDIVIDUALES
+  // ==========================================
+  openCapturaMaquinasIndividualesModal(onGuardado) {
+    const d = stateManager.data.maquinasIndividuales || { maq1_1: 0, maq2_1: 0, maq3_5: 0, total: 0, nota: '', porcentajeProveedor: 60, porcentajeNosotros: 40 };
+    const q1 = parseFloat(d.maq1_1) || 0;
+    const q2 = parseFloat(d.maq2_1) || 0;
+    const q3 = parseFloat(d.maq3_5) || 0;
+    const nota = d.nota || '';
+    const pctProv = d.porcentajeProveedor || 60;
+    const pctNos = d.porcentajeNosotros || 40;
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(v || 0);
+
+    const body = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #1e3a8a; border-radius: 6px; padding: 10px 14px;">
+          <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a;">CORTE DE MÁQUINAS INDIVIDUALES</div>
+          <div style="font-size: 0.76rem; color: #64748b; margin-top: 2px;">
+            Captura los montos de cada máquina para calcular el total acumulado y la división correspondiente.
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 700; font-size: 0.82rem; color: #0f172a;">Máquina 1 ($1 MXN)</label>
+            <input type="number" step="1" min="0" class="form-control font-bold" id="inputModalMaq1" 
+              value="${q1 > 0 ? q1 : ''}" placeholder="0.00" autofocus style="font-size: 1.1rem; text-align: right;">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 700; font-size: 0.82rem; color: #0f172a;">Máquina 2 ($1 MXN)</label>
+            <input type="number" step="1" min="0" class="form-control font-bold" id="inputModalMaq2" 
+              value="${q2 > 0 ? q2 : ''}" placeholder="0.00" style="font-size: 1.1rem; text-align: right;">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-weight: 700; font-size: 0.82rem; color: #0f172a;">Máquina 3 ($5 MXN)</label>
+          <input type="number" step="5" min="0" class="form-control font-bold" id="inputModalMaq3" 
+            value="${q3 > 0 ? q3 : ''}" placeholder="0.00" style="font-size: 1.1rem; text-align: right;">
+        </div>
+
+        <!-- Desglose de Reparto en Vivo -->
+        <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+            <span style="font-weight: 700; font-size: 0.84rem; color: #334155;">TOTAL ACUMULADO:</span>
+            <strong style="font-size: 1.1rem; color: #0f172a;" id="displayModalIndivTotal">${fmt(q1 + q2 + q3)}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.82rem; color: #64748b;">PROVEEDOR (${pctProv}%):</span>
+            <strong style="font-size: 0.95rem; color: #334155;" id="displayModalIndivProv">${fmt(((q1 + q2 + q3) * pctProv) / 100)}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 6px 10px; border-radius: 6px;">
+            <span style="font-size: 0.84rem; font-weight: 700; color: #166534;">NOSOTROS (${pctNos}%):</span>
+            <strong style="font-size: 1.05rem; font-weight: 800; color: #15803d;" id="displayModalIndivNosotros">${fmt(((q1 + q2 + q3) * pctNos) / 100)}</strong>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-weight: 600; font-size: 0.8rem; color: #64748b;">Nota u Observación (Opcional)</label>
+          <input type="text" class="form-control" id="inputModalNotaMaq" value="${nota}" placeholder="Ej. Vaciado regular, cambio de monedas...">
+        </div>
+      </div>
+    `;
+
+    const footer = `
+      <button type="button" class="btn-secondary" id="btnCancelMaqIndiv">Cancelar</button>
+      <button type="button" class="btn-primary" id="btnSaveMaqIndiv" style="min-width: 170px;">
+        ✓ Guardar Corte de Máquinas
+      </button>
+    `;
+
+    this.open('Corte: Máquinas Individuales', body, footer);
+
+    const in1 = document.getElementById('inputModalMaq1');
+    const in2 = document.getElementById('inputModalMaq2');
+    const in3 = document.getElementById('inputModalMaq3');
+    const inNota = document.getElementById('inputModalNotaMaq');
+
+    const dispTot = document.getElementById('displayModalIndivTotal');
+    const dispProv = document.getElementById('displayModalIndivProv');
+    const dispNos = document.getElementById('displayModalIndivNosotros');
+
+    const recalcular = () => {
+      const v1 = parseFloat(in1?.value) || 0;
+      const v2 = parseFloat(in2?.value) || 0;
+      const v3 = parseFloat(in3?.value) || 0;
+      const t = v1 + v2 + v3;
+      if (dispTot) dispTot.textContent = fmt(t);
+      if (dispProv) dispProv.textContent = fmt((t * pctProv) / 100);
+      if (dispNos) dispNos.textContent = fmt((t * pctNos) / 100);
+    };
+
+    [in1, in2, in3].forEach(inp => inp?.addEventListener('input', recalcular));
+    setTimeout(() => {
+      in1?.focus();
+      in1?.select();
+    }, 80);
+
+    document.getElementById('btnCancelMaqIndiv')?.addEventListener('click', () => this.close());
+
+    const guardar = () => {
+      const v1 = parseFloat(in1?.value) || 0;
+      const v2 = parseFloat(in2?.value) || 0;
+      const v3 = parseFloat(in3?.value) || 0;
+      const n = (inNota?.value || '').trim();
+
+      stateManager.updateMaquinasIndividuales({
+        maq1_1: v1,
+        maq2_1: v2,
+        maq3_5: v3,
+        nota: n,
+        porcentajeProveedor: pctProv,
+        porcentajeNosotros: pctNos
+      });
+      this.close();
+      if (onGuardado) onGuardado();
+    };
+
+    document.getElementById('btnSaveMaqIndiv')?.addEventListener('click', guardar);
+
+    // Navegación con tecla Enter entre casillas
+    in1?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        in2?.focus();
+        in2?.select();
+      }
+    });
+    in2?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        in3?.focus();
+        in3?.select();
+      }
+    });
+    in3?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        inNota?.focus();
+      }
+    });
+    inNota?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        guardar();
+      }
+    });
+  }
 }
 

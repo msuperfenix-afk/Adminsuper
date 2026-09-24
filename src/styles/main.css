@@ -4622,3 +4622,58 @@ body.keyboard-open .arqueo-resumen-banner {
   margin-bottom: 6px !important;
 }
 
+/* ==========================================================================
+   ESTILOS: RECUADROS INTERACTIVOS CLICKEABLES (MODAL CAPTURA FÁCIL)
+   ========================================================================== */
+.campo-inicial-clickeable:hover .hoja-valor-inicial-display {
+  border-color: #0284c7 !important;
+  background-color: #f0f9ff !important;
+}
+
+.campo-inicial-clickeable:active .hoja-valor-inicial-display {
+  transform: scale(0.98);
+}
+
+.subcuadro-clickeable {
+  transition: all 0.15s ease;
+  border: 1px solid #cbd5e1;
+}
+
+.subcuadro-clickeable.subcuadro-activo:hover {
+  border-color: #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.12);
+}
+
+.subcuadro-clickeable.subcuadro-activo:focus-visible {
+  outline: 2px solid #0284c7 !important;
+  outline-offset: 1px !important;
+}
+
+.badge-hint-click-edit {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0284c7;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.subcuadro-clickeable:hover .badge-hint-click-edit {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+.btn-chip-monto {
+  transition: all 0.12s ease;
+}
+
+.btn-chip-monto:hover {
+  background: #eff6ff !important;
+  border-color: #3b82f6 !important;
+  color: #1d4ed8 !important;
+}
+
+

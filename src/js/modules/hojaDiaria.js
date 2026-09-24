@@ -119,14 +119,17 @@ export class HojaDiariaModule {
             </button>
           </div>
         ` : (!tieneMontoInicial ? `
-          <!-- RECORDATORIO: CANTIDAD INICIAL -->
-          <div class="banner-aviso-monto-inicial" style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px 12px;">
+          <!-- RECORDATORIO: CANTIDAD INICIAL (Clickeable) -->
+          <div class="banner-aviso-monto-inicial" id="btnAvisoMontoInicial" style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px 12px; cursor: pointer;" title="Clic aquí para ingresar la Cantidad Inicial">
             <div class="banner-aviso-contenido">
               <span class="icono-alerta-inicial" style="font-weight: 800; font-size: 0.74rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #475569;">AVISO</span>
               <div>
-                <div class="banner-titulo-inicial" style="color: #334155; font-size: 0.8rem;">CANTIDAD INICIAL DE CAJA</div>
+                <div class="banner-titulo-inicial" style="color: #334155; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;">
+                  <span>CANTIDAD INICIAL DE CAJA</span>
+                  <span style="font-size: 0.72rem; color: #0284c7; font-weight: 700;">(✎ Clic para ingresar)</span>
+                </div>
                 <div class="banner-sub-inicial" style="color: #64748b; font-size: 0.74rem;">
-                  Recuerda ingresar el monto en el campo <strong>CANTIDAD INICIAL</strong> cuando realices el conteo de apertura. Puedes registrar tus compras, pan y proveedores normalmente.
+                  Haz clic aquí o en el campo superior <strong>CANTIDAD INICIAL</strong> para ingresar el fondo de apertura de hoy.
                 </div>
               </div>
             </div>
@@ -154,11 +157,18 @@ export class HojaDiariaModule {
               <span class="hoja-texto-fijo-fecha" id="displayFecha">${d.diaNum || ''} / ${d.mes || ''} / ${d.ano || ''}</span>
             </div>
 
-            <div class="hoja-campo-inicial">
-              <label>CANTIDAD INICIAL:</label>
-              <div class="input-money-wrap">
-                <span>$</span>
-                <input type="number" step="10" min="0" class="hoja-input-money ${esHoy && !tieneMontoInicial ? 'alerta-falta-inicial' : ''}" id="inputCantidadInicial" value="${d.cantidadInicial || ''}" placeholder="0.00" ${esHoy ? '' : 'disabled'}>
+            <!-- Recuadro Táctil de Cantidad Inicial -->
+            <div class="hoja-campo-inicial ${esHoy ? 'campo-inicial-clickeable' : ''}" id="btnAbrirModalCantidadInicial" 
+              title="${esHoy ? 'Clic para capturar o editar la Cantidad Inicial de caja' : 'Cantidad inicial guardada'}"
+              style="cursor: ${esHoy ? 'pointer' : 'default'}; user-select: none;">
+              <label style="cursor: inherit;">CANTIDAD INICIAL:</label>
+              <div class="input-money-wrap" style="cursor: inherit; display: flex; align-items: center; gap: 4px;">
+                <span style="font-weight: 800; color: #0f172a;">$</span>
+                <div class="hoja-valor-inicial-display ${esHoy && !tieneMontoInicial ? 'alerta-falta-inicial' : ''}" id="displayValorCantidadInicial"
+                  style="min-width: 72px; padding: 2px 6px; font-weight: 800; font-size: 0.88rem; text-align: right; border-radius: 4px; background: #ffffff; border: 1.5px solid ${esHoy && !tieneMontoInicial ? '#f59e0b' : '#cbd5e1'}; color: #0f172a;">
+                  ${tieneMontoInicial ? this.formatMoney(d.cantidadInicial).replace('$', '').trim() : '<span style="color: #94a3b8; font-weight: normal;">0.00</span>'}
+                </div>
+                ${esHoy ? '<span class="badge-lapiz-edit" style="font-size: 0.82rem; color: #0284c7; margin-left: 2px;" title="Editar">✎</span>' : ''}
               </div>
             </div>
 
@@ -572,20 +582,30 @@ export class HojaDiariaModule {
               </div>
             </div>
 
-            <!-- 4. MAQUINA MUÑECOS (Peluches) -->
-            <div class="hoja-subcuadro" style="margin-top: 14px;">
-              <div class="subcuadro-titulo">MAQUINA MUÑECOS</div>
+            <!-- 4. MAQUINA MUÑECOS (Peluches - Clickeable para abrir modal) -->
+            <div class="hoja-subcuadro subcuadro-clickeable ${editableGeneral ? 'subcuadro-activo' : ''}" id="btnAbrirModalMunecos" 
+              style="margin-top: 14px; cursor: ${editableGeneral ? 'pointer' : 'default'}; user-select: none;" 
+              tabindex="${editableGeneral ? '0' : '-1'}" role="button"
+              title="${editableGeneral ? 'Clic o Enter para capturar monedas y corte de máquina de muñecos' : 'Corte de muñecos'}">
+              <div class="subcuadro-titulo-flex">
+                <span>MAQUINA MUÑECOS</span>
+                ${editableGeneral ? '<span class="badge-hint-click-edit" style="font-size: 0.72rem; color: #0284c7; font-weight: 700;">✎ Capturar Corte</span>' : ''}
+              </div>
               <div class="grid-dos-campos">
                 <div>
                   <label>MONEDAS:</label>
-                  <input type="number" class="cell-input text-right font-bold" id="munecosMonedas" value="${d.maquinaMunecos.monedas}" ${editableGeneral ? '' : 'disabled'}>
+                  <div class="field-static-val font-bold text-right" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 0.88rem; color: #1e3a8a;">
+                    ${(parseFloat(d.maquinaMunecos.monedas) || 0) > 0 ? this.formatMoney(d.maquinaMunecos.monedas) : '$0.00'}
+                  </div>
                 </div>
                 <div>
                   <label>TOTAL CORTE:</label>
-                  <div class="field-static-val">${this.formatMoney(d.maquinaMunecos.totalCorte)}</div>
+                  <div class="field-static-val font-bold text-right" style="padding: 4px 8px; font-size: 0.88rem;">
+                    ${this.formatMoney(d.maquinaMunecos.totalCorte)}
+                  </div>
                 </div>
               </div>
-              <div class="corte-reparto-box">
+              <div class="corte-reparto-box" style="margin-top: 8px;">
                 <div class="reparto-item">
                   <span>ELLOS (${d.maquinaMunecos.porcentajeEllos}%):</span>
                   <strong>${this.formatMoney(d.maquinaMunecos.ellosTotal)}</strong>
@@ -597,9 +617,15 @@ export class HojaDiariaModule {
               </div>
             </div>
 
-            <!-- 6. MAQUINAS MONTO INDIVIDUAL -->
-            <div class="hoja-subcuadro" style="margin-top: 14px;">
-              <div class="subcuadro-titulo">MAQUINAS INDIVIDUALES</div>
+            <!-- 6. MAQUINAS MONTO INDIVIDUAL (Clickeable para abrir modal) -->
+            <div class="hoja-subcuadro subcuadro-clickeable ${editableGeneral ? 'subcuadro-activo' : ''}" id="btnAbrirModalMaquinasIndiv" 
+              style="margin-top: 14px; cursor: ${editableGeneral ? 'pointer' : 'default'}; user-select: none;" 
+              tabindex="${editableGeneral ? '0' : '-1'}" role="button"
+              title="${editableGeneral ? 'Clic o Enter para capturar montos de máquinas individuales' : 'Corte de máquinas individuales'}">
+              <div class="subcuadro-titulo-flex">
+                <span>MAQUINAS INDIVIDUALES</span>
+                ${editableGeneral ? '<span class="badge-hint-click-edit" style="font-size: 0.72rem; color: #0284c7; font-weight: 700;">✎ Capturar Corte</span>' : ''}
+              </div>
               <div class="tabla-responsive-wrap">
                 <table class="hoja-tabla-conteo">
                   <thead>
@@ -610,16 +636,22 @@ export class HojaDiariaModule {
                   </thead>
                   <tbody>
                     <tr>
-                      <td>MAQUINA 1 $1</td>
-                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq1" value="${d.maquinasIndividuales.maq1_1}" ${editableGeneral ? '' : 'disabled'}></td>
+                      <td class="font-bold">MAQUINA 1 $1</td>
+                      <td class="text-right font-bold" style="color: #0f172a; padding: 5px 8px;">
+                        ${(parseFloat(d.maquinasIndividuales.maq1_1) || 0) > 0 ? this.formatMoney(d.maquinasIndividuales.maq1_1) : '$0.00'}
+                      </td>
                     </tr>
                     <tr>
-                      <td>MAQUINA 2 $1</td>
-                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq2" value="${d.maquinasIndividuales.maq2_1}" ${editableGeneral ? '' : 'disabled'}></td>
+                      <td class="font-bold">MAQUINA 2 $1</td>
+                      <td class="text-right font-bold" style="color: #0f172a; padding: 5px 8px;">
+                        ${(parseFloat(d.maquinasIndividuales.maq2_1) || 0) > 0 ? this.formatMoney(d.maquinasIndividuales.maq2_1) : '$0.00'}
+                      </td>
                     </tr>
                     <tr>
-                      <td>MAQUINA 3 $5</td>
-                      <td><input type="number" class="cell-input text-right font-bold" id="indivMaq3" value="${d.maquinasIndividuales.maq3_5}" ${editableGeneral ? '' : 'disabled'}></td>
+                      <td class="font-bold">MAQUINA 3 $5</td>
+                      <td class="text-right font-bold" style="color: #0f172a; padding: 5px 8px;">
+                        ${(parseFloat(d.maquinasIndividuales.maq3_5) || 0) > 0 ? this.formatMoney(d.maquinasIndividuales.maq3_5) : '$0.00'}
+                      </td>
                     </tr>
                   </tbody>
                   <tfoot>
@@ -642,10 +674,11 @@ export class HojaDiariaModule {
                 </div>
               </div>
 
-              <div style="margin-top: 8px;">
-                <label style="font-size: 0.72rem; font-weight: 700; color: #475569;">NOTA:</label>
-                <input type="text" class="cell-input" id="indivNota" value="${d.maquinasIndividuales.nota || ''}" placeholder="Anotaciones..." ${editableGeneral ? '' : 'disabled'}>
-              </div>
+              ${d.maquinasIndividuales.nota ? `
+                <div style="margin-top: 6px; font-size: 0.74rem; color: #64748b; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                  <strong>Nota:</strong> ${d.maquinasIndividuales.nota}
+                </div>
+              ` : ''}
             </div>
 
           </div>
@@ -697,34 +730,40 @@ export class HojaDiariaModule {
 
 
 
-    // Encabezado: Cantidad inicial de caja
-    const inputCant = document.getElementById('inputCantidadInicial');
-    const guardarCantidadInicial = () => {
-      if (!inputCant) return;
-      stateManager.updateCantidadInicial(inputCant.value);
-      this.render();
-      setTimeout(() => {
-        const btnSiguiente = document.getElementById('btnPlusProveedor') || document.querySelector('[data-fila-pan]');
-        btnSiguiente?.focus();
-      }, 50);
+    // Encabezado: Apertura de Modal para Cantidad Inicial de Caja
+    const abrirModalCantidadInicial = () => {
+      if (!stateManager.esHojaEditable()) {
+        alert('Solo se puede editar la cantidad inicial en la hoja del día de hoy.');
+        return;
+      }
+      if (window.adminFenixApp?.modalManager) {
+        window.adminFenixApp.modalManager.openCapturaCantidadInicialModal(() => {
+          this.render();
+          setTimeout(() => {
+            const btnSiguiente = document.getElementById('btnPlusProveedor') || document.querySelector('[data-fila-pan]');
+            btnSiguiente?.focus();
+          }, 50);
+        });
+      }
     };
-    inputCant?.addEventListener('change', guardarCantidadInicial);
-    inputCant?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+
+    const btnCantInicial = document.getElementById('btnAbrirModalCantidadInicial');
+    btnCantInicial?.addEventListener('click', (e) => {
+      e.preventDefault();
+      abrirModalCantidadInicial();
+    });
+    btnCantInicial?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        guardarCantidadInicial();
+        abrirModalCantidadInicial();
       }
     });
 
-    // Autoenfoque en cantidad inicial si es el día de hoy y aún no está definida
-    const esHoy = stateManager.data.fecha === new Date().toISOString().split('T')[0];
-    const tieneMontoInicial = parseFloat(stateManager.data.cantidadInicial) > 0;
-    if (esHoy && !tieneMontoInicial && inputCant && !document.querySelector('.modal-overlay.active')) {
-      setTimeout(() => {
-        inputCant.focus();
-        inputCant.select();
-      }, 100);
-    }
+    // Recordatorio en Banner: Clic para abrir modal
+    document.getElementById('btnAvisoMontoInicial')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      abrirModalCantidadInicial();
+    });
 
     // Botón Imprimir
     document.getElementById('btnImprimirHoja')?.addEventListener('click', () => {
@@ -931,68 +970,51 @@ export class HojaDiariaModule {
       });
     });
 
-    // 7. Navegación fluida con Enter en Máquinas de Peluches e Individuales
-    const inpMun = document.getElementById('munecosMonedas');
-    inpMun?.addEventListener('change', (e) => {
-      stateManager.updateMaquinaMunecos({ monedas: e.target.value });
-    });
-    inpMun?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        stateManager.updateMaquinaMunecos({ monedas: e.target.value });
-        const m1 = document.getElementById('indivMaq1');
-        m1?.focus();
-        m1?.select();
+    // 7. Máquina de Muñecos (Peluches): Apertura de Modal de Captura Fácil
+    const btnMunecos = document.getElementById('btnAbrirModalMunecos');
+    const abrirModalMunecos = () => {
+      if (!stateManager.esHojaEditable()) {
+        alert('Solo se puede registrar corte de máquinas en la hoja del día de hoy.');
+        return;
       }
-    });
-
-    // Máquinas individuales
-    const saveIndiv = () => {
-      const q1 = document.getElementById('indivMaq1')?.value;
-      const q2 = document.getElementById('indivMaq2')?.value;
-      const q3 = document.getElementById('indivMaq3')?.value;
-      const nota = document.getElementById('indivNota')?.value;
-      stateManager.updateMaquinasIndividuales({ maq1_1: q1, maq2_1: q2, maq3_5: q3, nota });
+      if (window.adminFenixApp?.modalManager) {
+        window.adminFenixApp.modalManager.openCapturaMaquinaMunecosModal(() => {
+          this.render();
+        });
+      }
     };
-    ['indivMaq1', 'indivMaq2', 'indivMaq3', 'indivNota'].forEach(id => {
-      document.getElementById(id)?.addEventListener('change', saveIndiv);
+    btnMunecos?.addEventListener('click', (e) => {
+      e.preventDefault();
+      abrirModalMunecos();
     });
-
-    document.getElementById('indivMaq1')?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+    btnMunecos?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        saveIndiv();
-        const m2 = document.getElementById('indivMaq2');
-        m2?.focus();
-        m2?.select();
+        abrirModalMunecos();
       }
     });
 
-    document.getElementById('indivMaq2')?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        saveIndiv();
-        const m3 = document.getElementById('indivMaq3');
-        m3?.focus();
-        m3?.select();
+    // 8. Máquinas Individuales: Apertura de Modal de Captura Fácil
+    const btnMaqIndiv = document.getElementById('btnAbrirModalMaquinasIndiv');
+    const abrirModalMaqIndiv = () => {
+      if (!stateManager.esHojaEditable()) {
+        alert('Solo se puede registrar corte de máquinas en la hoja del día de hoy.');
+        return;
       }
-    });
-
-    document.getElementById('indivMaq3')?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        saveIndiv();
-        const nota = document.getElementById('indivNota');
-        nota?.focus();
-        nota?.select();
+      if (window.adminFenixApp?.modalManager) {
+        window.adminFenixApp.modalManager.openCapturaMaquinasIndividualesModal(() => {
+          this.render();
+        });
       }
+    };
+    btnMaqIndiv?.addEventListener('click', (e) => {
+      e.preventDefault();
+      abrirModalMaqIndiv();
     });
-
-    document.getElementById('indivNota')?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+    btnMaqIndiv?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        saveIndiv();
-        document.getElementById('indivNota')?.blur();
+        abrirModalMaqIndiv();
       }
     });
   }
