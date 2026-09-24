@@ -760,24 +760,59 @@ input, button, select, textarea {
   background: #ffffff;
 }
 
+.hoja-header-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+}
+
 .btn-fenix-print {
   background: #ffffff;
   color: #334155;
   border: 1px solid #cbd5e1;
   padding: 5px 12px;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 600;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .btn-fenix-print:hover {
   background: #f8fafc;
   border-color: #94a3b8;
+}
+
+.btn-fenix-email {
+  background: #0f172a;
+  color: #ffffff;
+  border: 1px solid #0f172a;
+  padding: 5px 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-fenix-email:hover {
+  background: #1e293b;
+  border-color: #1e293b;
+}
+
+.btn-fenix-email:active {
+  transform: translateY(1px);
 }
 
 /* Grilla de 2 Columnas */
@@ -3889,13 +3924,15 @@ input:disabled {
     font-size: 0.75rem !important;
   }
 
-  .btn-fenix-print {
+  .btn-fenix-print,
+  .btn-fenix-email {
     padding: 3px 6px !important;
     font-size: 0.68rem !important;
     height: 26px;
   }
 
-  .btn-fenix-print svg {
+  .btn-fenix-print svg,
+  .btn-fenix-email svg {
     width: 13px;
     height: 13px;
   }

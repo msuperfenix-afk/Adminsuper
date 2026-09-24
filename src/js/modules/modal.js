@@ -3699,5 +3699,268 @@ export class ModalManager {
       }
     });
   }
+
+  // ==========================================
+  // MODAL: ENVIAR CORTE CONTABLE POR CORREO ELECTRÓNICO
+  // ==========================================
+  openEnviarCorteEmailModal() {
+    const d = stateManager.data;
+    const totales = stateManager.getTotalesHoja();
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(parseFloat(v) || 0);
+
+    const fechaFormateada = `${d.dia || 'Lunes'} ${d.diaNum || ''} de ${d.mes || ''} de ${d.ano || ''} (${d.fecha || ''})`;
+    const asuntoEmail = `Corte Diario Minisúper Fénix - ${d.fecha || new Date().toISOString().split('T')[0]}`;
+    const correoGuardado = localStorage.getItem('fenix_correo_corte_predeterminado') || '';
+
+    // Construcción del informe en texto enriquecido plano para cuerpo de correo
+    let textoReporte = `====================================================\n`;
+    textoReporte += `       MINISÚPER FÉNIX - CORTE CONTABLE DIARIO\n`;
+    textoReporte += `====================================================\n`;
+    textoReporte += `Fecha: ${fechaFormateada}\n`;
+    textoReporte += `Caja: Principal\n`;
+    textoReporte += `Fondo Inicial de Caja: ${fmt(d.cantidadInicial || 0)}\n\n`;
+
+    // 1. Proveedores Pagados
+    textoReporte += `----------------------------------------------------\n`;
+    textoReporte += `1. RELACIÓN DE PROVEEDORES PAGADOS\n`;
+    textoReporte += `----------------------------------------------------\n`;
+    const provs = (d.comprasProveedores || []).filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pagado) > 0));
+    if (provs.length === 0) {
+      textoReporte += `(Sin proveedores pagados hoy)\n`;
+    } else {
+      provs.forEach((p, i) => {
+        textoReporte += `${i + 1}. ${p.proveedor} | ${p.tipoPago || 'Efectivo'} | ${fmt(p.pagado)}${p.hora ? ` (${p.hora})` : ''}\n`;
+      });
+    }
+    textoReporte += `\nSubtotal Efectivo: ${fmt(totales.totalEfectivoProveedores)}\n`;
+    textoReporte += `Subtotal Transferencias: ${fmt(totales.totalTransferenciaProveedores)}\n`;
+    textoReporte += `TOTAL PAGADO A PROVEEDORES: ${fmt(totales.totalPagadoProveedores)}\n\n`;
+
+    // 2. Conteo Pan y Tortilla
+    textoReporte += `----------------------------------------------------\n`;
+    textoReporte += `2. CONTEO DE PAN Y TORTILLAS\n`;
+    textoReporte += `----------------------------------------------------\n`;
+    const panConteo = (d.conteoPan || []).filter(p => (parseFloat(p.total) > 0) || (parseFloat(p.costo) > 0));
+    if (panConteo.length > 0) {
+      textoReporte += `PANADERÍAS:\n`;
+      panConteo.forEach(p => {
+        textoReporte += `• ${p.proveedor}: ${p.total || 0} pzas (Bol: ${p.bol || 0}, Dul: ${p.dul || 0}, Camb: ${p.camb || 0}) -> Costo: ${fmt(p.costo)}\n`;
+      });
+    }
+    const tortConteo = (d.conteoTortilla || []).filter(t => (parseFloat(t.total) > 0) || (parseFloat(t.costo) > 0));
+    if (tortConteo.length > 0) {
+      textoReporte += `TORTILLERÍAS:\n`;
+      tortConteo.forEach(t => {
+        textoReporte += `• ${t.proveedor}: ${t.total || 0} kg (Nuev: ${t.nuev || 0}, Camb: ${t.camb || 0}) -> Costo: ${fmt(t.costo)}\n`;
+      });
+    }
+    if (panConteo.length === 0 && tortConteo.length === 0) {
+      textoReporte += `(Sin conteo de pan o tortilla registrado hoy)\n`;
+    }
+    textoReporte += `\n`;
+
+    // 3. Préstamos o Pendientes
+    const pendientes = (d.prestamosPendientes || []).filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0));
+    if (pendientes.length > 0) {
+      textoReporte += `----------------------------------------------------\n`;
+      textoReporte += `3. PRÉSTAMOS O PENDIENTES DE PAGO\n`;
+      textoReporte += `----------------------------------------------------\n`;
+      pendientes.forEach((p, i) => {
+        textoReporte += `${i + 1}. ${p.proveedor}: ${fmt(p.pendiente)} [${p.liquidado ? 'PAGADO' : 'PENDIENTE'}]${p.nota ? ` - ${p.nota}` : ''}\n`;
+      });
+      textoReporte += `Total Pendientes: ${fmt(totales.totalPendientes)}\n\n`;
+    }
+
+    // 4. Retiros
+    const retiros = (d.retiros || []).filter(r => (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== ''));
+    if (retiros.length > 0) {
+      textoReporte += `----------------------------------------------------\n`;
+      textoReporte += `4. RETIROS DE EFECTIVO\n`;
+      textoReporte += `----------------------------------------------------\n`;
+      retiros.forEach((r, i) => {
+        textoReporte += `${i + 1}. ${fmt(r.monto)} - ${r.nombre || 'Encargado'}${r.concepto ? ` (${r.concepto})` : ''}\n`;
+      });
+      textoReporte += `Total Retiros: ${fmt(totales.totalRetiros)}\n\n`;
+    }
+
+    // 5. Arqueo de Caja
+    textoReporte += `----------------------------------------------------\n`;
+    textoReporte += `5. CORTE Y ARQUEO DE CAJA\n`;
+    textoReporte += `----------------------------------------------------\n`;
+    (d.arqueoColumnas || []).forEach((c, idx) => {
+      const sumEfectivo = (parseFloat(c.billetes) || 0) + (parseFloat(c.morralla) || 0);
+      textoReporte += `Turno ${idx + 1} (${c.nombre || `Arqueo ${idx + 1}`}):\n`;
+      textoReporte += `  Tarjetas: ${fmt(c.tarjetas)} | Sistema: ${fmt(c.sistema)} | Efectivo: ${fmt(sumEfectivo)}\n`;
+    });
+    textoReporte += `\n`;
+
+    // 6. Máquinas
+    textoReporte += `----------------------------------------------------\n`;
+    textoReporte += `6. MÁQUINAS RECREATIVAS\n`;
+    textoReporte += `----------------------------------------------------\n`;
+    const mm = d.maquinaMunecos || {};
+    textoReporte += `Máquina Muñecos: Recaudado ${fmt(mm.monedas || 0)} (Nosotros 40%: ${fmt(mm.nosotrosTotal || 0)} | Ellos 60%: ${fmt(mm.ellosTotal || 0)})\n`;
+    const mi = d.maquinasIndividuales || {};
+    textoReporte += `Máquinas Individuales: Total ${fmt(mi.total || 0)} (Nosotros 40%: ${fmt(mi.nosotrosTotal || 0)} | Proveedor 60%: ${fmt(mi.proveedorTotal || 0)})\n`;
+    textoReporte += `\n`;
+
+    textoReporte += `====================================================\n`;
+    textoReporte += `Reporte generado automáticamente desde Minisúper Fénix\n`;
+    textoReporte += `Fecha y hora de emisión: ${new Date().toLocaleString('es-MX')}\n`;
+    textoReporte += `====================================================\n`;
+
+    const body = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #0f172a; border-radius: 6px; padding: 10px 14px;">
+          <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a;">ENVÍO DE CORTE DEL DÍA POR CORREO</div>
+          <div style="font-size: 0.76rem; color: #64748b; margin-top: 2px;">
+            Ingresa el correo electrónico del destinatario (por ejemplo, el del dueño o contador). Se abrirá tu aplicación de correo con el reporte detallado listo para enviar.
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">
+            Correo Electrónico Destinatario *
+          </label>
+          <input type="email" class="form-control" id="inputDestinatarioCorteEmail" 
+            value="${correoGuardado}" placeholder="ejemplo@minisuperfenix.com" autofocus
+            style="font-size: 0.95rem; font-weight: 600;">
+          <small style="color: #64748b; font-size: 0.72rem;">El correo se guardará en este dispositivo para los próximos envíos.</small>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">
+            Asunto del Correo
+          </label>
+          <input type="text" class="form-control" id="inputAsuntoCorteEmail" 
+            value="${asuntoEmail}" style="font-size: 0.88rem;">
+        </div>
+
+        <!-- Vista Previa del Reporte -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label class="form-label" style="font-weight: 700; font-size: 0.8rem; color: #475569; margin-bottom: 0;">
+              Vista Previa del Resumen Contable:
+            </label>
+            <button type="button" class="btn-secondary" id="btnCopiarTextoCorte" style="padding: 3px 8px; font-size: 0.74rem;">
+              📋 Copiar Resumen
+            </button>
+          </div>
+          <textarea class="form-control" id="textareaCortePreview" readonly
+            style="height: 180px; font-family: monospace; font-size: 0.74rem; background: #f8fafc; color: #1e293b; line-height: 1.35; resize: vertical;">${textoReporte}</textarea>
+        </div>
+
+        <div id="mensajeAlertaCorteEmail" style="display: none; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;"></div>
+      </div>
+    `;
+
+    const soportaCompartir = typeof navigator.share === 'function';
+
+    const footer = `
+      <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end; flex-wrap: wrap;">
+        <button type="button" class="btn-secondary" id="btnCerrarModalEmail">Cerrar</button>
+        ${soportaCompartir ? `
+          <button type="button" class="btn-secondary" id="btnCompartirCorteNativo" style="gap: 4px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            <span>Compartir</span>
+          </button>
+        ` : ''}
+        <button type="button" class="btn-primary" id="btnEnviarCorteMailto" style="min-width: 180px; background: #0f172a; border-color: #0f172a;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          <span>Abrir y Enviar por Correo</span>
+        </button>
+      </div>
+    `;
+
+    this.open('Enviar Corte Diario por Correo Electrónico', body, footer);
+
+    const inputEmail = document.getElementById('inputDestinatarioCorteEmail');
+    const inputAsunto = document.getElementById('inputAsuntoCorteEmail');
+    const alertaMsg = document.getElementById('mensajeAlertaCorteEmail');
+
+    setTimeout(() => {
+      inputEmail?.focus();
+      if (!inputEmail?.value) {
+        inputEmail?.select();
+      }
+    }, 80);
+
+    const mostrarAlerta = (texto, esError = false) => {
+      if (!alertaMsg) return;
+      alertaMsg.style.display = 'block';
+      alertaMsg.style.background = esError ? '#fee2e2' : '#dcfce7';
+      alertaMsg.style.color = esError ? '#991b1b' : '#166534';
+      alertaMsg.style.border = `1px solid ${esError ? '#fca5a5' : '#86efac'}`;
+      alertaMsg.textContent = texto;
+      setTimeout(() => {
+        alertaMsg.style.display = 'none';
+      }, 3500);
+    };
+
+    // Botón Copiar Texto
+    document.getElementById('btnCopiarTextoCorte')?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(textoReporte);
+        mostrarAlerta('✓ Resumen del corte copiado al portapapeles. Listo para pegar en correo o WhatsApp.');
+      } catch (err) {
+        mostrarAlerta('No se pudo copiar automáticamente. Puedes seleccionarlo manualmente.', true);
+      }
+    });
+
+    // Botón Compartir Nativo (Tablets y Móviles)
+    document.getElementById('btnCompartirCorteNativo')?.addEventListener('click', async () => {
+      try {
+        await navigator.share({
+          title: inputAsunto?.value || asuntoEmail,
+          text: textoReporte
+        });
+      } catch (err) {
+        // Cancelado por el usuario o no soportado
+      }
+    });
+
+    // Botón Enviar con mailto
+    const ejecutarEnvioMailto = () => {
+      const email = (inputEmail?.value || '').trim();
+      const asunto = (inputAsunto?.value || '').trim() || asuntoEmail;
+
+      if (!email) {
+        mostrarAlerta('Por favor ingresa un correo electrónico destinatario.', true);
+        inputEmail?.focus();
+        return;
+      }
+
+      // Validar formato básico de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        mostrarAlerta('El formato del correo electrónico no parece válido.', true);
+        inputEmail?.focus();
+        return;
+      }
+
+      // Guardar correo para futuros envíos
+      localStorage.setItem('fenix_correo_corte_predeterminado', email);
+
+      // Abrir cliente de correo nativo o web
+      const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(textoReporte)}`;
+      
+      // En tablets / navegadores abrir enlace mailto
+      window.location.href = mailtoUrl;
+
+      mostrarAlerta('✓ Abriendo tu aplicación de correo con el corte listo...');
+      setTimeout(() => {
+        this.close();
+      }, 1500);
+    };
+
+    document.getElementById('btnEnviarCorteMailto')?.addEventListener('click', ejecutarEnvioMailto);
+    document.getElementById('btnCerrarModalEmail')?.addEventListener('click', () => this.close());
+    inputEmail?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        ejecutarEnvioMailto();
+      }
+    });
+  }
 }
 

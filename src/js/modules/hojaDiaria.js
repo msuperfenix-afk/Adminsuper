@@ -173,9 +173,16 @@ export class HojaDiariaModule {
             </div>
 
             <div class="hoja-header-actions">
-              <button class="btn-fenix-print" id="btnImprimirHoja">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+              <button class="btn-fenix-print" id="btnImprimirHoja" title="Imprimir hoja contable física">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                 <span>Imprimir Hoja</span>
+              </button>
+              <button class="btn-fenix-email" id="btnEnviarCorteEmail" title="Enviar este corte contable a un correo electrónico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <span>Enviar a Correo</span>
               </button>
             </div>
           </div>
@@ -768,6 +775,14 @@ export class HojaDiariaModule {
     // Botón Imprimir
     document.getElementById('btnImprimirHoja')?.addEventListener('click', () => {
       window.print();
+    });
+
+    // Botón Enviar a Correo (debajo de Imprimir)
+    document.getElementById('btnEnviarCorteEmail')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.adminFenixApp?.modalManager) {
+        window.adminFenixApp.modalManager.openEnviarCorteEmailModal();
+      }
     });
 
     // Panaderos: Abrir modal al dar clic en la fila o en el botón 'i' o pulsar Enter
