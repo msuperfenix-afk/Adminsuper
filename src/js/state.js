@@ -1,4 +1,12 @@
-import { guardarHojaEnFirestore, cargarHojaDeFirestore, isFirebaseConectado } from './firebaseClient.js';
+import { 
+  guardarHojaEnFirestore, 
+  cargarHojaDeFirestore, 
+  escucharHojaEnFirestore,
+  guardarProveedoresGlobalFirestore,
+  cargarProveedoresGlobalFirestore,
+  escucharProveedoresGlobalFirestore,
+  isFirebaseConectado 
+} from './firebaseClient.js';
 
 const STORAGE_KEY = 'adminfenix_data_v5';
 
@@ -501,16 +509,18 @@ class StateManager {
   constructor() {
     this.data = this.loadState();
     this.listeners = [];
+    this.unsubscribeHojaActual = null;
+    this.unsubscribeProveedores = null;
     this.sincronizarProveedoresDesdeHoja();
+    this.iniciarSincronizacionGlobalFirestore();
   }
 
   loadState() {
     try {
       let stored = localStorage.getItem(STORAGE_KEY);
       let datosMigracion = null;
-      let fueMigrado = false;
 
-      // Si no existe adminfenix_data_v5, recuperar catálogos de versiones previas
+      // Si no existe adminfenix_data_v5, recuperar de versiones previas
       if (!stored) {
         const versionesPrevias = ['adminfenix_data_v4', 'adminfenix_data_v3', 'adminfenix_data_v2', 'adminfenix_data'];
         for (const vKey of versionesPrevias) {
@@ -518,7 +528,6 @@ class StateManager {
           if (oldStr) {
             try {
               datosMigracion = JSON.parse(oldStr);
-              fueMigrado = true;
               break;
             } catch (err) {}
           }
@@ -529,12 +538,8 @@ class StateManager {
         const parsed = stored ? JSON.parse(stored) : datosMigracion;
         const merged = { ...SEED_DATA, ...parsed };
 
-        // Si venimos de migración de versión previa o detectamos datos de prueba antiguos (ej. fecha 2026-09-15 o compra simulada de Cerveza $15,775)
-        const tieneDatosPrueba = merged.fecha === '2026-09-15' || 
-          (Array.isArray(merged.comprasProveedores) && merged.comprasProveedores.some(c => c.monto === 15775 || c.pagado === 15775 || c.proveedor === 'Cerveza Corona' || c.proveedor === 'Cerveza'));
-
-        if (fueMigrado || tieneDatosPrueba) {
-          // Resetear hoja activa a la fecha de hoy local limpia
+        // Asegurar que la fecha activa sea válida (por defecto hoy local)
+        if (!merged.fecha || merged.fecha === '2026-09-15') {
           const fechaHoy = getFechaHoyLocal();
           const dHoy = new Date(fechaHoy + 'T12:00:00');
           merged.fecha = fechaHoy;
@@ -542,31 +547,6 @@ class StateManager {
           merged.diaNum = dHoy.getDate();
           merged.mes = NOMBRES_MESES[dHoy.getMonth()] || 'Ene';
           merged.ano = dHoy.getFullYear();
-          merged.cantidadInicial = 0;
-          merged.comprasProveedores = [];
-          merged.prestamosPendientes = [];
-          merged.retiros = [];
-          merged.pagosDia = [];
-          merged.panaderos = [];
-          merged.tortillerias = [];
-          merged.pendientesPago = [];
-          merged.arqueos = [];
-          merged.maquinas = [];
-          merged.arqueoColumnas = [
-            { id: 'col-1', nombre: 'Arqueo 1 (Turno 1)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false },
-            { id: 'col-2', nombre: 'Arqueo 2 (Turno 2)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false },
-            { id: 'col-3', nombre: 'Arqueo 3 (Cierre)', tarjetas: 0, tarjetaYomp: 0, sistema: 0, billetes: 0, mon1: 0, mon2: 0, mon5: 0, mon10: 0, morralla: 0, bloqueado: false }
-          ];
-          merged.cascada = { monedas: 0, premios: 0, total: 0, totalCorte: 0, porcentajeEllos: 60, porcentajeNosotros: 40, ellosTotal: 0, nosotrosTotal: 0 };
-          merged.maquinaMunecos = { monedas: 0, total: 0, totalCorte: 0, porcentajeEllos: 60, porcentajeNosotros: 40, ellosTotal: 0, nosotrosTotal: 0 };
-          merged.maquinasIndividuales = { maq1_1: 0, maq2_1: 0, maq3_5: 0, total: 0, porcentajeProveedor: 60, porcentajeNosotros: 40, proveedorTotal: 0, nosotrosTotal: 0, nota: '' };
-
-          // Limpiar historial de hojas pasadas simuladas
-          if (merged.hojasPorFecha) {
-            delete merged.hojasPorFecha['2026-09-15'];
-          } else {
-            merged.hojasPorFecha = {};
-          }
         }
 
         // Migración de nombres de tortilla si hiciera falta
@@ -584,6 +564,12 @@ class StateManager {
         // Catálogos recordatorios de precios
         if (!merged.preciosGuardadosPan) merged.preciosGuardadosPan = { ...SEED_DATA.preciosGuardadosPan };
         if (!merged.preciosGuardadosTortilla) merged.preciosGuardadosTortilla = { ...SEED_DATA.preciosGuardadosTortilla };
+
+        // Preservar fielmente los arrays de transacciones sin resetear
+        if (!Array.isArray(merged.comprasProveedores)) merged.comprasProveedores = [];
+        if (!Array.isArray(merged.prestamosPendientes)) merged.prestamosPendientes = [];
+        if (!Array.isArray(merged.retiros)) merged.retiros = [];
+        if (!Array.isArray(merged.arqueoColumnas)) merged.arqueoColumnas = JSON.parse(JSON.stringify(SEED_DATA.arqueoColumnas));
 
         // Limpieza y cálculo de conteoPan y conteoTortilla con nombres oficiales fijos
         if (Array.isArray(merged.conteoPan)) {
@@ -622,7 +608,6 @@ class StateManager {
         }
 
         if (!merged.hojasPorFecha) merged.hojasPorFecha = {};
-        // Asegurarse de que no exista la hoja demo antigua en el historial
         if (merged.hojasPorFecha['2026-09-15']) {
           delete merged.hojasPorFecha['2026-09-15'];
         }
@@ -660,18 +645,156 @@ class StateManager {
     return JSON.parse(JSON.stringify(SEED_DATA));
   }
 
+  // ==========================================
+  // SINCRONIZACIÓN GLOBAL MULTI-DISPOSITIVO (CLOUD FIRESTORE)
+  // ==========================================
+  async iniciarSincronizacionGlobalFirestore() {
+    if (!isFirebaseConectado()) return;
+
+    try {
+      this.actualizarIndicadorGuardado('sincronizando');
+
+      // 1. Sincronizar catálogo y agenda de proveedores global
+      const provsRemotos = await cargarProveedoresGlobalFirestore();
+      if (provsRemotos && Array.isArray(provsRemotos.catalogoProveedores) && provsRemotos.catalogoProveedores.length > 0) {
+        console.log('Catálogo de proveedores recibido de Firestore');
+        this.data.catalogoProveedores = provsRemotos.catalogoProveedores;
+        if (Array.isArray(provsRemotos.proveedoresAgenda) && provsRemotos.proveedoresAgenda.length > 0) {
+          this.data.proveedores = provsRemotos.proveedoresAgenda;
+        }
+        if (provsRemotos.preciosGuardadosPan) {
+          this.data.preciosGuardadosPan = { ...this.data.preciosGuardadosPan, ...provsRemotos.preciosGuardadosPan };
+        }
+        if (provsRemotos.preciosGuardadosTortilla) {
+          this.data.preciosGuardadosTortilla = { ...this.data.preciosGuardadosTortilla, ...provsRemotos.preciosGuardadosTortilla };
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      } else {
+        // Inicializar documento en la nube con los proveedores maestros
+        guardarProveedoresGlobalFirestore({
+          catalogoProveedores: this.data.catalogoProveedores,
+          proveedoresAgenda: this.data.proveedores,
+          preciosGuardadosPan: this.data.preciosGuardadosPan,
+          preciosGuardadosTortilla: this.data.preciosGuardadosTortilla
+        });
+      }
+
+      // Escuchar cambios de proveedores en tiempo real desde otros dispositivos
+      this.unsubscribeProveedores = escucharProveedoresGlobalFirestore((datosRemotos) => {
+        if (!datosRemotos) return;
+        if (Array.isArray(datosRemotos.catalogoProveedores) && datosRemotos.catalogoProveedores.length > 0) {
+          this.data.catalogoProveedores = datosRemotos.catalogoProveedores;
+        }
+        if (Array.isArray(datosRemotos.proveedoresAgenda) && datosRemotos.proveedoresAgenda.length > 0) {
+          this.data.proveedores = datosRemotos.proveedoresAgenda;
+        }
+        if (datosRemotos.preciosGuardadosPan) {
+          this.data.preciosGuardadosPan = { ...this.data.preciosGuardadosPan, ...datosRemotos.preciosGuardadosPan };
+        }
+        if (datosRemotos.preciosGuardadosTortilla) {
+          this.data.preciosGuardadosTortilla = { ...this.data.preciosGuardadosTortilla, ...datosRemotos.preciosGuardadosTortilla };
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+        this.notify();
+      });
+
+      // 2. Sincronizar hoja del día actual
+      const fechaActiva = this.data.fecha || getFechaHoyLocal();
+      const hojaRemota = await cargarHojaDeFirestore(fechaActiva);
+      if (hojaRemota) {
+        console.log(`Hoja activa ${fechaActiva} descargada desde Firestore`);
+        this.adoptarDatosHojaRemota(hojaRemota);
+      } else {
+        // Subir hoja local a Firestore para que otros dispositivos la vean
+        if (!this.data.hojasPorFecha) this.data.hojasPorFecha = {};
+        this.data.hojasPorFecha[fechaActiva] = this.extraerDatosHojaActual(this.data);
+        guardarHojaEnFirestore(fechaActiva, this.data.hojasPorFecha[fechaActiva]);
+      }
+
+      // Activar listener de la hoja activa
+      this.activarListenerHojaEnVivo(fechaActiva);
+
+      this.actualizarIndicadorGuardado('guardado');
+    } catch (e) {
+      console.warn('Error en iniciarSincronizacionGlobalFirestore:', e);
+      this.actualizarIndicadorGuardado('guardado');
+    }
+  }
+
+  activarListenerHojaEnVivo(fecha) {
+    if (!isFirebaseConectado() || !fecha) return;
+
+    if (this.unsubscribeHojaActual) {
+      try { this.unsubscribeHojaActual(); } catch (err) {}
+      this.unsubscribeHojaActual = null;
+    }
+
+    this.unsubscribeHojaActual = escucharHojaEnFirestore(fecha, (hojaRemota) => {
+      if (hojaRemota && hojaRemota.fecha === this.data.fecha) {
+        console.log('Sincronización en vivo: actualizando vista con datos remotos de Firestore');
+        this.adoptarDatosHojaRemota(hojaRemota);
+      }
+    });
+  }
+
+  adoptarDatosHojaRemota(hojaRemota) {
+    if (!hojaRemota) return;
+
+    if (hojaRemota.comprasProveedores !== undefined) {
+      this.data.comprasProveedores = JSON.parse(JSON.stringify(hojaRemota.comprasProveedores || []));
+    }
+    if (hojaRemota.prestamosPendientes !== undefined) {
+      this.data.prestamosPendientes = JSON.parse(JSON.stringify(hojaRemota.prestamosPendientes || []));
+    }
+    if (hojaRemota.conteoPan !== undefined) {
+      this.data.conteoPan = JSON.parse(JSON.stringify(hojaRemota.conteoPan || []));
+    }
+    if (hojaRemota.conteoTortilla !== undefined) {
+      this.data.conteoTortilla = JSON.parse(JSON.stringify(hojaRemota.conteoTortilla || []));
+    }
+    if (hojaRemota.retiros !== undefined) {
+      this.data.retiros = JSON.parse(JSON.stringify(hojaRemota.retiros || []));
+    }
+    if (hojaRemota.arqueoColumnas !== undefined) {
+      this.data.arqueoColumnas = JSON.parse(JSON.stringify(hojaRemota.arqueoColumnas || []));
+    }
+    if (hojaRemota.cantidadInicial !== undefined) {
+      this.data.cantidadInicial = hojaRemota.cantidadInicial;
+    }
+    if (hojaRemota.cascada !== undefined) {
+      this.data.cascada = JSON.parse(JSON.stringify(hojaRemota.cascada || {}));
+    }
+    if (hojaRemota.maquinaMunecos !== undefined) {
+      this.data.maquinaMunecos = JSON.parse(JSON.stringify(hojaRemota.maquinaMunecos || {}));
+    }
+    if (hojaRemota.maquinasIndividuales !== undefined) {
+      this.data.maquinasIndividuales = JSON.parse(JSON.stringify(hojaRemota.maquinasIndividuales || {}));
+    }
+
+    if (!this.data.hojasPorFecha) this.data.hojasPorFecha = {};
+    this.data.hojasPorFecha[hojaRemota.fecha || this.data.fecha] = this.extraerDatosHojaActual(this.data);
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    this.sincronizarProveedoresDesdeHoja(this.data.fecha);
+    this.notify();
+  }
+
   actualizarIndicadorGuardado(estado) {
     const label = document.getElementById('textoGuardadoLabel');
     const badge = document.getElementById('btnGuardadoIndicador');
     if (!label || !badge) return;
 
-    if (estado === 'guardando') {
+    if (estado === 'guardando' || estado === 'sincronizando') {
       badge.classList.add('guardando');
-      label.textContent = 'Guardando...';
+      label.textContent = isFirebaseConectado() ? 'Sincronizando...' : 'Guardando...';
+      badge.title = 'Guardando cambios en Firestore para todos los dispositivos';
     } else {
       setTimeout(() => {
         badge.classList.remove('guardando');
-        label.textContent = 'Guardado';
+        label.textContent = isFirebaseConectado() ? 'En Vivo (Global)' : 'Guardado';
+        badge.title = isFirebaseConectado() 
+          ? 'Conectado a la nube. Información sincronizada globalmente para todos los dispositivos.' 
+          : 'Guardado en este dispositivo.';
       }, 350);
     }
   }
@@ -689,16 +812,24 @@ class StateManager {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       this.notify();
 
-      // Sincronización en segundo plano con Firestore
+      // Sincronización en segundo plano con Firestore (hoja diaria y proveedores globales)
       if (isFirebaseConectado() && data.fecha) {
-        guardarHojaEnFirestore(data.fecha, data.hojasPorFecha[data.fecha])
-          .then(() => {
-            this.actualizarIndicadorGuardado('guardado');
+        Promise.all([
+          guardarHojaEnFirestore(data.fecha, data.hojasPorFecha[data.fecha]),
+          guardarProveedoresGlobalFirestore({
+            catalogoProveedores: data.catalogoProveedores,
+            proveedoresAgenda: data.proveedores,
+            preciosGuardadosPan: data.preciosGuardadosPan,
+            preciosGuardadosTortilla: data.preciosGuardadosTortilla
           })
-          .catch(err => {
-            console.warn('Sincronización en segundo plano con Firestore pendiente:', err);
-            this.actualizarIndicadorGuardado('guardado');
-          });
+        ])
+        .then(() => {
+          this.actualizarIndicadorGuardado('guardado');
+        })
+        .catch(err => {
+          console.warn('Sincronización en segundo plano con Firestore pendiente:', err);
+          this.actualizarIndicadorGuardado('guardado');
+        });
       } else {
         this.actualizarIndicadorGuardado('guardado');
       }
@@ -777,6 +908,9 @@ class StateManager {
     if (this.data.fecha) {
       if (!this.data.hojasPorFecha) this.data.hojasPorFecha = {};
       this.data.hojasPorFecha[this.data.fecha] = this.extraerDatosHojaActual();
+      if (isFirebaseConectado()) {
+        guardarHojaEnFirestore(this.data.fecha, this.data.hojasPorFecha[this.data.fecha]);
+      }
     }
 
     // 2. Verificar si ya existe en memoria o LocalStorage
@@ -804,6 +938,7 @@ class StateManager {
     this.data.fecha = nuevaFecha;
 
     this.sincronizarProveedoresDesdeHoja(nuevaFecha);
+    this.activarListenerHojaEnVivo(nuevaFecha);
 
     this.saveState();
   }
@@ -833,7 +968,7 @@ class StateManager {
   }
 
   puedeEditarCamposGenerales(fecha = this.data.fecha) {
-    return this.esHojaEditable(fecha) && this.tieneCantidadInicial();
+    return this.esHojaEditable(fecha);
   }
 
   getResumenFechasHistorial() {
@@ -985,7 +1120,7 @@ class StateManager {
     }
   }
 
-  guardarCapturaPan(index, { bol, dul, camb, precioPieza }) {
+  guardarCapturaPan(index, { bol, dul, camb, precioPieza, destino = 'ninguno' }) {
     if (!this.puedeEditarCamposGenerales()) return false;
     if (this.data.conteoPan && this.data.conteoPan[index]) {
       const p = this.data.conteoPan[index];
@@ -1013,18 +1148,22 @@ class StateManager {
         this.data.preciosGuardadosPan[p.proveedor] = precio;
       }
 
-      // Pasar automáticamente el costo a la tabla de proveedores
-      if (p.costo > 0) {
+      // Procesar destino solicitado
+      if (destino === 'pagados' && p.costo > 0) {
         this.sincronizarProveedorConteo(p.proveedor, p.costo);
+        this.removerDePendientesPago(p.proveedor);
+      } else if (destino === 'pendientes' && p.costo > 0) {
+        this.trasladarConteoAPendientesPago(p.proveedor, p.costo, `Surtido pan (${tot} pzas)`);
+        this.removerDeProveedoresPagados(p.proveedor);
       }
 
       this.saveState();
-      return true;
+      return { ok: true, total: tot, costo: p.costo };
     }
     return false;
   }
 
-  guardarCapturaTortilla(index, { nuev, camb, precioKilo }) {
+  guardarCapturaTortilla(index, { nuev, camb, precioKilo, destino = 'ninguno' }) {
     if (!this.puedeEditarCamposGenerales()) return false;
     if (this.data.conteoTortilla && this.data.conteoTortilla[index]) {
       const t = this.data.conteoTortilla[index];
@@ -1049,13 +1188,17 @@ class StateManager {
         this.data.preciosGuardadosTortilla[t.proveedor] = precio;
       }
 
-      // Pasar automáticamente el costo a la tabla de proveedores
-      if (t.costo > 0) {
+      // Procesar destino solicitado
+      if (destino === 'pagados' && t.costo > 0) {
         this.sincronizarProveedorConteo(t.proveedor, t.costo);
+        this.removerDePendientesPago(t.proveedor);
+      } else if (destino === 'pendientes' && t.costo > 0) {
+        this.trasladarConteoAPendientesPago(t.proveedor, t.costo, `Surtido tortilla (${tot} kg)`);
+        this.removerDeProveedoresPagados(t.proveedor);
       }
 
       this.saveState();
-      return true;
+      return { ok: true, total: tot, costo: t.costo };
     }
     return false;
   }
@@ -1119,6 +1262,82 @@ class StateManager {
     // Renumerar notas consecutivas
     this.data.comprasProveedores.forEach((r, i) => { r.nota = i + 1; });
     this.sincronizarLlegadaProveedor(nombreProveedorConteo, horaActual, costo, this.data.fecha);
+  }
+
+  // Trasladar costo a PRESTAMOS O PENDIENTES DE PAGO
+  trasladarConteoAPendientesPago(nombreProveedor, monto, conceptoDetalle = 'Surtido') {
+    if (!this.data.prestamosPendientes) this.data.prestamosPendientes = [];
+    const valor = parseFloat(monto) || 0;
+    if (valor <= 0) return;
+
+    const norm = (s) => (s || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\./g, '').trim();
+    const provNorm = norm(nombreProveedor);
+
+    let indexEncontrado = this.data.prestamosPendientes.findIndex(p => {
+      const pNorm = norm(p.proveedor);
+      if (pNorm === provNorm) return true;
+      if (provNorm.includes('celia') && pNorm.includes('celia')) return true;
+      if (provNorm.includes('mirella') && pNorm.includes('mirella')) return true;
+      if (provNorm.includes('espacio') && pNorm.includes('espacio')) return true;
+      if (provNorm.includes('ideal') && pNorm.includes('ideal')) return true;
+      if (provNorm.includes('amarilla') && pNorm.includes('amarilla')) return true;
+      if (provNorm.includes('monreal') && pNorm.includes('monreal')) return true;
+      return false;
+    });
+
+    if (indexEncontrado >= 0) {
+      this.data.prestamosPendientes[indexEncontrado].pendiente = valor;
+      this.data.prestamosPendientes[indexEncontrado].liquidado = false;
+      this.data.prestamosPendientes[indexEncontrado].bloqueado = true;
+      this.data.prestamosPendientes[indexEncontrado].concepto = conceptoDetalle;
+    } else {
+      this.data.prestamosPendientes.push({
+        id: 'prest-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+        proveedor: nombreProveedor,
+        pendiente: valor,
+        concepto: conceptoDetalle,
+        liquidado: false,
+        bloqueado: true,
+        fecha: this.data.fecha
+      });
+    }
+  }
+
+  removerDePendientesPago(nombreProveedor) {
+    if (!Array.isArray(this.data.prestamosPendientes)) return;
+    const norm = (s) => (s || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\./g, '').trim();
+    const pNorm = norm(nombreProveedor);
+
+    this.data.prestamosPendientes = this.data.prestamosPendientes.filter(p => {
+      const itemNorm = norm(p.proveedor);
+      if (itemNorm === pNorm) return false;
+      if (pNorm.includes('celia') && itemNorm.includes('celia')) return false;
+      if (pNorm.includes('mirella') && itemNorm.includes('mirella')) return false;
+      if (pNorm.includes('espacio') && itemNorm.includes('espacio')) return false;
+      if (pNorm.includes('ideal') && itemNorm.includes('ideal')) return false;
+      if (pNorm.includes('amarilla') && itemNorm.includes('amarilla')) return false;
+      if (pNorm.includes('monreal') && itemNorm.includes('monreal')) return false;
+      return true;
+    });
+  }
+
+  removerDeProveedoresPagados(nombreProveedor) {
+    if (!Array.isArray(this.data.comprasProveedores)) return;
+    const norm = (s) => (s || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\./g, '').trim();
+    const pNorm = norm(nombreProveedor);
+
+    this.data.comprasProveedores = this.data.comprasProveedores.filter(c => {
+      const cNorm = norm(c.proveedor);
+      if (cNorm === pNorm) return false;
+      if (pNorm.includes('celia') && cNorm.includes('celia')) return false;
+      if (pNorm.includes('mirella') && cNorm.includes('mirella')) return false;
+      if (pNorm.includes('espacio') && cNorm.includes('espacio')) return false;
+      if (pNorm.includes('ideal') && cNorm.includes('ideal')) return false;
+      if (pNorm.includes('amarilla') && cNorm.includes('amarilla')) return false;
+      if (pNorm.includes('monreal') && cNorm.includes('monreal')) return false;
+      return true;
+    });
+    this.data.comprasProveedores.forEach((r, i) => { r.nota = i + 1; });
   }
 
   // 3. Compras y Proveedores Pagados (Hoja Diaria)

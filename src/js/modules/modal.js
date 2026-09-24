@@ -2376,8 +2376,24 @@ export class ModalManager {
     `;
 
     const footer = `
-      <button type="button" class="btn-secondary" id="btnCerrarModalPanCosto">Cancelar</button>
-      ${esEditable ? '<button type="button" class="btn-primary" id="btnGuardarModalPanCosto" style="min-width: 150px;">Guardar Registro</button>' : ''}
+      <div style="display: flex; gap: 8px; width: 100%; justify-content: space-between; flex-wrap: wrap; align-items: center;">
+        <button type="button" class="btn-secondary" id="btnCerrarModalPanCosto" style="font-size: 0.78rem; padding: 7px 10px;">
+          Cancelar
+        </button>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" id="btnSeguirEditandoPan" style="font-size: 0.78rem; padding: 7px 11px; font-weight: 600;">
+            Cerrar para seguir editando
+          </button>
+          ${esEditable ? `
+            <button type="button" class="btn-primary" id="btnPagarDespuesPan" style="background: #d97706; border-color: #b45309; font-size: 0.78rem; padding: 7px 12px; font-weight: 700;">
+              Pagar Después (Pendientes)
+            </button>
+            <button type="button" class="btn-primary" id="btnGuardarPagadoPan" style="background: #16a34a; border-color: #15803d; font-size: 0.78rem; padding: 7px 14px; font-weight: 700;">
+              Guardar en Proveedores Pagados
+            </button>
+          ` : ''}
+        </div>
+      </div>
     `;
 
     this.open(`Conteo y Costo: ${proveedor}`, body, footer);
@@ -2418,24 +2434,52 @@ export class ModalManager {
 
     document.getElementById('btnCerrarModalPanCosto')?.addEventListener('click', () => this.close());
 
+    // Opción 1: Cerrar para seguir editando (solo guarda conteo local sin pasar a pagos ni deudas)
+    document.getElementById('btnSeguirEditandoPan')?.addEventListener('click', () => {
+      stateManager.guardarCapturaPan(index, {
+        bol: inputBol?.value,
+        dul: inputDul?.value,
+        camb: inputCamb?.value,
+        precioPieza: inputPrecio?.value,
+        destino: 'solo_guardar'
+      });
+      this.close();
+      if (onGuardado) onGuardado();
+    });
+
     if (esEditable) {
-      document.getElementById('btnGuardarModalPanCosto')?.addEventListener('click', () => {
+      // Opción 2: Guardar y registrar en RELACIÓN DE PROVEEDORES PAGADOS
+      document.getElementById('btnGuardarPagadoPan')?.addEventListener('click', () => {
         stateManager.guardarCapturaPan(index, {
           bol: inputBol?.value,
           dul: inputDul?.value,
           camb: inputCamb?.value,
-          precioPieza: inputPrecio?.value
+          precioPieza: inputPrecio?.value,
+          destino: 'pagados'
         });
         this.close();
         if (onGuardado) onGuardado();
       });
 
-      // Guardar con Enter en los campos
+      // Opción 3: Pagar después y registrar en PRESTAMOS O PENDIENTES DE PAGO
+      document.getElementById('btnPagarDespuesPan')?.addEventListener('click', () => {
+        stateManager.guardarCapturaPan(index, {
+          bol: inputBol?.value,
+          dul: inputDul?.value,
+          camb: inputCamb?.value,
+          precioPieza: inputPrecio?.value,
+          destino: 'pendientes'
+        });
+        this.close();
+        if (onGuardado) onGuardado();
+      });
+
+      // Enter en los campos guarda en Proveedores Pagados por defecto
       [inputBol, inputDul, inputCamb, inputPrecio].forEach(inp => {
         inp?.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
-            document.getElementById('btnGuardarModalPanCosto')?.click();
+            document.getElementById('btnGuardarPagadoPan')?.click();
           }
         });
       });
@@ -2577,8 +2621,24 @@ export class ModalManager {
     `;
 
     const footer = `
-      <button type="button" class="btn-secondary" id="btnCerrarModalTortCosto">Cancelar</button>
-      ${esEditable ? '<button type="button" class="btn-primary" id="btnGuardarModalTortCosto" style="min-width: 150px;">Guardar Registro</button>' : ''}
+      <div style="display: flex; gap: 8px; width: 100%; justify-content: space-between; flex-wrap: wrap; align-items: center;">
+        <button type="button" class="btn-secondary" id="btnCerrarModalTortCosto" style="font-size: 0.78rem; padding: 7px 10px;">
+          Cancelar
+        </button>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" id="btnSeguirEditandoTort" style="font-size: 0.78rem; padding: 7px 11px; font-weight: 600;">
+            Cerrar para seguir editando
+          </button>
+          ${esEditable ? `
+            <button type="button" class="btn-primary" id="btnPagarDespuesTort" style="background: #d97706; border-color: #b45309; font-size: 0.78rem; padding: 7px 12px; font-weight: 700;">
+              Pagar Después (Pendientes)
+            </button>
+            <button type="button" class="btn-primary" id="btnGuardarPagadoTort" style="background: #16a34a; border-color: #15803d; font-size: 0.78rem; padding: 7px 14px; font-weight: 700;">
+              Guardar en Proveedores Pagados
+            </button>
+          ` : ''}
+        </div>
+      </div>
     `;
 
     this.open(`Conteo y Costo: ${proveedor}`, body, footer);
@@ -2615,23 +2675,49 @@ export class ModalManager {
 
     document.getElementById('btnCerrarModalTortCosto')?.addEventListener('click', () => this.close());
 
+    // Opción 1: Cerrar para seguir editando (solo guarda conteo local sin pasar a pagos ni deudas)
+    document.getElementById('btnSeguirEditandoTort')?.addEventListener('click', () => {
+      stateManager.guardarCapturaTortilla(index, {
+        nuev: inputNuev?.value,
+        camb: inputCamb?.value,
+        precioKilo: inputPrecio?.value,
+        destino: 'solo_guardar'
+      });
+      this.close();
+      if (onGuardado) onGuardado();
+    });
+
     if (esEditable) {
-      document.getElementById('btnGuardarModalTortCosto')?.addEventListener('click', () => {
+      // Opción 2: Guardar y registrar en RELACIÓN DE PROVEEDORES PAGADOS
+      document.getElementById('btnGuardarPagadoTort')?.addEventListener('click', () => {
         stateManager.guardarCapturaTortilla(index, {
           nuev: inputNuev?.value,
           camb: inputCamb?.value,
-          precioKilo: inputPrecio?.value
+          precioKilo: inputPrecio?.value,
+          destino: 'pagados'
         });
         this.close();
         if (onGuardado) onGuardado();
       });
 
-      // Guardar con Enter en los campos
+      // Opción 3: Pagar después y registrar en PRESTAMOS O PENDIENTES DE PAGO
+      document.getElementById('btnPagarDespuesTort')?.addEventListener('click', () => {
+        stateManager.guardarCapturaTortilla(index, {
+          nuev: inputNuev?.value,
+          camb: inputCamb?.value,
+          precioKilo: inputPrecio?.value,
+          destino: 'pendientes'
+        });
+        this.close();
+        if (onGuardado) onGuardado();
+      });
+
+      // Guardar con Enter en los campos (por defecto a proveedores pagados)
       [inputNuev, inputCamb, inputPrecio].forEach(inp => {
         inp?.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
-            document.getElementById('btnGuardarModalTortCosto')?.click();
+            document.getElementById('btnGuardarPagadoTort')?.click();
           }
         });
       });

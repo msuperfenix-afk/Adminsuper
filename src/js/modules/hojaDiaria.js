@@ -27,7 +27,7 @@ export class HojaDiariaModule {
     const hoyISO = stateManager.getFechaHoy();
     const esHoy = stateManager.esHojaEditable();
     const tieneMontoInicial = stateManager.tieneCantidadInicial();
-    const editableGeneral = esHoy && tieneMontoInicial;
+    const editableGeneral = esHoy;
 
     // Obtener los días de la semana actual (Lunes a Domingo) para la barra rápida
     const hoy = new Date(d.fecha ? d.fecha + 'T12:00:00' : Date.now());
@@ -93,9 +93,9 @@ export class HojaDiariaModule {
             </div>
 
             <!-- Indicador Verde de Guardado Automático (No editable) -->
-            <div class="badge-guardado-verde" id="btnGuardadoIndicador" title="Guardado automáticamente en la nube">
+            <div class="badge-guardado-verde" id="btnGuardadoIndicador" title="Sincronizado globalmente en la nube">
               <span class="punto-verde-guardado"></span>
-              <span class="texto-guardado-label" id="textoGuardadoLabel">Guardado</span>
+              <span class="texto-guardado-label" id="textoGuardadoLabel">En Vivo (Global)</span>
             </div>
           </div>
         </div>
@@ -119,15 +119,14 @@ export class HojaDiariaModule {
             </button>
           </div>
         ` : (!tieneMontoInicial ? `
-          <!-- BANNER DE AVISO: FALTA MONTO INICIAL -->
-          <div class="banner-aviso-monto-inicial">
+          <!-- RECORDATORIO: CANTIDAD INICIAL -->
+          <div class="banner-aviso-monto-inicial" style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px 12px;">
             <div class="banner-aviso-contenido">
-              <span class="icono-alerta-inicial" style="font-weight: 800; font-size: 0.8rem; background: #fef08a; padding: 2px 6px; border-radius: 4px; color: #854d0e;">ATENCIÓN</span>
+              <span class="icono-alerta-inicial" style="font-weight: 800; font-size: 0.74rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #475569;">AVISO</span>
               <div>
-                <div class="banner-titulo-inicial">PASO REQUERIDO: INGRESA LA CANTIDAD INICIAL DE CAJA</div>
-                <div class="banner-sub-inicial">
-                  Para comenzar a registrar proveedores, préstamos, retiros y conteos del día, ingresa el monto en el campo <strong>CANTIDAD INICIAL</strong>.
-                  <em>(La sección de Corte y Arqueo está disponible).</em>
+                <div class="banner-titulo-inicial" style="color: #334155; font-size: 0.8rem;">CANTIDAD INICIAL DE CAJA</div>
+                <div class="banner-sub-inicial" style="color: #64748b; font-size: 0.74rem;">
+                  Recuerda ingresar el monto en el campo <strong>CANTIDAD INICIAL</strong> cuando realices el conteo de apertura. Puedes registrar tus compras, pan y proveedores normalmente.
                 </div>
               </div>
             </div>
@@ -831,9 +830,8 @@ export class HojaDiariaModule {
     // 2. Botón + Proveedor en último renglón (Abre Modal de Captura Segura)
     document.getElementById('btnPlusProveedor')?.addEventListener('click', (e) => {
       e.preventDefault();
-      if (!stateManager.puedeEditarCamposGenerales()) {
-        alert('Por favor ingresa primero la Cantidad Inicial de caja en el encabezado.');
-        document.getElementById('inputCantidadInicial')?.focus();
+      if (!stateManager.esHojaEditable()) {
+        alert('Solo se pueden registrar nuevos proveedores en la hoja del día de hoy.');
         return;
       }
       const provs = (stateManager.data.comprasProveedores || []).filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pagado) > 0));
@@ -866,9 +864,8 @@ export class HojaDiariaModule {
     // 4. Botón + Préstamo / Pendiente en último renglón (Abre Modal de Captura Segura)
     document.getElementById('btnPlusPrestamo')?.addEventListener('click', (e) => {
       e.preventDefault();
-      if (!stateManager.puedeEditarCamposGenerales()) {
-        alert('Por favor ingresa primero la Cantidad Inicial de caja en el encabezado.');
-        document.getElementById('inputCantidadInicial')?.focus();
+      if (!stateManager.esHojaEditable()) {
+        alert('Solo se pueden registrar préstamos en la hoja del día de hoy.');
         return;
       }
       const prestamosReg = (stateManager.data.prestamosPendientes || []).filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0));
@@ -891,9 +888,8 @@ export class HojaDiariaModule {
     // 5. Botón + Retiro en último renglón (Abre Modal de Captura Segura)
     document.getElementById('btnPlusRetiro')?.addEventListener('click', (e) => {
       e.preventDefault();
-      if (!stateManager.puedeEditarCamposGenerales()) {
-        alert('Por favor ingresa primero la Cantidad Inicial de caja en el encabezado.');
-        document.getElementById('inputCantidadInicial')?.focus();
+      if (!stateManager.esHojaEditable()) {
+        alert('Solo se pueden registrar retiros en la hoja del día de hoy.');
         return;
       }
       const retirosReg = (stateManager.data.retiros || []).filter(r => (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== ''));
