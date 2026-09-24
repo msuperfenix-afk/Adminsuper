@@ -25,9 +25,11 @@ export class HojaDiariaModule {
     const d = stateManager.data;
     const totales = stateManager.getTotalesHoja();
     const hoyISO = stateManager.getFechaHoy();
-    const esHoy = stateManager.esHojaEditable();
+    const esFechaHoy = (d.fecha === hoyISO);
+    const estaDesbloqueadaPorPin = stateManager.esFechaDesbloqueada(d.fecha);
+    const editableGeneral = stateManager.esHojaEditable(d.fecha);
+    const estaBloqueada = !editableGeneral;
     const tieneMontoInicial = stateManager.tieneCantidadInicial();
-    const editableGeneral = esHoy;
 
     // Obtener los días de la semana actual (Lunes a Domingo) para la barra rápida
     const hoy = new Date(d.fecha ? d.fecha + 'T12:00:00' : Date.now());
@@ -92,6 +94,31 @@ export class HojaDiariaModule {
               <input type="date" class="input-fecha-picker" id="inputFechaSelector" value="${d.fecha || ''}">
             </div>
 
+            <!-- Logo de Candado de Seguridad y Control de Bloqueo a las 12 AM -->
+            <button class="btn-candado-seguridad ${estaBloqueada ? 'es-bloqueado' : 'es-desbloqueado'}" 
+              id="btnCandadoSeguridad" 
+              title="${estaBloqueada ? 'Hoja bloqueada (Corte cerrado). Clic para desbloquear con PIN de Administrador' : (estaDesbloqueadaPorPin ? 'Plantilla anterior desbloqueada con PIN. Clic para volver a bloquear' : 'Hoja activa de hoy (Editable)')}">
+              ${estaBloqueada ? `
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Bloqueado</span>
+              ` : (estaDesbloqueadaPorPin ? `
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                </svg>
+                <span>Desbloqueado (Admin)</span>
+              ` : `
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                </svg>
+                <span>Editable (Hoy)</span>
+              `)}
+            </button>
+
             <!-- Indicador Verde de Guardado Automático (No editable) -->
             <div class="badge-guardado-verde" id="btnGuardadoIndicador" title="Sincronizado globalmente en la nube">
               <span class="punto-verde-guardado"></span>
@@ -100,25 +127,47 @@ export class HojaDiariaModule {
           </div>
         </div>
 
-        ${!esHoy ? `
-          <!-- BANNER DE AVISO: MODO HISTORIAL (SOLO LECTURA) -->
+        ${!esFechaHoy ? (estaBloqueada ? `
+          <!-- BANNER DE AVISO: MODO HISTORIAL (BLOQUEADO A LAS 12 AM) -->
           <div class="banner-aviso-historial">
             <div class="banner-aviso-contenido">
-              <span class="icono-candado-aviso" style="font-weight: 800; font-size: 0.8rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">HISTORIAL</span>
+              <span class="icono-candado-aviso">🔒 BLOQUEADO</span>
               <div>
-                <div class="banner-titulo-historial">MODO HISTORIAL • CONSULTA DE DÍA PASADO</div>
+                <div class="banner-titulo-historial">PLANTILLA ANTERIOR BLOQUEADA (12:00 AM)</div>
                 <div class="banner-sub-historial">
-                  Estás revisando la hoja histórica del <strong>${d.dia || ''} ${d.diaNum || ''} de ${d.mes || ''} de ${d.ano || ''}</strong>.
-                  Por integridad contable, solo se permite editar la hoja del <strong>día de hoy (${hoyISO})</strong>.
-                  <em>(La sección de Corte y Arqueo se mantiene disponible para conteos físicos).</em>
+                  Estás revisando la hoja del <strong>${d.dia || ''} ${d.diaNum || ''} de ${d.mes || ''} de ${d.ano || ''}</strong>.
+                  Las hojas de días anteriores se bloquean automáticamente a las 12:00 AM para proteger los cortes contables.
+                  Pulsa el candado para <strong>desbloquear con PIN</strong> y editar o eliminar registros de proveedores pagados.
                 </div>
               </div>
             </div>
-            <button type="button" class="btn-regresar-hoy" id="btnIrAHoy" title="Volver a la hoja editable del día de hoy">
-              Ir a Hoja de Hoy (${hoyISO})
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn-desbloquear-con-pin" id="btnDesbloquearBanner" title="Desbloquear edición y eliminación con PIN de Administrador">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                <span>Desbloquear con PIN 🔓</span>
+              </button>
+              <button type="button" class="btn-regresar-hoy" id="btnIrAHoy" title="Volver a la hoja editable del día de hoy">
+                Ir a Hoja de Hoy (${hoyISO})
+              </button>
+            </div>
+          </div>
+        ` : `
+          <!-- BANNER DE AVISO: MODO ADMINISTRADOR (DESBLOQUEADO CON PIN) -->
+          <div class="banner-aviso-desbloqueado">
+            <div class="banner-aviso-contenido">
+              <span class="icono-candado-aviso-abierto">🔓 DESBLOQUEADO</span>
+              <div>
+                <div class="banner-titulo-desbloqueado">MODO ADMINISTRADOR ACTIVO</div>
+                <div class="banner-sub-desbloqueado">
+                  Has desbloqueado esta plantilla anterior con PIN. Puedes modificar cualquier apartado y <strong>eliminar registros de la lista de proveedores pagados</strong>.
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn-volver-bloquear" id="btnVolverABloquear" title="Cerrar permisos de edición y volver a proteger esta hoja">
+              🔒 Volver a Bloquear
             </button>
           </div>
-        ` : (!tieneMontoInicial ? `
+        `) : (!tieneMontoInicial ? `
           <!-- RECORDATORIO: CANTIDAD INICIAL (Clickeable) -->
           <div class="banner-aviso-monto-inicial" id="btnAvisoMontoInicial" style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px 12px; cursor: pointer;" title="Clic aquí para ingresar la Cantidad Inicial">
             <div class="banner-aviso-contenido">
@@ -158,17 +207,17 @@ export class HojaDiariaModule {
             </div>
 
             <!-- Recuadro Táctil de Cantidad Inicial -->
-            <div class="hoja-campo-inicial ${esHoy ? 'campo-inicial-clickeable' : ''}" id="btnAbrirModalCantidadInicial" 
-              title="${esHoy ? 'Clic para capturar o editar la Cantidad Inicial de caja' : 'Cantidad inicial guardada'}"
-              style="cursor: ${esHoy ? 'pointer' : 'default'}; user-select: none;">
+            <div class="hoja-campo-inicial ${editableGeneral ? 'campo-inicial-clickeable' : ''}" id="btnAbrirModalCantidadInicial" 
+              title="${editableGeneral ? 'Clic para capturar o editar la Cantidad Inicial de caja' : 'Cantidad inicial guardada'}"
+              style="cursor: ${editableGeneral ? 'pointer' : 'default'}; user-select: none;">
               <label style="cursor: inherit;">CANTIDAD INICIAL:</label>
               <div class="input-money-wrap" style="cursor: inherit; display: flex; align-items: center; gap: 4px;">
                 <span style="font-weight: 800; color: #0f172a;">$</span>
-                <div class="hoja-valor-inicial-display ${esHoy && !tieneMontoInicial ? 'alerta-falta-inicial' : ''}" id="displayValorCantidadInicial"
-                  style="min-width: 72px; padding: 2px 6px; font-weight: 800; font-size: 0.88rem; text-align: right; border-radius: 4px; background: #ffffff; border: 1.5px solid ${esHoy && !tieneMontoInicial ? '#f59e0b' : '#cbd5e1'}; color: #0f172a;">
+                <div class="hoja-valor-inicial-display ${editableGeneral && !tieneMontoInicial ? 'alerta-falta-inicial' : ''}" id="displayValorCantidadInicial"
+                  style="min-width: 72px; padding: 2px 6px; font-weight: 800; font-size: 0.88rem; text-align: right; border-radius: 4px; background: #ffffff; border: 1.5px solid ${editableGeneral && !tieneMontoInicial ? '#f59e0b' : '#cbd5e1'}; color: #0f172a;">
                   ${tieneMontoInicial ? this.formatMoney(d.cantidadInicial).replace('$', '').trim() : '<span style="color: #94a3b8; font-weight: normal;">0.00</span>'}
                 </div>
-                ${esHoy ? '<span class="badge-lapiz-edit" style="font-size: 0.82rem; color: #0284c7; margin-left: 2px;" title="Editar">✎</span>' : ''}
+                ${editableGeneral ? '<span class="badge-lapiz-edit" style="font-size: 0.82rem; color: #0284c7; margin-left: 2px;" title="Editar">✎</span>' : ''}
               </div>
             </div>
 
@@ -308,7 +357,8 @@ export class HojaDiariaModule {
                       <th style="width: 38px; text-align: center;">NOTA</th>
                       <th>PROVEEDOR</th>
                       <th style="width: 44px; text-align: center;" title="Tipo de Pago: Efectivo (EF) o Transferencia (TR)">PAGO</th>
-                      <th style="width: 120px; text-align: right;">PAGADO ($)</th>
+                      <th style="width: 110px; text-align: right;">PAGADO ($)</th>
+                      ${editableGeneral ? '<th style="width: 36px; text-align: center;" title="Eliminar registro">DEL</th>' : ''}
                     </tr>
                   </thead>
                   <tbody>
@@ -317,7 +367,7 @@ export class HojaDiariaModule {
                       if (comprasReg.length === 0) {
                         return `
                           <tr class="fila-sin-registros">
-                            <td colspan="4" class="texto-sin-registros">
+                            <td colspan="${editableGeneral ? '5' : '4'}" class="texto-sin-registros">
                               Sin proveedores registrados. Pulsa el botón <strong>+</strong> para añadir el primer registro.
                             </td>
                           </tr>
@@ -347,15 +397,22 @@ export class HojaDiariaModule {
                               ${this.formatMoney(row.pagado)}
                             </span>
                           </td>
+                          ${editableGeneral ? `
+                            <td style="text-align: center; padding: 2px;" onclick="event.stopPropagation();">
+                              <button type="button" class="btn-accion-eliminar-fila btn-del-prov" data-del-prov="${idx}" title="Eliminar registro de pago a ${row.proveedor}">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                              </button>
+                            </td>
+                          ` : ''}
                         </tr>
                       `).join('');
                     })()}
 
-                    ${esHoy ? `
+                    ${editableGeneral ? `
                       <!-- ÚLTIMO RENGLÓN CON SOLO EL SIGNO + -->
                       <tr class="fila-agregar-mas">
-                        <td colspan="4" class="celda-agregar-mas">
-                          <button type="button" class="btn-solo-plus" id="btnPlusProveedor" ${editableGeneral ? '' : 'disabled'} title="${editableGeneral ? 'Registrar proveedor (+)' : 'Ingresa primero la cantidad inicial de caja'}">+</button>
+                        <td colspan="5" class="celda-agregar-mas">
+                          <button type="button" class="btn-solo-plus" id="btnPlusProveedor" title="Registrar proveedor (+)">+</button>
                         </td>
                       </tr>
                     ` : ''}
@@ -381,13 +438,17 @@ export class HojaDiariaModule {
                     <tr>
                       <th style="width: 48px; text-align: center;" title="Casilla de Pagado: marca como pagado y tacha/subraya">PAGADO</th>
                       <th>PROVEEDOR / CONCEPTO</th>
-                      <th style="width: 115px; text-al                  <tbody>
+                      <th style="width: 110px; text-align: right;">PENDIENTE ($)</th>
+                      ${editableGeneral ? '<th style="width: 36px; text-align: center;" title="Eliminar registro">DEL</th>' : ''}
+                    </tr>
+                  </thead>
+                  <tbody>
                     ${(() => {
                       const prestamosReg = (d.prestamosPendientes || []).filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0));
                       if (prestamosReg.length === 0) {
                         return `
                           <tr class="fila-sin-registros">
-                            <td colspan="3" class="texto-sin-registros">
+                            <td colspan="${editableGeneral ? '4' : '3'}" class="texto-sin-registros">
                               Sin préstamos o pendientes registrados.
                             </td>
                           </tr>
@@ -412,15 +473,22 @@ export class HojaDiariaModule {
                           <td class="text-right font-bold ${pres.liquidado ? 'prestamo-monto-liquidado' : ''}" style="color: #0f172a;">
                             ${this.formatMoney(pres.pendiente)}
                           </td>
+                          ${editableGeneral ? `
+                            <td style="text-align: center; padding: 2px;" onclick="event.stopPropagation();">
+                              <button type="button" class="btn-accion-eliminar-fila btn-del-prestamo" data-del-prestamo="${idx}" title="Eliminar pendiente de ${pres.proveedor}">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                              </button>
+                            </td>
+                          ` : ''}
                         </tr>
                       `).join('');
                     })()}
 
-                    ${esHoy ? `
+                    ${editableGeneral ? `
                       <!-- ÚLTIMO RENGLÓN CON SOLO EL SIGNO + -->
                       <tr class="fila-agregar-mas">
-                        <td colspan="3" class="celda-agregar-mas">
-                          <button type="button" class="btn-solo-plus" id="btnPlusPrestamo" ${editableGeneral ? '' : 'disabled'} title="${editableGeneral ? 'Registrar préstamo (+)' : 'Ingresa primero la cantidad inicial de caja'}">+</button>
+                        <td colspan="4" class="celda-agregar-mas">
+                          <button type="button" class="btn-solo-plus" id="btnPlusPrestamo" title="Registrar préstamo (+)">+</button>
                         </td>
                       </tr>
                     ` : ''}
@@ -545,9 +613,10 @@ export class HojaDiariaModule {
                 <table class="hoja-tabla-retiros">
                   <thead>
                     <tr>
-                      <th style="width: 48px; text-align: center;">NO.</th>
-                      <th style="width: 110px; text-align: right;">MONTO ($)</th>
+                      <th style="width: 44px; text-align: center;">NO.</th>
+                      <th style="width: 105px; text-align: right;">MONTO ($)</th>
                       <th>RESPONSABLE / CONCEPTO</th>
+                      ${editableGeneral ? '<th style="width: 36px; text-align: center;" title="Eliminar retiro">DEL</th>' : ''}
                     </tr>
                   </thead>
                   <tbody>
@@ -556,14 +625,14 @@ export class HojaDiariaModule {
                       if (retirosReg.length === 0) {
                         return `
                           <tr class="fila-sin-registros">
-                            <td colspan="3" class="texto-sin-registros">
+                            <td colspan="${editableGeneral ? '4' : '3'}" class="texto-sin-registros">
                               Sin retiros registrados en esta hoja.
                             </td>
                           </tr>
                         `;
                       }
                       return retirosReg.map((ret, idx) => `
-                        <tr class="fila-bloqueada" title="Retiro registrado (Protegido contra cambios)">
+                        <tr class="fila-bloqueada" title="Retiro registrado">
                           <td class="font-bold text-center" style="color: #64748b;">#${idx + 1}</td>
                           <td class="text-right font-bold" style="font-size: 0.84rem; color: #0f172a;">${this.formatMoney(ret.monto)}</td>
                           <td>
@@ -572,15 +641,22 @@ export class HojaDiariaModule {
                               ${ret.concepto || ret.motivo ? `<span style="color: #64748b; font-size: 0.74rem;">(${ret.concepto || ret.motivo})</span>` : ''}
                             </div>
                           </td>
+                          ${editableGeneral ? `
+                            <td style="text-align: center; padding: 2px;" onclick="event.stopPropagation();">
+                              <button type="button" class="btn-accion-eliminar-fila btn-del-retiro" data-del-retiro="${idx}" title="Eliminar retiro #${idx + 1}">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                              </button>
+                            </td>
+                          ` : ''}
                         </tr>
                       `).join('');
                     })()}
 
-                    ${esHoy ? `
+                    ${editableGeneral ? `
                       <!-- ÚLTIMO RENGLÓN CON SOLO EL SIGNO + -->
                       <tr class="fila-agregar-mas">
-                        <td colspan="3" class="celda-agregar-mas">
-                          <button type="button" class="btn-solo-plus" id="btnPlusRetiro" ${editableGeneral ? '' : 'disabled'} title="${editableGeneral ? 'Registrar retiro (+)' : 'Ingresa primero la cantidad inicial de caja'}">+</button>
+                        <td colspan="4" class="celda-agregar-mas">
+                          <button type="button" class="btn-solo-plus" id="btnPlusRetiro" title="Registrar retiro (+)">+</button>
                         </td>
                       </tr>
                     ` : ''}
@@ -735,12 +811,54 @@ export class HojaDiariaModule {
       stateManager.cambiarFechaHoja(stateManager.getFechaHoy());
     });
 
+    // 2.3 Botón de Candado de Seguridad
+    document.getElementById('btnCandadoSeguridad')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const fecha = stateManager.data.fecha;
+      if (stateManager.esFechaDesbloqueada(fecha)) {
+        // Hoja desbloqueada con PIN: permitir volver a bloquear
+        stateManager.bloquearFecha(fecha);
+        this.render();
+      } else if (!stateManager.esHojaEditable(fecha)) {
+        // Hoja de día pasado bloqueada: abrir modal de PIN
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openDesbloqueoPinModal(() => {
+            this.render();
+          });
+        }
+      } else {
+        // Hoja de hoy editable: abrir menú/modal para cambiar o gestionar PIN
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openCambiarPinModal();
+        }
+      }
+    });
 
+    // 2.4 Botón Desbloquear con PIN en Banner de Historial
+    document.getElementById('btnDesbloquearBanner')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.adminFenixApp?.modalManager) {
+        window.adminFenixApp.modalManager.openDesbloqueoPinModal(() => {
+          this.render();
+        });
+      }
+    });
+
+    // 2.5 Botón Volver a Bloquear en Banner de Modo Administrador
+    document.getElementById('btnVolverABloquear')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      stateManager.bloquearFecha(stateManager.data.fecha);
+      this.render();
+    });
 
     // Encabezado: Apertura de Modal para Cantidad Inicial de Caja
     const abrirModalCantidadInicial = () => {
       if (!stateManager.esHojaEditable()) {
-        alert('Solo se puede editar la cantidad inicial en la hoja del día de hoy.');
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openDesbloqueoPinModal(() => {
+            this.render();
+          });
+        }
         return;
       }
       if (window.adminFenixApp?.modalManager) {
@@ -885,7 +1003,11 @@ export class HojaDiariaModule {
     document.getElementById('btnPlusProveedor')?.addEventListener('click', (e) => {
       e.preventDefault();
       if (!stateManager.esHojaEditable()) {
-        alert('Solo se pueden registrar nuevos proveedores en la hoja del día de hoy.');
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openDesbloqueoPinModal(() => {
+            this.render();
+          });
+        }
         return;
       }
       const provs = (stateManager.data.comprasProveedores || []).filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pagado) > 0));
@@ -906,6 +1028,34 @@ export class HojaDiariaModule {
       }
     });
 
+    // 2.1 Botón Eliminar Renglón de Proveedor Pagado (Exclusivo con permisos / PIN de Admin)
+    this.container.querySelectorAll('.btn-del-prov').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-del-prov'));
+        const comprasReg = (stateManager.data.comprasProveedores || []).filter(r => (r.proveedor && r.proveedor.trim() !== '') || (parseFloat(r.pagado) > 0));
+        const compra = comprasReg[idx];
+        if (!compra) return;
+
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openConfirmarEliminarModal({
+            titulo: 'Eliminar Proveedor Pagado',
+            mensaje: `¿Estás seguro de eliminar el registro de pago a <strong>${compra.proveedor}</strong>?`,
+            detalle: `Monto pagado: ${this.formatMoney(compra.pagado)} (${compra.tipoPago || 'Efectivo'})`,
+            onConfirmar: () => {
+              const exito = stateManager.deleteFilaCompraProveedor(idx);
+              if (exito) {
+                this.render();
+              } else {
+                alert('No se pudo eliminar el registro. La hoja está protegida.');
+              }
+            }
+          });
+        }
+      });
+    });
+
     // 3. Casilla de Pagado en Préstamos / Pendientes (Marca como liquidado y subraya/tacha)
     this.container.querySelectorAll('[data-check-liquidado]').forEach(chk => {
       chk.addEventListener('change', (e) => {
@@ -919,7 +1069,11 @@ export class HojaDiariaModule {
     document.getElementById('btnPlusPrestamo')?.addEventListener('click', (e) => {
       e.preventDefault();
       if (!stateManager.esHojaEditable()) {
-        alert('Solo se pueden registrar préstamos en la hoja del día de hoy.');
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openDesbloqueoPinModal(() => {
+            this.render();
+          });
+        }
         return;
       }
       const prestamosReg = (stateManager.data.prestamosPendientes || []).filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0));
@@ -939,11 +1093,43 @@ export class HojaDiariaModule {
       }
     });
 
+    // 4.1 Botón Eliminar Renglón de Préstamo / Pendiente
+    this.container.querySelectorAll('.btn-del-prestamo').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-del-prestamo'));
+        const prestamosReg = (stateManager.data.prestamosPendientes || []).filter(p => (p.proveedor && p.proveedor.trim() !== '') || (parseFloat(p.pendiente) > 0));
+        const prestamo = prestamosReg[idx];
+        if (!prestamo) return;
+
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openConfirmarEliminarModal({
+            titulo: 'Eliminar Préstamo / Pendiente',
+            mensaje: `¿Estás seguro de eliminar el pendiente de <strong>${prestamo.proveedor}</strong>?`,
+            detalle: `Monto pendiente: ${this.formatMoney(prestamo.pendiente)} ${prestamo.nota ? `(${prestamo.nota})` : ''}`,
+            onConfirmar: () => {
+              const exito = stateManager.deleteFilaPrestamo(idx);
+              if (exito) {
+                this.render();
+              } else {
+                alert('No se pudo eliminar el registro. La hoja está protegida.');
+              }
+            }
+          });
+        }
+      });
+    });
+
     // 5. Botón + Retiro en último renglón (Abre Modal de Captura Segura)
     document.getElementById('btnPlusRetiro')?.addEventListener('click', (e) => {
       e.preventDefault();
       if (!stateManager.esHojaEditable()) {
-        alert('Solo se pueden registrar retiros en la hoja del día de hoy.');
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openDesbloqueoPinModal(() => {
+            this.render();
+          });
+        }
         return;
       }
       const retirosReg = (stateManager.data.retiros || []).filter(r => (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== ''));
@@ -961,6 +1147,34 @@ export class HojaDiariaModule {
           }, 50);
         });
       }
+    });
+
+    // 5.1 Botón Eliminar Renglón de Retiro
+    this.container.querySelectorAll('.btn-del-retiro').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-del-retiro'));
+        const retirosReg = (stateManager.data.retiros || []).filter(r => (parseFloat(r.monto) > 0) || (r.nombre && r.nombre.trim() !== ''));
+        const retiro = retirosReg[idx];
+        if (!retiro) return;
+
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openConfirmarEliminarModal({
+            titulo: 'Eliminar Retiro',
+            mensaje: `¿Estás seguro de eliminar el retiro #${idx + 1} de <strong>${retiro.nombre || 'Encargado'}</strong>?`,
+            detalle: `Monto retirado: ${this.formatMoney(retiro.monto)} ${retiro.concepto ? `(${retiro.concepto})` : ''}`,
+            onConfirmar: () => {
+              const exito = stateManager.deleteFilaRetiro(idx);
+              if (exito) {
+                this.render();
+              } else {
+                alert('No se pudo eliminar el retiro. La hoja está protegida.');
+              }
+            }
+          });
+        }
+      });
     });
 
     // 6. Conteo y Arqueo por Columnas (Abre Modal de Captura Segura / Bloqueo con Clic o Enter)
@@ -989,7 +1203,11 @@ export class HojaDiariaModule {
     const btnMunecos = document.getElementById('btnAbrirModalMunecos');
     const abrirModalMunecos = () => {
       if (!stateManager.esHojaEditable()) {
-        alert('Solo se puede registrar corte de máquinas en la hoja del día de hoy.');
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openDesbloqueoPinModal(() => {
+            this.render();
+          });
+        }
         return;
       }
       if (window.adminFenixApp?.modalManager) {
@@ -1013,7 +1231,11 @@ export class HojaDiariaModule {
     const btnMaqIndiv = document.getElementById('btnAbrirModalMaquinasIndiv');
     const abrirModalMaqIndiv = () => {
       if (!stateManager.esHojaEditable()) {
-        alert('Solo se puede registrar corte de máquinas en la hoja del día de hoy.');
+        if (window.adminFenixApp?.modalManager) {
+          window.adminFenixApp.modalManager.openDesbloqueoPinModal(() => {
+            this.render();
+          });
+        }
         return;
       }
       if (window.adminFenixApp?.modalManager) {
@@ -1040,3 +1262,4 @@ export class HojaDiariaModule {
     });
   }
 }
+

@@ -1024,12 +1024,29 @@ export class ModalManager {
         </div>
       `;
 
+      const fechaDesbloqueada = stateManager.esFechaDesbloqueada(stateManager.data.fecha);
       const footer = `
-        <button type="button" class="btn-primary" id="btnCerrarModalArqBloq" style="min-width: 110px;">Cerrar</button>
+        <button type="button" class="btn-secondary" id="btnCerrarModalArqBloq" style="min-width: 110px;">Cerrar</button>
+        <button type="button" class="btn-primary" id="btnReabrirArqueoAdmin" style="background: #f59e0b; border-color: #d97706; min-width: 150px;">
+          ${fechaDesbloqueada ? '🔓 Reabrir Arqueo' : '🔒 Reabrir con PIN'}
+        </button>
       `;
 
       this.open(`Arqueo Cerrado: ${colNombre}`, body, footer);
       document.getElementById('btnCerrarModalArqBloq')?.addEventListener('click', () => this.close());
+      document.getElementById('btnReabrirArqueoAdmin')?.addEventListener('click', () => {
+        if (!stateManager.esFechaDesbloqueada(stateManager.data.fecha)) {
+          this.close();
+          this.openDesbloqueoPinModal(() => {
+            stateManager.reabrirArqueoColumna(colIndex);
+            this.openCapturaArqueoColumnaModal(colIndex, onGuardado);
+          });
+        } else {
+          stateManager.reabrirArqueoColumna(colIndex);
+          this.close();
+          this.openCapturaArqueoColumnaModal(colIndex, onGuardado);
+        }
+      });
       return;
     }
 
@@ -4534,6 +4551,293 @@ export class ModalManager {
         ejecutarEnvioMailto();
       }
     });
+  }
+
+  // ==========================================
+  // MODAL: DESBLOQUEO CON PIN DE ADMINISTRADOR
+  // ==========================================
+  openDesbloqueoPinModal(onDesbloqueado) {
+    const body = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-left: 4px solid #0f172a; border-radius: 8px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;">
+          <div style="font-size: 1.6rem; line-height: 1;">🔒</div>
+          <div>
+            <strong style="color: #0f172a; font-size: 0.88rem;">DESBLOQUEO DE PLANTILLAS Y REGISTROS PROTEGIDOS</strong>
+            <p style="margin: 4px 0 0; font-size: 0.77rem; color: #475569; line-height: 1.35;">
+              Por seguridad contable, las hojas de días pasados se bloquean automáticamente a las <strong>12:00 AM</strong>.
+              Ingresa el <strong>PIN de Administrador</strong> para habilitar la edición de esta plantilla anterior, modificar campos y <strong>eliminar registros de proveedores pagados</strong>.
+            </p>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 4px;">
+          <label style="display: block; font-weight: 800; font-size: 0.84rem; color: #0f172a; margin-bottom: 8px; letter-spacing: 0.3px;">
+            PIN DE ADMINISTRADOR
+          </label>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <input type="password" id="inputPinAdmin" maxlength="10" autofocus
+              style="width: 170px; text-align: center; font-size: 1.6rem; letter-spacing: 6px; font-weight: 900; padding: 7px 12px; border-radius: 8px; border: 2px solid #0f172a; background: #ffffff; color: #0f172a;"
+              placeholder="••••">
+            <button type="button" id="btnToggleVerPin" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; cursor: pointer; font-size: 0.85rem;" title="Mostrar u ocultar PIN">
+              👁️
+            </button>
+          </div>
+          <div style="font-size: 0.75rem; color: #64748b;">
+            PIN de fábrica: <strong style="color: #0f172a;">1234</strong>
+          </div>
+          <div id="msgErrorPin" style="display: none; margin-top: 10px; background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700;"></div>
+        </div>
+
+        <!-- Teclado Numérico Ergonómico para Tablets y Pantallas Táctiles -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-width: 230px; margin: 4px auto 0;">
+          ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => `
+            <button type="button" class="btn-num-teclado-pin" data-num="${num}" style="padding: 10px; font-size: 1.15rem; font-weight: 800; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; color: #0f172a; touch-action: manipulation;">${num}</button>
+          `).join('')}
+          <button type="button" class="btn-num-teclado-pin" data-action="clear" style="padding: 10px; font-size: 0.8rem; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; color: #64748b;">Borrar</button>
+          <button type="button" class="btn-num-teclado-pin" data-num="0" style="padding: 10px; font-size: 1.15rem; font-weight: 800; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; color: #0f172a; touch-action: manipulation;">0</button>
+          <button type="button" class="btn-num-teclado-pin" data-action="backspace" style="padding: 10px; font-size: 0.95rem; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; color: #64748b;">⌫</button>
+        </div>
+
+        <div style="text-align: center; margin-top: 4px;">
+          <button type="button" id="btnIrACambiarPin" style="background: none; border: none; color: #0284c7; font-size: 0.76rem; font-weight: 700; cursor: pointer; text-decoration: underline;">
+            ¿Deseas cambiar el PIN de Administrador?
+          </button>
+        </div>
+      </div>
+    `;
+
+    const footer = `
+      <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end;">
+        <button type="button" class="btn-secondary" id="btnCancelPinModal">Cancelar</button>
+        <button type="button" class="btn-primary" id="btnConfirmarDesbloqueoPin" style="min-width: 150px; background: #0f172a; border-color: #0f172a; font-weight: 700;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+          <span>Desbloquear Hoja 🔓</span>
+        </button>
+      </div>
+    `;
+
+    this.open('Autorización de Administrador', body, footer);
+
+    const inputPin = document.getElementById('inputPinAdmin');
+    const msgError = document.getElementById('msgErrorPin');
+    const btnToggle = document.getElementById('btnToggleVerPin');
+
+    setTimeout(() => {
+      inputPin?.focus();
+    }, 80);
+
+    btnToggle?.addEventListener('click', () => {
+      if (!inputPin) return;
+      inputPin.type = inputPin.type === 'password' ? 'text' : 'password';
+    });
+
+    // Teclado numérico táctil
+    this.container.querySelectorAll('.btn-num-teclado-pin').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!inputPin) return;
+        const num = btn.getAttribute('data-num');
+        const action = btn.getAttribute('data-action');
+        if (num !== null) {
+          if (inputPin.value.length < 10) {
+            inputPin.value += num;
+          }
+        } else if (action === 'clear') {
+          inputPin.value = '';
+        } else if (action === 'backspace') {
+          inputPin.value = inputPin.value.slice(0, -1);
+        }
+        inputPin.focus();
+      });
+    });
+
+    const ejecutarValidacion = () => {
+      const pinIngresado = (inputPin?.value || '').trim();
+      if (!pinIngresado) {
+        if (msgError) {
+          msgError.textContent = 'Por favor ingresa el PIN.';
+          msgError.style.display = 'block';
+        }
+        inputPin?.focus();
+        return;
+      }
+
+      const fechaActual = stateManager.data.fecha;
+      const exito = stateManager.desbloquearFechaConPin(pinIngresado, fechaActual);
+
+      if (exito) {
+        this.close();
+        if (onDesbloqueado) onDesbloqueado(fechaActual);
+      } else {
+        if (msgError) {
+          msgError.textContent = '✕ PIN incorrecto. Verifica el número e intenta de nuevo.';
+          msgError.style.display = 'block';
+        }
+        if (inputPin) {
+          inputPin.value = '';
+          inputPin.focus();
+        }
+      }
+    };
+
+    document.getElementById('btnConfirmarDesbloqueoPin')?.addEventListener('click', ejecutarValidacion);
+    document.getElementById('btnCancelPinModal')?.addEventListener('click', () => this.close());
+    inputPin?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        ejecutarValidacion();
+      }
+    });
+
+    document.getElementById('btnIrACambiarPin')?.addEventListener('click', () => {
+      this.close();
+      this.openCambiarPinModal(() => {
+        this.openDesbloqueoPinModal(onDesbloqueado);
+      });
+    });
+  }
+
+  // ==========================================
+  // MODAL: CAMBIAR PIN DE ADMINISTRADOR
+  // ==========================================
+  openCambiarPinModal(onCambiado) {
+    const body = `
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-left: 4px solid #0284c7; border-radius: 8px; padding: 10px 14px;">
+          <strong style="color: #0f172a; font-size: 0.88rem;">CAMBIAR PIN DE ADMINISTRADOR</strong>
+          <p style="margin: 4px 0 0; font-size: 0.77rem; color: #475569;">
+            Ingresa el PIN actual de seguridad y define tu nuevo PIN de al menos 4 dígitos para proteger los cortes contables pasados.
+          </p>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="font-weight: 700; font-size: 0.82rem;">PIN Actual *</label>
+          <input type="password" class="form-control font-bold" id="inputPinActual" maxlength="10" placeholder="••••" autofocus style="font-size: 1.1rem; text-align: center;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 700; font-size: 0.82rem;">Nuevo PIN *</label>
+            <input type="password" class="form-control font-bold" id="inputPinNuevo" maxlength="10" placeholder="••••" style="font-size: 1.1rem; text-align: center;">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-weight: 700; font-size: 0.82rem;">Confirmar Nuevo PIN *</label>
+            <input type="password" class="form-control font-bold" id="inputPinNuevoConfirm" maxlength="10" placeholder="••••" style="font-size: 1.1rem; text-align: center;">
+          </div>
+        </div>
+
+        <div id="msgAlertaCambioPin" style="display: none; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700;"></div>
+      </div>
+    `;
+
+    const footer = `
+      <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end;">
+        <button type="button" class="btn-secondary" id="btnCancelCambiarPin">Cancelar</button>
+        <button type="button" class="btn-primary" id="btnGuardarNuevoPin" style="background: #0284c7; border-color: #0284c7; font-weight: 700;">
+          Guardar Nuevo PIN
+        </button>
+      </div>
+    `;
+
+    this.open('Configurar PIN de Seguridad', body, footer);
+
+    const inActual = document.getElementById('inputPinActual');
+    const inNuevo = document.getElementById('inputPinNuevo');
+    const inConfirm = document.getElementById('inputPinNuevoConfirm');
+    const msg = document.getElementById('msgAlertaCambioPin');
+
+    const mostrarMsg = (texto, esError = false) => {
+      if (!msg) return;
+      msg.style.display = 'block';
+      msg.style.background = esError ? '#fee2e2' : '#dcfce7';
+      msg.style.color = esError ? '#991b1b' : '#166534';
+      msg.style.border = `1px solid ${esError ? '#fca5a5' : '#86efac'}`;
+      msg.textContent = texto;
+    };
+
+    const guardar = () => {
+      const actual = (inActual?.value || '').trim();
+      const nuevo = (inNuevo?.value || '').trim();
+      const confirm = (inConfirm?.value || '').trim();
+      const pinVerdadero = stateManager.getPinAdmin();
+
+      if (actual !== pinVerdadero) {
+        mostrarMsg('El PIN actual no es correcto.', true);
+        inActual?.focus();
+        return;
+      }
+
+      if (!nuevo || nuevo.length < 4) {
+        mostrarMsg('El nuevo PIN debe tener al menos 4 dígitos o caracteres.', true);
+        inNuevo?.focus();
+        return;
+      }
+
+      if (nuevo !== confirm) {
+        mostrarMsg('El nuevo PIN y su confirmación no coinciden.', true);
+        inConfirm?.focus();
+        return;
+      }
+
+      stateManager.setPinAdmin(nuevo);
+      mostrarMsg('✓ PIN actualizado exitosamente.', false);
+      setTimeout(() => {
+        this.close();
+        if (onCambiado) onCambiado();
+      }, 1000);
+    };
+
+    document.getElementById('btnGuardarNuevoPin')?.addEventListener('click', guardar);
+    document.getElementById('btnCancelCambiarPin')?.addEventListener('click', () => this.close());
+    inConfirm?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        guardar();
+      }
+    });
+  }
+
+  // ==========================================
+  // MODAL: CONFIRMAR ELIMINACIÓN DE REGISTROS CONTABLES
+  // ==========================================
+  openConfirmarEliminarModal({ titulo = 'Eliminar Registro', mensaje, detalle = '', onConfirmar }) {
+    const body = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-left: 4px solid #ef4444; border-radius: 8px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;">
+          <div style="font-size: 1.6rem; line-height: 1;">🗑️</div>
+          <div>
+            <strong style="color: #991b1b; font-size: 0.9rem;">¿DESEAS ELIMINAR ESTE REGISTRO?</strong>
+            <p style="margin: 4px 0 0; font-size: 0.78rem; color: #7f1d1d; line-height: 1.35;">
+              ${mensaje || 'Al eliminar este registro, los importes y totales de la hoja contable se recalcularán de inmediato.'}
+            </p>
+          </div>
+        </div>
+
+        ${detalle ? `
+          <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; color: #0f172a;">
+            ${detalle}
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    const footer = `
+      <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end;">
+        <button type="button" class="btn-secondary" id="btnCancelEliminarRegistro">Cancelar</button>
+        <button type="button" class="btn-danger" id="btnConfirmarEliminarRegistro" style="background: #dc2626; border-color: #dc2626; color: #ffffff; font-weight: 700; padding: 6px 14px; border-radius: 6px;">
+          Sí, Eliminar Registro
+        </button>
+      </div>
+    `;
+
+    this.open(titulo, body, footer);
+
+    document.getElementById('btnConfirmarEliminarRegistro')?.addEventListener('click', () => {
+      this.close();
+      if (onConfirmar) onConfirmar();
+    });
+
+    document.getElementById('btnCancelEliminarRegistro')?.addEventListener('click', () => this.close());
   }
 }
 

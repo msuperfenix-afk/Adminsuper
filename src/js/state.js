@@ -509,6 +509,7 @@ class StateManager {
   constructor() {
     this.data = this.loadState();
     this.listeners = [];
+    this.fechasDesbloqueadasConPin = new Set();
     this.unsubscribeHojaActual = null;
     this.unsubscribeProveedores = null;
     this.sincronizarProveedoresDesdeHoja();
@@ -954,13 +955,51 @@ class StateManager {
     this.listeners.forEach(fn => fn(this.data));
   }
 
-  // Métodos de Control de Fechas e Historial
+  // Métodos de Control de Fechas, Bloqueo de Días Pasados y PIN de Administrador
   getFechaHoy() {
     return getFechaHoyLocal();
   }
 
+  getPinAdmin() {
+    return localStorage.getItem('adminfenix_admin_pin') || '1234';
+  }
+
+  setPinAdmin(nuevoPin) {
+    if (!nuevoPin || String(nuevoPin).trim().length < 4) return false;
+    localStorage.setItem('adminfenix_admin_pin', String(nuevoPin).trim());
+    return true;
+  }
+
+  esFechaDesbloqueada(fecha = this.data.fecha) {
+    if (!this.fechasDesbloqueadasConPin) this.fechasDesbloqueadasConPin = new Set();
+    return this.fechasDesbloqueadasConPin.has(fecha);
+  }
+
+  desbloquearFechaConPin(pin, fecha = this.data.fecha) {
+    if (!this.fechasDesbloqueadasConPin) this.fechasDesbloqueadasConPin = new Set();
+    const pinCorrecto = this.getPinAdmin();
+    if (String(pin).trim() === pinCorrecto) {
+      this.fechasDesbloqueadasConPin.add(fecha);
+      this.notify();
+      return true;
+    }
+    return false;
+  }
+
+  bloquearFecha(fecha = this.data.fecha) {
+    if (this.fechasDesbloqueadasConPin) {
+      this.fechasDesbloqueadasConPin.delete(fecha);
+    }
+    this.notify();
+  }
+
   esHojaEditable(fecha = this.data.fecha) {
-    return fecha === getFechaHoyLocal();
+    const hoy = this.getFechaHoy();
+    // A las 12:00 AM (medianoche), la fecha actual avanza al nuevo día.
+    // Si la hoja corresponde al día de hoy, es editable normalmente.
+    if (fecha === hoy) return true;
+    // Si corresponde a un día pasado, solo es editable si fue desbloqueada con PIN.
+    return this.esFechaDesbloqueada(fecha);
   }
 
   tieneCantidadInicial() {
@@ -968,6 +1007,10 @@ class StateManager {
   }
 
   puedeEditarCamposGenerales(fecha = this.data.fecha) {
+    return this.esHojaEditable(fecha);
+  }
+
+  puedeEliminarRegistrosBloqueados(fecha = this.data.fecha) {
     return this.esHojaEditable(fecha);
   }
 
@@ -1424,12 +1467,15 @@ class StateManager {
   }
 
   deleteFilaCompraProveedor(index) {
+    if (!this.puedeEliminarRegistrosBloqueados()) return false;
     if (this.data.comprasProveedores && this.data.comprasProveedores[index]) {
       this.data.comprasProveedores.splice(index, 1);
       this.data.comprasProveedores.forEach((r, i) => { r.nota = i + 1; });
       this.sincronizarProveedoresDesdeHoja(this.data.fecha);
       this.saveState();
+      return true;
     }
+    return false;
   }
 
   agregarCompraProveedor(proveedor, pagado, tipoPago = 'Efectivo') {
@@ -1461,7 +1507,7 @@ class StateManager {
 
   guardarPrestamoSeguro({ index, proveedor, pendiente, nota }) {
     if (!this.puedeEditarCamposGenerales()) {
-      console.warn('Solo se puede editar la hoja del día actual y habiendo registrado el monto inicial.');
+      console.warn('Solo se puede editar la hoja del día actual o una hoja desbloqueada con PIN.');
       return false;
     }
     const pNom = (proveedor || '').trim();
@@ -1511,11 +1557,13 @@ class StateManager {
   }
 
   deleteFilaPrestamo(index) {
-    if (!this.puedeEditarCamposGenerales()) return;
+    if (!this.puedeEliminarRegistrosBloqueados()) return false;
     if (this.data.prestamosPendientes && this.data.prestamosPendientes[index]) {
       this.data.prestamosPendientes.splice(index, 1);
       this.saveState();
+      return true;
     }
+    return false;
   }
 
   addPrestamo(proveedor, pendiente, pagado = 0, nota = '') {
@@ -1531,8 +1579,8 @@ class StateManager {
   updateArqueoColumna(colIndex, campos) {
     if (this.data.arqueoColumnas && this.data.arqueoColumnas[colIndex]) {
       const col = this.data.arqueoColumnas[colIndex];
-      // Si la columna ya está bloqueada/cerrada, no se puede modificar
-      if (col.bloqueado) {
+      // Si la columna ya está bloqueada/cerrada, solo se permite alterar si la hoja está desbloqueada por PIN
+      if (col.bloqueado && !this.esFechaDesbloqueada(this.data.fecha)) {
         return col;
       }
       Object.assign(col, campos);
@@ -1546,11 +1594,22 @@ class StateManager {
     return null;
   }
 
+  reabrirArqueoColumna(colIndex) {
+    if (!this.puedeEliminarRegistrosBloqueados()) return false;
+    if (this.data.arqueoColumnas && this.data.arqueoColumnas[colIndex]) {
+      this.data.arqueoColumnas[colIndex].bloqueado = false;
+      this.data.arqueoColumnas[colIndex].horaCierre = '';
+      this.saveState();
+      return true;
+    }
+    return false;
+  }
+
   guardarArqueoColumnaSeguro(colIndex, campos, bloquear = true) {
     if (this.data.arqueoColumnas && this.data.arqueoColumnas[colIndex]) {
       const col = this.data.arqueoColumnas[colIndex];
-      // Si ya está bloqueado, no permitir alterar
-      if (col.bloqueado) {
+      // Si ya está bloqueado y no está autorizada la edición por PIN, no permitir alterar
+      if (col.bloqueado && !this.esFechaDesbloqueada(this.data.fecha)) {
         return col;
       }
 
@@ -1734,11 +1793,13 @@ class StateManager {
   }
 
   deleteFilaRetiro(index) {
-    if (!this.puedeEditarCamposGenerales()) return;
+    if (!this.puedeEliminarRegistrosBloqueados()) return false;
     if (this.data.retiros && this.data.retiros[index]) {
       this.data.retiros.splice(index, 1);
       this.saveState();
+      return true;
     }
+    return false;
   }
 
   addRetiro(monto, responsable, motivo = '', autorizo = 'Gerencia') {
