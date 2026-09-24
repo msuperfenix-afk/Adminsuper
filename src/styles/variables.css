@@ -47,4 +47,9 @@
   --transition-fast: 0.15s ease;
   --sidebar-width: 70px;
   --header-height: 64px;
+
+  /* Variables dinámicas para Tablets y Teclados en Pantalla */
+  --visual-viewport-height: 100dvh;
+  --keyboard-height: 0px;
+  --visual-viewport-top: 0px;
 }

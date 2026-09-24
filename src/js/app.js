@@ -9,6 +9,7 @@ import { PipelineModule } from './modules/pipeline.js';
 import { ProveedoresDbModule } from './modules/proveedoresDb.js';
 import { EstadisticasModule } from './modules/estadisticas.js';
 import { ModalManager } from './modules/modal.js';
+import { initTabletKeyboardSupport } from './modules/tabletKeyboard.js';
 
 class App {
   constructor() {
@@ -17,6 +18,13 @@ class App {
   }
 
   init() {
+    // 0. Soporte y Adaptabilidad de Teclado en Pantalla para Tablets
+    try {
+      this.tabletKeyboardAdapter = initTabletKeyboardSupport();
+    } catch (e) {
+      console.warn('Soporte de teclado tablet no inicializado:', e);
+    }
+
     try {
       // 1. Gestor de Modales Global
       this.modalManager = new ModalManager('modalOverlay', 'modalContainer');

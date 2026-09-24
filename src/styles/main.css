@@ -1568,9 +1568,12 @@ input, button, select, textarea {
   border: 2px solid #0f172a;
   width: 90%;
   max-width: 560px;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: min(92vh, calc(var(--visual-viewport-height, 100dvh) - 24px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: var(--shadow-lg);
+  box-sizing: border-box;
 }
 
 .modal-header {
@@ -1580,6 +1583,7 @@ input, button, select, textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .modal-title {
@@ -1599,6 +1603,10 @@ input, button, select, textarea {
 
 .modal-body {
   padding: 20px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .form-control {
@@ -1609,6 +1617,7 @@ input, button, select, textarea {
   border-radius: 4px;
   font-size: 0.88rem;
   color: #0f172a;
+  touch-action: manipulation;
 }
 
 .form-control:focus {
@@ -1624,6 +1633,10 @@ input, button, select, textarea {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
 }
 
 .btn-secondary {
@@ -4435,3 +4448,177 @@ input:disabled {
   border-color: #0284c7 !important;
   box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2) !important;
 }
+
+/* ==========================================================================
+   ADAPTABILIDAD PARA TABLETS Y TECLADOS EN PANTALLA (VIRTUAL KEYBOARD SUPPORT)
+   ========================================================================== */
+
+/* 1. Optimización táctil global para tablets y pantallas táctiles */
+.tablet-touch-device button,
+.tablet-touch-device .nav-item,
+.tablet-touch-device .btn-dia-selector,
+.tablet-touch-device .cell-clickable-arq,
+.tablet-touch-device .fila-conteo-clickeable,
+.tablet-touch-device [data-ver-detalle-prov],
+.tablet-touch-device .form-control,
+.tablet-touch-device input,
+.tablet-touch-device select,
+.tablet-touch-device textarea {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 2. Resaltado claro y nítido del campo activo para visualización rápida en tablet */
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25) !important;
+  background-color: #ffffff !important;
+  outline: none !important;
+}
+
+/* 3. Ajuste del Layout dinámico con altura real del Visual Viewport */
+.app-layout {
+  height: 100dvh;
+  height: var(--visual-viewport-height, 100dvh);
+}
+
+.main-area {
+  height: 100dvh;
+  height: var(--visual-viewport-height, 100dvh);
+}
+
+/* 4. Comportamiento cuando el teclado virtual de la tablet se despliega (.keyboard-open) */
+body.keyboard-open {
+  height: var(--visual-viewport-height, 100dvh) !important;
+  overflow: hidden !important;
+}
+
+body.keyboard-open .app-layout {
+  height: var(--visual-viewport-height, 100dvh) !important;
+}
+
+body.keyboard-open .main-area {
+  height: var(--visual-viewport-height, 100dvh) !important;
+}
+
+/* En tablets, cuando sale el teclado, dar margen inferior de resguardo en la vista principal */
+body.keyboard-open .view-container {
+  padding-bottom: min(320px, calc(var(--keyboard-height, 280px) + 24px)) !important;
+}
+
+body.keyboard-open .hoja-papel-container {
+  margin-bottom: min(320px, calc(var(--keyboard-height, 280px) + 24px)) !important;
+}
+
+/* 5. Modales adaptables al salir el teclado virtual */
+body.keyboard-open .modal-overlay {
+  align-items: flex-start !important;
+  justify-content: center !important;
+  padding: 6px 10px !important;
+  height: var(--visual-viewport-height, 100dvh) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+body.keyboard-open .modal-container {
+  margin-top: 4px !important;
+  margin-bottom: auto !important;
+  width: 96vw !important;
+  max-width: 600px !important;
+  max-height: calc(var(--visual-viewport-height, 100dvh) - 12px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+body.keyboard-open .modal-header {
+  padding: 8px 14px !important;
+  flex-shrink: 0 !important;
+}
+
+body.keyboard-open .modal-title {
+  font-size: 0.95rem !important;
+}
+
+body.keyboard-open .modal-close-btn {
+  font-size: 1.25rem !important;
+}
+
+body.keyboard-open .modal-body {
+  padding: 10px 14px !important;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  max-height: none !important;
+}
+
+/* El pie del modal permanece SIEMPRE visible y fijado (Sticky Footer) */
+body.keyboard-open .modal-footer {
+  padding: 8px 14px !important;
+  flex-shrink: 0 !important;
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 30 !important;
+  background: #f8fafc !important;
+  border-top: 1px solid #cbd5e1 !important;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08) !important;
+  gap: 8px !important;
+}
+
+body.keyboard-open .modal-footer button {
+  min-height: 36px !important;
+  padding: 6px 12px !important;
+  font-size: 0.82rem !important;
+}
+
+/* 6. Tablet en Orientación Horizontal (Landscape) con teclado abierto */
+body.keyboard-landscape.keyboard-open .modal-container {
+  max-height: calc(var(--visual-viewport-height, 100dvh) - 6px) !important;
+}
+
+body.keyboard-landscape.keyboard-open .modal-header {
+  padding: 5px 12px !important;
+}
+
+body.keyboard-landscape.keyboard-open .modal-title {
+  font-size: 0.86rem !important;
+}
+
+body.keyboard-landscape.keyboard-open .modal-body {
+  padding: 6px 12px !important;
+}
+
+body.keyboard-landscape.keyboard-open .modal-footer {
+  padding: 5px 10px !important;
+}
+
+body.keyboard-landscape.keyboard-open .modal-footer button {
+  min-height: 32px !important;
+  padding: 4px 10px !important;
+  font-size: 0.76rem !important;
+}
+
+body.keyboard-landscape.keyboard-open .form-group {
+  margin-bottom: 6px !important;
+}
+
+body.keyboard-landscape.keyboard-open .form-control {
+  height: 32px !important;
+  font-size: 0.82rem !important;
+}
+
+/* Reducción de márgenes y espaciadores en tarjetas de cálculo al salir el teclado */
+body.keyboard-open .costo-formula-card,
+body.keyboard-open .costo-info-header-box {
+  margin-bottom: 6px !important;
+  padding: 6px 10px !important;
+}
+
+body.keyboard-open .arqueo-resumen-banner {
+  padding: 6px 8px !important;
+  margin-bottom: 6px !important;
+}
+
