@@ -4853,5 +4853,35 @@ body.keyboard-open .arqueo-resumen-banner {
   transform: scale(1.08);
 }
 
+/* ========================================================
+   ESTILOS PARA TICKET TÉRMICO USB (58mm / 80mm)
+   ======================================================== */
+.ticket-preview-box {
+  background: #ffffff;
+  border: 1.5px dashed #94a3b8;
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-family: 'Courier New', Courier, monospace;
+  color: #000000;
+  line-height: 1.25;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  margin: 0 auto;
+  user-select: text;
+}
+
+.ticket-preview-box table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.btn-ancho-rollo {
+  transition: all 0.15s ease;
+}
+
+.btn-ancho-rollo:hover {
+  filter: brightness(0.96);
+}
+
+
 
 

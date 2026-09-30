@@ -2864,8 +2864,20 @@ export class ModalManager {
     `;
 
     const footer = `
-      <button type="button" class="btn-secondary" id="btnCerrarModalPedido">Cerrar</button>
-      <button type="button" class="btn-primary" id="btnGuardarPedidoModal" style="min-width: 150px;">Guardar Pedido</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 8px;">
+        <button type="button" class="btn-secondary" id="btnImprimirTicketPedido" style="background: #f0fdf4; border: 1.5px solid #86efac; color: #166534; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px; cursor: pointer;" title="Imprimir ticket para impresora térmica USB (58mm / 80mm)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          <span>🖨️ Imprimir Ticket USB</span>
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn-secondary" id="btnCerrarModalPedido">Cerrar</button>
+          <button type="button" class="btn-primary" id="btnGuardarPedidoModal" style="min-width: 140px;">Guardar Pedido</button>
+        </div>
+      </div>
     `;
 
     this.open(`Lista de Pedido: ${p.proveedor}`, body, footer);
@@ -2974,6 +2986,25 @@ export class ModalManager {
       if (inputs.length > 0) inputs[inputs.length - 1].focus();
     });
 
+    // BOTÓN: IMPRIMIR TICKET TÉRMICO USB
+    document.getElementById('btnImprimirTicketPedido')?.addEventListener('click', () => {
+      const itemsActuales = sincronizarItemsDesdeDOM();
+      const presupuesto = parseFloat(document.getElementById('inputPresupuestoAprox')?.value) || 0;
+      const ventaAnterior = parseFloat(document.getElementById('inputVentaAnterior')?.value) || 0;
+      const notas = document.getElementById('inputNotasProveedor')?.value.trim() || '';
+
+      this.openModalImprimirTicketPedido({
+        proveedor: p,
+        items: itemsActuales,
+        presupuesto,
+        ventaAnterior,
+        notas,
+        onVolver: () => {
+          this.openListaPedidoModal(p, onGuardado);
+        }
+      });
+    });
+
     document.getElementById('btnCerrarModalPedido')?.addEventListener('click', () => this.close());
 
     document.getElementById('btnGuardarPedidoModal')?.addEventListener('click', () => {
@@ -2992,6 +3023,402 @@ export class ModalManager {
       this.close();
       if (onGuardado) onGuardado();
     });
+  }
+
+  // ==========================================
+  // MODAL: OPCIONES Y PREVISUALIZACIÓN DE TICKET TÉRMICO USB
+  // ==========================================
+  openModalImprimirTicketPedido({ proveedor, items, presupuesto, ventaAnterior, notas, onVolver }) {
+    let anchoRollo = localStorage.getItem('adminfenix_ancho_ticket') || '58mm';
+    const ahora = new Date();
+    const fechaHora = ahora.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + 
+                      ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 }).format(v || 0);
+
+    const renderPreviewTicket = (ancho) => {
+      const es58 = ancho === '58mm';
+      return `
+        <div class="ticket-preview-box" style="background:#ffffff; border:1.5px dashed #94a3b8; border-radius:8px; padding:14px 18px; font-family:'Courier New', Courier, monospace; color:#000000; font-size:${es58 ? '12px' : '13px'}; line-height:1.25; max-width:${es58 ? '310px' : '400px'}; margin:0 auto; box-shadow:0 4px 6px -1px rgba(0,0,0,0.08);">
+          <div style="text-align:center; font-weight:900; font-size:${es58 ? '15px' : '17px'}; letter-spacing:0.5px;">MINISÚPER FÉNIX</div>
+          <div style="text-align:center; font-weight:bold; font-size:${es58 ? '11px' : '13px'}; margin:2px 0;">*** LISTA DE PEDIDO ***</div>
+          <div style="text-align:center; font-size:9px; color:#333;">CONTROL DE MERCANCÍA Y PROVEEDORES</div>
+          <div style="border-top:2px solid #000; margin:6px 0;"></div>
+          
+          <div style="font-size:${es58 ? '10.5px' : '12px'};">
+            <div style="display:flex; justify-content:space-between;"><span style="font-weight:bold;">PROVEEDOR:</span><span style="font-weight:bold;">${(proveedor.proveedor || '').toUpperCase()}</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>FECHA:</span><span>${fechaHora}</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>VISITA:</span><span style="font-weight:bold;">${(proveedor.dia || 'HABITUAL').toUpperCase()} ${proveedor.hora ? `(${proveedor.hora})` : ''}</span></div>
+            ${presupuesto > 0 ? `<div style="display:flex; justify-content:space-between;"><span>PRESUPUESTO APROX:</span><span style="font-weight:bold;">${fmt(presupuesto)}</span></div>` : ''}
+            ${ventaAnterior > 0 ? `<div style="display:flex; justify-content:space-between;"><span>VENTA ANTERIOR:</span><span>${fmt(ventaAnterior)}</span></div>` : ''}
+          </div>
+
+          <div style="border-top:1px dashed #000; margin:6px 0;"></div>
+
+          <table style="width:100%; border-collapse:collapse; font-size:${es58 ? '11px' : '12px'};">
+            <thead>
+              <tr style="border-bottom:1px solid #000; text-align:left;">
+                <th style="padding:2px 0; width:28%;">CANT</th>
+                <th style="padding:2px 0;">DESCRIPCIÓN</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.length === 0 ? `
+                <tr><td colspan="2" style="text-align:center; padding:10px 0; font-style:italic;">* Sin artículos en la lista *</td></tr>
+              ` : items.map(it => `
+                <tr style="border-bottom:0.5px dotted #ccc;">
+                  <td style="padding:4px 0; font-weight:900; white-space:nowrap;">[ ${it.cantidad || '1'} ]</td>
+                  <td style="padding:4px 0;">
+                    <div style="font-weight:bold;">${it.producto || 'Producto'}</div>
+                    ${it.notas ? `<div style="font-size:${es58 ? '9.5px' : '10.5px'}; color:#333;">Nota: ${it.notas}</div>` : ''}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div style="border-top:1px dashed #000; margin:6px 0;"></div>
+
+          <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:${es58 ? '11px' : '12px'};">
+            <span>TOTAL ARTÍCULOS:</span>
+            <span>${items.length} productos</span>
+          </div>
+
+          ${notas ? `
+            <div style="margin-top:6px; font-size:${es58 ? '10px' : '11px'};">
+              <span style="font-weight:bold;">NOTAS ADICIONALES:</span>
+              <div>${notas}</div>
+            </div>
+          ` : ''}
+
+          <div style="margin-top:20px; font-size:${es58 ? '10px' : '11px'};">
+            <div style="border-bottom:1px solid #000; margin:22px 6px 4px 6px;"></div>
+            <div style="text-align:center; font-weight:bold;">FIRMA ENCARGADO (FÉNIX)</div>
+            <div style="border-bottom:1px solid #000; margin:24px 6px 4px 6px;"></div>
+            <div style="text-align:center; font-weight:bold;">FIRMA PREVENTISTA / REPARTIDOR</div>
+          </div>
+
+          <div style="margin-top:14px; text-align:center; font-size:9.5px; color:#444;">
+            <div>================================</div>
+            <div>MINISÚPER FÉNIX - SISTEMA DE CAJA</div>
+            <div>¡Muchas gracias por su atención!</div>
+          </div>
+        </div>
+      `;
+    };
+
+    const body = `
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <!-- Barra de selector de ancho de rollo -->
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div>
+            <div style="font-weight:700; color:#0f172a; font-size:0.88rem;">Ancho del Rollo de Papel Térmico:</div>
+            <div style="font-size:0.75rem; color:#64748b;">Selecciona el tamaño de tu rollo (el más común por cable USB es 58 mm)</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-ancho-rollo ${anchoRollo === '58mm' ? 'activo' : ''}" data-ancho="58mm" id="btnAncho58" style="padding:6px 14px; font-size:0.8rem; font-weight:700; border-radius:6px; cursor:pointer; border:1.5px solid ${anchoRollo === '58mm' ? '#0284c7' : '#cbd5e1'}; background:${anchoRollo === '58mm' ? '#e0f2fe' : '#ffffff'}; color:${anchoRollo === '58mm' ? '#0369a1' : '#334155'};">
+              58 mm (Chico)
+            </button>
+            <button type="button" class="btn-ancho-rollo ${anchoRollo === '80mm' ? 'activo' : ''}" data-ancho="80mm" id="btnAncho80" style="padding:6px 14px; font-size:0.8rem; font-weight:700; border-radius:6px; cursor:pointer; border:1.5px solid ${anchoRollo === '80mm' ? '#0284c7' : '#cbd5e1'}; background:${anchoRollo === '80mm' ? '#e0f2fe' : '#ffffff'}; color:${anchoRollo === '80mm' ? '#0369a1' : '#334155'};">
+              80 mm (Ancho)
+            </button>
+          </div>
+        </div>
+
+        <!-- Vista previa del ticket -->
+        <div id="contenedorTicketPreview">
+          ${renderPreviewTicket(anchoRollo)}
+        </div>
+
+        <div style="font-size:0.76rem; color:#64748b; background:#f1f5f9; padding:8px 12px; border-radius:6px; display:flex; align-items:center; gap:6px;">
+          <span>💡</span>
+          <span><strong>Consejo para cable USB:</strong> Al pulsar "Imprimir Ticket USB", se abre el diálogo de tu tablet o computadora; asegúrate de seleccionar tu impresora térmica USB conectada.</span>
+        </div>
+      </div>
+    `;
+
+    const footer = `
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap; gap:8px;">
+        <button type="button" class="btn-secondary" id="btnVolverAlPedido">← Volver al Pedido</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn-secondary" id="btnImprimirRawBT" style="background:#f0fdf4; border:1.5px solid #86efac; color:#166534; font-weight:700; padding:8px 14px; display:inline-flex; align-items:center; gap:6px; border-radius:6px; cursor:pointer;" title="Imprimir directo vía RawBT si tu tablet es Android y usas cable OTG">
+            ⚡ App RawBT (Android)
+          </button>
+          <button type="button" class="btn-primary" id="btnEjecutarImpresionUSB" style="background:#0284c7; font-weight:700; padding:8px 16px; min-width:160px; display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:6px; cursor:pointer;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            <span>🖨️ Imprimir Ticket USB</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    this.open(`Imprimir Ticket Térmico: ${proveedor.proveedor}`, body, footer);
+
+    // Switch de tamaño 58mm / 80mm
+    const actualizarBotonesAncho = (nuevoAncho) => {
+      anchoRollo = nuevoAncho;
+      localStorage.setItem('adminfenix_ancho_ticket', anchoRollo);
+      const b58 = document.getElementById('btnAncho58');
+      const b80 = document.getElementById('btnAncho80');
+      if (b58 && b80) {
+        b58.style.borderColor = anchoRollo === '58mm' ? '#0284c7' : '#cbd5e1';
+        b58.style.background = anchoRollo === '58mm' ? '#e0f2fe' : '#ffffff';
+        b58.style.color = anchoRollo === '58mm' ? '#0369a1' : '#334155';
+
+        b80.style.borderColor = anchoRollo === '80mm' ? '#0284c7' : '#cbd5e1';
+        b80.style.background = anchoRollo === '80mm' ? '#e0f2fe' : '#ffffff';
+        b80.style.color = anchoRollo === '80mm' ? '#0369a1' : '#334155';
+      }
+      const cont = document.getElementById('contenedorTicketPreview');
+      if (cont) cont.innerHTML = renderPreviewTicket(anchoRollo);
+    };
+
+    document.getElementById('btnAncho58')?.addEventListener('click', () => actualizarBotonesAncho('58mm'));
+    document.getElementById('btnAncho80')?.addEventListener('click', () => actualizarBotonesAncho('80mm'));
+
+    // Botón volver
+    document.getElementById('btnVolverAlPedido')?.addEventListener('click', () => {
+      this.close();
+      if (onVolver) onVolver();
+    });
+
+    // Botón imprimir USB nativo
+    document.getElementById('btnEjecutarImpresionUSB')?.addEventListener('click', () => {
+      this.imprimirTicketTermico({
+        proveedor,
+        items,
+        presupuesto,
+        ventaAnterior,
+        notas,
+        ancho: anchoRollo
+      });
+    });
+
+    // Botón imprimir con RawBT (Android OTG)
+    document.getElementById('btnImprimirRawBT')?.addEventListener('click', () => {
+      this.imprimirTicketRawBT({
+        proveedor,
+        items,
+        presupuesto,
+        ventaAnterior,
+        notas,
+        ancho: anchoRollo
+      });
+    });
+  }
+
+  // ==========================================
+  // GENERAR TEXTO PLANO PARA IMPRESORAS TÉRMICAS / RAWBT
+  // ==========================================
+  generarTextoPlanoTicket({ proveedor, items, presupuesto, ventaAnterior, notas, ancho = '58mm' }) {
+    const es58 = ancho === '58mm';
+    const c = es58 ? 32 : 44;
+    const padCenter = (t) => {
+      const sp = Math.max(0, Math.floor((c - t.length) / 2));
+      return ' '.repeat(sp) + t;
+    };
+    const sep = '='.repeat(c);
+    const sepGuion = '-'.repeat(c);
+    const ahora = new Date();
+    const fechaHora = ahora.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + 
+                      ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    let t = '';
+    t += padCenter('MINISUPER FENIX') + '\n';
+    t += padCenter('*** LISTA DE PEDIDO ***') + '\n';
+    t += sep + '\n';
+    t += `PROVEEDOR: ${(proveedor.proveedor || '').toUpperCase()}\n`;
+    t += `FECHA:     ${fechaHora}\n`;
+    t += `VISITA:    ${(proveedor.dia || 'HABITUAL').toUpperCase()} ${proveedor.hora ? `(${proveedor.hora})` : ''}\n`;
+    if (presupuesto > 0) {
+      t += `PRESUPUESTO: $${presupuesto.toFixed(2)}\n`;
+    }
+    if (ventaAnterior > 0) {
+      t += `VENTA ANTERIOR: $${ventaAnterior.toFixed(2)}\n`;
+    }
+    t += sepGuion + '\n';
+    t += 'CANT.  DESCRIPCION / VARIEDAD\n';
+    t += sepGuion + '\n';
+
+    if (items.length === 0) {
+      t += '      * Sin articulos *\n';
+    } else {
+      items.forEach((it) => {
+        const cant = `[ ${it.cantidad || '1'} ]`.padEnd(7);
+        t += `${cant} ${it.producto || 'Producto'}\n`;
+        if (it.notas) {
+          t += `        Nota: ${it.notas}\n`;
+        }
+      });
+    }
+
+    t += sepGuion + '\n';
+    t += `TOTAL ARTICULOS: ${items.length} productos\n`;
+    if (notas) {
+      t += `NOTAS: ${notas}\n`;
+    }
+    t += sep + '\n\n';
+    t += 'Firma Encargado: ________________\n\n';
+    t += 'Firma Proveedor: ________________\n';
+    t += sep + '\n';
+    t += padCenter('MINISUPER FENIX') + '\n';
+    t += padCenter('Control de Compras') + '\n\n\n\n';
+    return t;
+  }
+
+  // ==========================================
+  // ENVÍO DE TICKET A APP RAWBT (ANDROID USB OTG)
+  // ==========================================
+  imprimirTicketRawBT(datosTicket) {
+    try {
+      const texto = this.generarTextoPlanoTicket(datosTicket);
+      const base64 = btoa(unescape(encodeURIComponent(texto)));
+      window.location.href = "rawbt:data:base64," + base64;
+    } catch (err) {
+      console.warn('Error al enviar a RawBT, usando impresión nativa:', err);
+      this.imprimirTicketTermico(datosTicket);
+    }
+  }
+
+  // ==========================================
+  // IMPRESIÓN TÉRMICA USB NATIVA AISLADA (IFRAME)
+  // ==========================================
+  imprimirTicketTermico(datosTicket) {
+    const { proveedor, items, presupuesto, ventaAnterior, notas, ancho = '58mm' } = datosTicket;
+    const ahora = new Date();
+    const fechaHora = ahora.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + 
+                      ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 }).format(v || 0);
+    const es58mm = (ancho === '58mm');
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ticket Pedido - ${proveedor.proveedor || 'Proveedor'}</title>
+  <style>
+    @page {
+      size: ${ancho} auto;
+      margin: 0;
+    }
+    @media print {
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: ${ancho} !important;
+      }
+    }
+    body {
+      margin: 0;
+      padding: ${es58mm ? '4px 6px' : '6px 10px'};
+      width: ${ancho};
+      box-sizing: border-box;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: ${es58mm ? '11px' : '13px'};
+      line-height: 1.25;
+      color: #000000;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .text-center { text-align: center; }
+    .bold { font-weight: bold; }
+    .divider { border-top: 1px dashed #000; margin: 5px 0; }
+    .divider-double { border-top: 2px solid #000; margin: 6px 0; }
+    .titulo { font-size: ${es58mm ? '15px' : '18px'}; font-weight: 900; margin: 0; letter-spacing: 0.5px; }
+    .subtitulo { font-size: ${es58mm ? '11px' : '13px'}; font-weight: bold; margin: 2px 0; }
+    .fila-dato { display: flex; justify-content: space-between; margin-bottom: 2px; }
+    .tabla-items { width: 100%; border-collapse: collapse; margin: 4px 0; }
+    .tabla-items th { text-align: left; border-bottom: 1px solid #000; padding: 3px 0; }
+    .tabla-items td { padding: 3px 0; vertical-align: top; }
+    .item-cant { font-weight: 900; padding-right: 6px; white-space: nowrap; font-size: ${es58mm ? '12px' : '13px'}; }
+    .linea-firma { border-bottom: 1px solid #000; margin: 24px 4px 4px 4px; }
+    .pie-ticket { margin-top: 14px; text-align: center; font-size: ${es58mm ? '9px' : '10px'}; }
+  </style>
+</head>
+<body>
+  <div class="text-center">
+    <div class="titulo">MINISÚPER FÉNIX</div>
+    <div class="subtitulo">*** LISTA DE PEDIDO ***</div>
+    <div style="font-size: 9px; margin-bottom: 3px;">CONTROL DE MERCANCÍA Y PROVEEDORES</div>
+  </div>
+  <div class="divider-double"></div>
+  <div style="margin: 4px 0; font-size: ${es58mm ? '10px' : '12px'};">
+    <div class="fila-dato"><span class="bold">PROVEEDOR:</span><span class="bold">${(proveedor.proveedor || '').toUpperCase()}</span></div>
+    <div class="fila-dato"><span>FECHA:</span><span>${fechaHora}</span></div>
+    <div class="fila-dato"><span>VISITA:</span><span class="bold">${(proveedor.dia || 'HABITUAL').toUpperCase()} ${proveedor.hora ? `(${proveedor.hora})` : ''}</span></div>
+    ${presupuesto > 0 ? `<div class="fila-dato"><span>PRESUPUESTO APROX:</span><span class="bold">${fmt(presupuesto)}</span></div>` : ''}
+    ${ventaAnterior > 0 ? `<div class="fila-dato"><span>VENTA/COMPRA ANT:</span><span>${fmt(ventaAnterior)}</span></div>` : ''}
+  </div>
+  <div class="divider"></div>
+  <table class="tabla-items">
+    <thead>
+      <tr>
+        <th style="width: 25%;">CANT</th>
+        <th style="width: 75%;">DESCRIPCIÓN</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${items.length === 0 ? `
+        <tr><td colspan="2" style="text-align:center; padding:8px 0;">* Sin artículos en la lista *</td></tr>
+      ` : items.map(it => `
+        <tr>
+          <td class="item-cant">[ ${it.cantidad || '1'} ]</td>
+          <td>
+            <div class="bold">${it.producto || 'Producto'}</div>
+            ${it.notas ? `<div style="font-size: ${es58mm ? '9.5px' : '11px'}; color: #222;">Nota: ${it.notas}</div>` : ''}
+          </td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+  <div class="divider"></div>
+  <div class="fila-dato bold">
+    <span>TOTAL ARTÍCULOS:</span>
+    <span>${items.length} productos</span>
+  </div>
+  ${notas ? `
+    <div style="margin-top: 6px; font-size: ${es58mm ? '10px' : '11px'};">
+      <span class="bold">NOTAS ADICIONALES:</span>
+      <div>${notas}</div>
+    </div>
+  ` : ''}
+  <div style="margin-top: 16px; font-size: ${es58mm ? '10px' : '11px'};">
+    <div class="linea-firma"></div>
+    <div class="text-center bold">FIRMA ENCARGADO (FÉNIX)</div>
+    <div class="linea-firma" style="margin-top: 24px;"></div>
+    <div class="text-center bold">FIRMA PREVENTISTA / REPARTIDOR</div>
+  </div>
+  <div class="pie-ticket">
+    <div>================================</div>
+    <div>MINISÚPER FÉNIX - SISTEMA DE CAJA</div>
+    <div>¡Muchas gracias por su atención!</div>
+  </div>
+</body>
+</html>`;
+
+    let iframe = document.getElementById('iframeTicketTermicoAdminFenix');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'iframeTicketTermicoAdminFenix';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+    }
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }, 250);
   }
 
   // ==========================================
