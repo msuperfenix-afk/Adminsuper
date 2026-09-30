@@ -10,6 +10,7 @@ import { ProveedoresDbModule } from './modules/proveedoresDb.js';
 import { EstadisticasModule } from './modules/estadisticas.js';
 import { ModalManager } from './modules/modal.js';
 import { initTabletKeyboardSupport } from './modules/tabletKeyboard.js';
+import { solicitarPersistenciaPermanente } from './modules/storageManager.js';
 
 class App {
   constructor() {
@@ -18,7 +19,14 @@ class App {
   }
 
   init() {
-    // 0. Soporte y Adaptabilidad de Teclado en Pantalla para Tablets
+    // 0. Persistencia de Almacenamiento Permanente contra borrado de Android/Chrome
+    try {
+      solicitarPersistenciaPermanente();
+    } catch (e) {
+      console.warn('Persistencia de almacenamiento no disponible:', e);
+    }
+
+    // 0.1 Soporte y Adaptabilidad de Teclado en Pantalla para Tablets
     try {
       this.tabletKeyboardAdapter = initTabletKeyboardSupport();
     } catch (e) {

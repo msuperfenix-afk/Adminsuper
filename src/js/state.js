@@ -7,6 +7,15 @@ import {
   escucharProveedoresGlobalFirestore,
   isFirebaseConectado 
 } from './firebaseClient.js';
+import {
+  solicitarPersistenciaPermanente,
+  guardarHojaEnIndexedDB,
+  cargarHojaDeIndexedDB,
+  cargarTodasLasHojasIndexedDB,
+  guardarProveedoresEnIndexedDB,
+  cargarProveedoresDeIndexedDB,
+  guardarBackupDiarioAutomatico
+} from './modules/storageManager.js';
 
 const STORAGE_KEY = 'adminfenix_data_v5';
 
@@ -514,6 +523,7 @@ class StateManager {
     this.unsubscribeProveedores = null;
     this.sincronizarProveedoresDesdeHoja();
     this.iniciarSincronizacionGlobalFirestore();
+    this.inicializarBlindajeIndexedDB();
   }
 
   loadState() {
@@ -719,6 +729,65 @@ class StateManager {
   }
 
   // ==========================================
+  // BLINDAJE DE ALMACENAMIENTO PERMANENTE E INDEXEDDB
+  // ==========================================
+  async inicializarBlindajeIndexedDB() {
+    try {
+      // 1. Activar persistencia física contra desalojos de Android/Chrome
+      await solicitarPersistenciaPermanente();
+
+      // 2. Escudo Anti-Vaciado de Proveedores: Si el catálogo o agenda están vacíos, recuperar de IndexedDB
+      if (!Array.isArray(this.data.catalogoProveedores) || this.data.catalogoProveedores.length === 0) {
+        const provsIndexed = await cargarProveedoresDeIndexedDB();
+        if (provsIndexed && Array.isArray(provsIndexed.catalogoProveedores) && provsIndexed.catalogoProveedores.length > 0) {
+          console.log('Catálogo de proveedores recuperado con éxito desde IndexedDB');
+          this.data.catalogoProveedores = provsIndexed.catalogoProveedores;
+          if (Array.isArray(provsIndexed.proveedoresAgenda) && provsIndexed.proveedoresAgenda.length > 0) {
+            this.data.proveedores = provsIndexed.proveedoresAgenda;
+          }
+          this.notify();
+        } else {
+          // Si tampoco está en IndexedDB, restaurar catálogo oficial maestro
+          this.data.catalogoProveedores = JSON.parse(JSON.stringify(CATALOGO_PROVEEDORES_INICIAL));
+          this.data.proveedores = JSON.parse(JSON.stringify(SEED_DATA.proveedores));
+        }
+      }
+
+      // 3. Recuperar hojas históricas de IndexedDB si no están en memoria
+      const hojasHistoricas = await cargarTodasLasHojasIndexedDB();
+      let huboRecuperacion = false;
+      if (hojasHistoricas && typeof hojasHistoricas === 'object') {
+        if (!this.data.hojasPorFecha) this.data.hojasPorFecha = {};
+        Object.entries(hojasHistoricas).forEach(([f, hoja]) => {
+          if (!this.data.hojasPorFecha[f] && hoja) {
+            this.data.hojasPorFecha[f] = hoja;
+            huboRecuperacion = true;
+          }
+        });
+      }
+
+      if (huboRecuperacion) {
+        console.log('Hojas históricas sincronizadas desde IndexedDB a la memoria');
+        this.notify();
+      }
+
+      // 4. Guardar snapshot inicial en IndexedDB
+      if (this.data.fecha && this.data.hojasPorFecha && this.data.hojasPorFecha[this.data.fecha]) {
+        guardarHojaEnIndexedDB(this.data.fecha, this.data.hojasPorFecha[this.data.fecha]);
+      }
+      guardarProveedoresEnIndexedDB({
+        catalogoProveedores: this.data.catalogoProveedores,
+        proveedoresAgenda: this.data.proveedores,
+        preciosGuardadosPan: this.data.preciosGuardadosPan,
+        preciosGuardadosTortilla: this.data.preciosGuardadosTortilla
+      });
+      guardarBackupDiarioAutomatico(this.data);
+    } catch (e) {
+      console.warn('Advertencia en inicializarBlindajeIndexedDB:', e);
+    }
+  }
+
+  // ==========================================
   // SINCRONIZACIÓN GLOBAL MULTI-DISPOSITIVO (CLOUD FIRESTORE)
   // ==========================================
   async iniciarSincronizacionGlobalFirestore() {
@@ -741,9 +810,15 @@ class StateManager {
         if (provsRemotos.preciosGuardadosTortilla) {
           this.data.preciosGuardadosTortilla = { ...this.data.preciosGuardadosTortilla, ...provsRemotos.preciosGuardadosTortilla };
         }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+        guardarProveedoresEnIndexedDB({
+          catalogoProveedores: this.data.catalogoProveedores,
+          proveedoresAgenda: this.data.proveedores,
+          preciosGuardadosPan: this.data.preciosGuardadosPan,
+          preciosGuardadosTortilla: this.data.preciosGuardadosTortilla
+        });
+        this.guardarEnLocalStorageSeguro(this.data);
       } else {
-        // Inicializar documento en la nube con los proveedores maestros
+        // Inicializar documento en la nube con los proveedores maestros para proteger la persistencia
         guardarProveedoresGlobalFirestore({
           catalogoProveedores: this.data.catalogoProveedores,
           proveedoresAgenda: this.data.proveedores,
@@ -767,7 +842,13 @@ class StateManager {
         if (datosRemotos.preciosGuardadosTortilla) {
           this.data.preciosGuardadosTortilla = { ...this.data.preciosGuardadosTortilla, ...datosRemotos.preciosGuardadosTortilla };
         }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+        guardarProveedoresEnIndexedDB({
+          catalogoProveedores: this.data.catalogoProveedores,
+          proveedoresAgenda: this.data.proveedores,
+          preciosGuardadosPan: this.data.preciosGuardadosPan,
+          preciosGuardadosTortilla: this.data.preciosGuardadosTortilla
+        });
+        this.guardarEnLocalStorageSeguro(this.data);
         this.notify();
       });
 
@@ -782,6 +863,7 @@ class StateManager {
         // Subir hoja local a Firestore para que otros dispositivos la vean
         if (!this.data.hojasPorFecha) this.data.hojasPorFecha = {};
         this.data.hojasPorFecha[fechaActiva] = this.extraerDatosHojaActual(this.data);
+        guardarHojaEnIndexedDB(fechaActiva, this.data.hojasPorFecha[fechaActiva]);
         guardarHojaEnFirestore(fechaActiva, this.data.hojasPorFecha[fechaActiva]);
       }
 
@@ -846,9 +928,11 @@ class StateManager {
     }
 
     if (!this.data.hojasPorFecha) this.data.hojasPorFecha = {};
-    this.data.hojasPorFecha[hojaRemota.fecha || this.data.fecha] = this.extraerDatosHojaActual(this.data);
+    const fHoja = hojaRemota.fecha || this.data.fecha;
+    this.data.hojasPorFecha[fHoja] = this.extraerDatosHojaActual(this.data);
+    guardarHojaEnIndexedDB(fHoja, this.data.hojasPorFecha[fHoja]);
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    this.guardarEnLocalStorageSeguro(this.data);
     this.sincronizarProveedoresDesdeHoja(this.data.fecha);
     this.notify();
   }
@@ -877,16 +961,39 @@ class StateManager {
     try {
       this.actualizarIndicadorGuardado('guardando');
 
-      // Guardar snapshot de la hoja actual indexada por su fecha
+      // 1. Escudo Anti-Vaciado de Proveedores: Blindar que nunca se queden vacíos por error
+      if (!Array.isArray(data.catalogoProveedores) || data.catalogoProveedores.length === 0) {
+        data.catalogoProveedores = JSON.parse(JSON.stringify(CATALOGO_PROVEEDORES_INICIAL));
+      }
+      if (!Array.isArray(data.proveedores) || data.proveedores.length === 0) {
+        data.proveedores = JSON.parse(JSON.stringify(SEED_DATA.proveedores));
+      }
+
+      // 2. Guardar snapshot de la hoja actual indexada por su fecha
       if (!data.hojasPorFecha) data.hojasPorFecha = {};
       if (data.fecha) {
         data.hojasPorFecha[data.fecha] = this.extraerDatosHojaActual(data);
       }
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      // 3. CAPA 1: Guardado en IndexedDB (Alta Capacidad de Gigabytes - Sin límite de 5MB)
+      if (data.fecha && data.hojasPorFecha[data.fecha]) {
+        guardarHojaEnIndexedDB(data.fecha, data.hojasPorFecha[data.fecha]);
+      }
+      guardarProveedoresEnIndexedDB({
+        catalogoProveedores: data.catalogoProveedores,
+        proveedoresAgenda: data.proveedores,
+        preciosGuardadosPan: data.preciosGuardadosPan,
+        preciosGuardadosTortilla: data.preciosGuardadosTortilla
+      });
+      // Respaldo diario rotativo automático (últimos 30 días)
+      guardarBackupDiarioAutomatico(data);
+
+      // 4. CAPA 2: Guardado en localStorage con Purgado Inteligente contra QuotaExceededError
+      this.guardarEnLocalStorageSeguro(data);
+
       this.notify();
 
-      // Sincronización en segundo plano con Firestore (hoja diaria y proveedores globales)
+      // 5. CAPA 3: Sincronización en segundo plano con Cloud Firestore
       if (isFirebaseConectado() && data.fecha) {
         Promise.all([
           guardarHojaEnFirestore(data.fecha, data.hojasPorFecha[data.fecha]),
@@ -910,6 +1017,34 @@ class StateManager {
     } catch (e) {
       console.error('Error al guardar datos:', e);
       this.actualizarIndicadorGuardado('guardado');
+    }
+  }
+
+  guardarEnLocalStorageSeguro(data) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (errQuota) {
+      console.warn('Límite de memoria de 5MB en localStorage alcanzado. Activando optimización de almacenamiento seguro...');
+      // Purgado inteligente: IndexedDB y Firestore conservan TODO el historial completo.
+      // En localStorage mantenemos un clon ligero con las últimas 14 hojas
+      try {
+        const dataLigero = JSON.parse(JSON.stringify(data));
+        if (dataLigero.hojasPorFecha) {
+          const fechasOrdenadas = Object.keys(dataLigero.hojasPorFecha).sort();
+          if (fechasOrdenadas.length > 14) {
+            const fechasAEliminar = fechasOrdenadas.slice(0, fechasOrdenadas.length - 14);
+            fechasAEliminar.forEach(f => {
+              if (f !== dataLigero.fecha) {
+                delete dataLigero.hojasPorFecha[f];
+              }
+            });
+          }
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataLigero));
+        console.log('Almacenamiento localStorage optimizado con éxito. El historial completo sigue 100% blindado en IndexedDB.');
+      } catch (errCritico) {
+        console.error('Error crítico al escribir en localStorage. Los datos siguen protegidos en IndexedDB y Firestore:', errCritico);
+      }
     }
   }
 
@@ -978,10 +1113,11 @@ class StateManager {
   async cambiarFechaHoja(nuevaFecha) {
     if (!nuevaFecha) return;
     
-    // 1. Guardar la hoja actual en su fecha
+    // 1. Guardar la hoja actual en su fecha (memoria, IndexedDB y Firestore)
     if (this.data.fecha) {
       if (!this.data.hojasPorFecha) this.data.hojasPorFecha = {};
       this.data.hojasPorFecha[this.data.fecha] = this.extraerDatosHojaActual();
+      guardarHojaEnIndexedDB(this.data.fecha, this.data.hojasPorFecha[this.data.fecha]);
       if (isFirebaseConectado()) {
         guardarHojaEnFirestore(this.data.fecha, this.data.hojasPorFecha[this.data.fecha]);
       }
@@ -990,24 +1126,40 @@ class StateManager {
     // 2. Verificar si ya existe en memoria o LocalStorage
     let hojaDestino = this.data.hojasPorFecha ? this.data.hojasPorFecha[nuevaFecha] : null;
 
-    // 3. Si no existe localmente y Firebase está conectado, consultar la nube
+    // 3. Si no existe en memoria, buscar en la base de datos de alta capacidad IndexedDB
+    if (!hojaDestino) {
+      try {
+        const hojaIndexed = await cargarHojaDeIndexedDB(nuevaFecha);
+        if (hojaIndexed) {
+          hojaDestino = hojaIndexed;
+          this.data.hojasPorFecha[nuevaFecha] = hojaIndexed;
+          console.log(`Hoja del día ${nuevaFecha} recuperada desde IndexedDB`);
+        }
+      } catch (errIdb) {
+        console.warn('Error al consultar IndexedDB en cambiarFechaHoja:', errIdb);
+      }
+    }
+
+    // 4. Si aún no existe localmente y Firebase está conectado, consultar la nube
     if (!hojaDestino && isFirebaseConectado()) {
       try {
         const hojaNube = await cargarHojaDeFirestore(nuevaFecha);
         if (hojaNube) {
           hojaDestino = hojaNube;
+          this.data.hojasPorFecha[nuevaFecha] = hojaNube;
+          guardarHojaEnIndexedDB(nuevaFecha, hojaNube);
         }
       } catch (e) {
         console.warn('No se pudo obtener la hoja de Firestore:', e);
       }
     }
 
-    // 4. Si aún no existe, generar plantilla limpia
+    // 5. Si aún no existe, generar plantilla limpia
     if (!hojaDestino) {
       hojaDestino = this.crearPlantillaLimpia(nuevaFecha);
     }
 
-    // 5. Cargar datos en la hoja activa
+    // 6. Cargar datos en la hoja activa
     Object.assign(this.data, hojaDestino);
     this.data.fecha = nuevaFecha;
 

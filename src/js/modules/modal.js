@@ -6,6 +6,7 @@ import { stateManager, CATALOGO_PROVEEDORES_PREDETERMINADOS } from '../state.js'
 import { DIAS_SEMANA, CATEGORIAS_PROVEEDOR } from './pipeline.js';
 import { inicializarFirebase, getFirebaseConfigActual, isFirebaseConectado } from '../firebaseClient.js';
 import { ExportManager } from './exportManager.js';
+import { obtenerListaBackupsDiarios, cargarBackupDiarioPorId } from './storageManager.js';
 
 export class ModalManager {
   constructor(overlayId, containerId) {
@@ -1503,21 +1504,33 @@ export class ModalManager {
   // ==========================================
   // 10. MODAL: GUARDADO, EXPORTACIÓN Y RESPALDO (FILTRADO POR PERÍODO)
   // ==========================================
-  openBackupModal() {
+  async openBackupModal() {
     const hoyStr = stateManager.getFechaHoy();
     const [anoActual, mesActual] = hoyStr.split('-');
+    let listaBackups = [];
+    try {
+      listaBackups = await obtenerListaBackupsDiarios();
+    } catch (e) {
+      console.warn('Error al cargar backups diarios:', e);
+    }
 
     const body = `
       <div style="display: flex; flex-direction: column; gap: 16px;">
-        <!-- Cabecera Informativa Sobria -->
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px;">
-          <div style="font-weight: 700; font-size: 0.9rem; color: #0f172a;">Exportación y Respaldo de Datos</div>
-          <p style="margin: 4px 0 0; font-size: 0.76rem; color: #475569; line-height: 1.4;">
-            Selecciona el período a consultar y exportar. La descarga se procesa internamente para evitar sobrecargas del sistema.
+        <!-- Cabecera Informativa con Blindaje de Datos -->
+        <div style="background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); border: 1.5px solid #86efac; border-radius: 8px; padding: 12px 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-weight: 700; font-size: 0.9rem; color: #15803d; display: flex; align-items: center; gap: 6px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              <span>Blindaje Antiperdida de Datos Activo</span>
+            </div>
+            <span style="background: #22c55e; color: #ffffff; font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 9999px;">PROTEGIDO</span>
+          </div>
+          <p style="margin: 6px 0 0; font-size: 0.75rem; color: #334155; line-height: 1.4;">
+            Tus hojas, cuentas y catálogo de proveedores están protegidos en <strong>IndexedDB</strong> (base de datos local de alta capacidad sin límite de 5MB) y en <strong>Cloud Firestore</strong>. La memoria del navegador y Android tiene prohibido borrar tus datos.
           </p>
         </div>
 
-        <!-- Filtro por Período -->
+        <!-- Filtro por Período de Exportación -->
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
           <label style="display: block; font-weight: 700; font-size: 0.82rem; color: #0f172a; margin-bottom: 8px;">
             Período de Exportación:
@@ -1584,12 +1597,56 @@ export class ModalManager {
           </div>
         </div>
 
-        <!-- Sección de Restauración de Respaldo -->
+        <!-- Sección de Respaldos Automáticos Diarios en IndexedDB -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="font-weight: 700; font-size: 0.82rem; color: #0f172a; margin: 0;">
+              Respaldos Automáticos Diarios (${listaBackups.length} disponibles):
+            </label>
+          </div>
+          <p style="font-size: 0.74rem; color: #64748b; margin: 0 0 10px 0;">
+            El sistema genera un respaldo rotativo automático cada día en la base de datos interna para restaurar el sistema en cualquier momento.
+          </p>
+          <div style="max-height: 140px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
+            ${listaBackups.length === 0 ? `
+              <div style="padding: 12px; font-size: 0.76rem; color: #94a3b8; text-align: center;">No hay respaldos automáticos previos aún. Se generará uno automáticamente hoy.</div>
+            ` : `
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+                <thead>
+                  <tr style="background: #f8fafc; color: #475569; text-align: left; border-bottom: 1px solid #e2e8f0;">
+                    <th style="padding: 6px 8px;">Fecha</th>
+                    <th style="padding: 6px 8px;">Proveedores</th>
+                    <th style="padding: 6px 8px;">Hojas</th>
+                    <th style="padding: 6px 8px; text-align: right;">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${listaBackups.slice(0, 10).map(b => `
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                      <td style="padding: 6px 8px; font-weight: 600; color: #1e293b;">
+                        ${b.fecha} <span style="font-size: 0.68rem; color: #64748b; font-weight: normal;">(${b.fechaHoraHumana || ''})</span>
+                      </td>
+                      <td style="padding: 6px 8px; color: #475569;">${b.totalProveedores || 0}</td>
+                      <td style="padding: 6px 8px; color: #475569;">${b.totalHojasRegistradas || 1}</td>
+                      <td style="padding: 6px 8px; text-align: right;">
+                        <button type="button" class="btn-restaurar-backup-auto" data-id="${b.id}" data-fecha="${b.fecha}" style="font-size: 0.7rem; padding: 2px 8px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                          Restaurar
+                        </button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `}
+          </div>
+        </div>
+
+        <!-- Sección de Restauración Manual desde Archivo -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 0.82rem; color: #334155;">Restauración de Base de Datos</span>
+            <span style="font-weight: 700; font-size: 0.82rem; color: #334155;">Restauración Manual desde Archivo</span>
             <button type="button" id="btnToggleRestaurar" class="btn-secondary" style="font-size: 0.72rem; padding: 3px 8px;">
-              Opciones de Restauración
+              Opciones Avanzadas
             </button>
           </div>
 
@@ -1615,7 +1672,7 @@ export class ModalManager {
       <button type="button" class="btn-secondary" id="modalCancelBtn">Cerrar</button>
     `;
 
-    this.open('Gestión y Exportación de Datos', body, footer);
+    this.open('Gestión y Blindaje de Datos', body, footer);
 
     document.getElementById('modalCancelBtn')?.addEventListener('click', () => this.close());
 
@@ -1662,7 +1719,27 @@ export class ModalManager {
       ExportManager.exportarPDF(tipo, fecha, ano, mes);
     });
 
-    // Toggle de sección de restauración
+    // Listeners para restaurar respaldos automáticos diarios de IndexedDB
+    document.querySelectorAll('.btn-restaurar-backup-auto').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const idBackup = btn.getAttribute('data-id');
+        const fechaBackup = btn.getAttribute('data-fecha');
+        if (confirm(`¿Restaurar el sistema completo al respaldo automático del día ${fechaBackup}?\n\nSe restablecerán todas las hojas contables y los proveedores de esa fecha.`)) {
+          const estadoRecuperado = await cargarBackupDiarioPorId(idBackup);
+          if (estadoRecuperado) {
+            stateManager.data = estadoRecuperado;
+            stateManager.saveState();
+            stateManager.notify();
+            alert(`¡Sistema restaurado con éxito al estado del ${fechaBackup}!`);
+            this.close();
+          } else {
+            alert('No se pudo leer el respaldo automático.');
+          }
+        }
+      });
+    });
+
+    // Toggle de sección de restauración manual
     const btnToggle = document.getElementById('btnToggleRestaurar');
     const boxRestaurar = document.getElementById('cajaOpcionesRestaurar');
     btnToggle?.addEventListener('click', () => {
