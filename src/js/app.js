@@ -86,6 +86,54 @@ class App {
     stateManager.subscribe(() => {
       this.updateGlobalHeaderStats();
     });
+
+    // 8. Garantizar SIEMPRE que al abrir la página salga en la hoja diaria del día actual
+    this.forzarHojaDiariaDeHoy();
+    this.setupDetectorCambioDeDia();
+  }
+
+  forzarHojaDiariaDeHoy() {
+    const fechaHoy = stateManager.getFechaHoy();
+    if (stateManager.data.fecha !== fechaHoy) {
+      stateManager.cambiarFechaHoja(fechaHoy);
+    }
+    // Asegurar siempre vista de hoja diaria activa
+    this.switchView('hoja');
+    const navButtons = document.querySelectorAll('.sidebar .nav-item[data-view]');
+    navButtons.forEach(btn => {
+      if (btn.getAttribute('data-view') === 'hoja') {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  setupDetectorCambioDeDia() {
+    const verificarDia = () => {
+      const fechaHoyReal = stateManager.getFechaHoy();
+      if (stateManager.data.fecha !== fechaHoyReal) {
+        console.log(`Detectado cambio de fecha (${stateManager.data.fecha} -> ${fechaHoyReal}). Cambiando a hoja de hoy.`);
+        stateManager.cambiarFechaHoja(fechaHoyReal);
+        if (this.currentView === 'hoja' && this.hojaDiariaModule) {
+          this.hojaDiariaModule.render();
+        }
+      }
+    };
+
+    // Al volver a la pestaña tras suspensión, bloqueo o cambio de app en tablet/móvil
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        verificarDia();
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      verificarDia();
+    });
+
+    // Revisión automática cada 60 segundos por si la pantalla se mantiene encendida al pasar la medianoche (12:00 AM)
+    setInterval(verificarDia, 60000);
   }
 
   setupSidebarNavigation() {

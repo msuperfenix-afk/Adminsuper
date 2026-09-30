@@ -538,17 +538,93 @@ class StateManager {
       if (stored || datosMigracion) {
         const parsed = stored ? JSON.parse(stored) : datosMigracion;
         const merged = { ...SEED_DATA, ...parsed };
-
-        // Asegurar que la fecha activa sea válida (por defecto hoy local)
-        if (!merged.fecha || merged.fecha === '2026-09-15') {
-          const fechaHoy = getFechaHoyLocal();
-          const dHoy = new Date(fechaHoy + 'T12:00:00');
-          merged.fecha = fechaHoy;
-          merged.dia = NOMBRES_DIAS[dHoy.getDay()] || 'Lunes';
-          merged.diaNum = dHoy.getDate();
-          merged.mes = NOMBRES_MESES[dHoy.getMonth()] || 'Ene';
-          merged.ano = dHoy.getFullYear();
+        if (!merged.hojasPorFecha) merged.hojasPorFecha = {};
+        if (merged.hojasPorFecha['2026-09-15']) {
+          delete merged.hojasPorFecha['2026-09-15'];
         }
+
+        // Catálogos recordatorios de precios
+        if (!merged.preciosGuardadosPan) merged.preciosGuardadosPan = { ...SEED_DATA.preciosGuardadosPan };
+        if (!merged.preciosGuardadosTortilla) merged.preciosGuardadosTortilla = { ...SEED_DATA.preciosGuardadosTortilla };
+
+        // OBTENER FECHA DEL DÍA DE HOY LOCAL (SIEMPRE ABRIR EN EL DÍA ACTUAL)
+        const fechaHoy = getFechaHoyLocal();
+        const dHoy = new Date(fechaHoy + 'T12:00:00');
+        const diaNombreHoy = NOMBRES_DIAS[dHoy.getDay()] || 'Lunes';
+        const diaNumHoy = dHoy.getDate();
+        const mesNombreHoy = NOMBRES_MESES[dHoy.getMonth()] || 'Ene';
+        const anoNumHoy = dHoy.getFullYear();
+
+        // Si el estado almacenado tenía abierta una hoja de otro día, respaldarla primero en hojasPorFecha
+        const fechaPrevia = parsed.fecha;
+        if (fechaPrevia && fechaPrevia !== fechaHoy && fechaPrevia !== '2026-09-15') {
+          if (!merged.hojasPorFecha[fechaPrevia]) {
+            merged.hojasPorFecha[fechaPrevia] = {
+              fecha: fechaPrevia,
+              dia: parsed.dia || diaNombreHoy,
+              diaNum: parsed.diaNum || diaNumHoy,
+              mes: parsed.mes || mesNombreHoy,
+              ano: parsed.ano || anoNumHoy,
+              cantidadInicial: parsed.cantidadInicial || 0,
+              conteoPan: JSON.parse(JSON.stringify(parsed.conteoPan || [])),
+              conteoTortilla: JSON.parse(JSON.stringify(parsed.conteoTortilla || [])),
+              comprasProveedores: JSON.parse(JSON.stringify(parsed.comprasProveedores || [])),
+              prestamosPendientes: JSON.parse(JSON.stringify(parsed.prestamosPendientes || [])),
+              arqueoColumnas: JSON.parse(JSON.stringify(parsed.arqueoColumnas || SEED_DATA.arqueoColumnas)),
+              retiros: JSON.parse(JSON.stringify(parsed.retiros || [])),
+              cascada: JSON.parse(JSON.stringify(parsed.cascada || SEED_DATA.cascada)),
+              maquinaMunecos: JSON.parse(JSON.stringify(parsed.maquinaMunecos || SEED_DATA.maquinaMunecos)),
+              maquinasIndividuales: JSON.parse(JSON.stringify(parsed.maquinasIndividuales || SEED_DATA.maquinasIndividuales))
+            };
+          }
+        }
+
+        // AL ABRIR LA PÁGINA: SIEMPRE CARGAR LA HOJA DEL DÍA DE HOY
+        if (merged.hojasPorFecha && merged.hojasPorFecha[fechaHoy]) {
+          // Si el día de hoy ya tiene registros previos guardados, restaurarlos
+          const hojaHoy = merged.hojasPorFecha[fechaHoy];
+          merged.cantidadInicial = hojaHoy.cantidadInicial || 0;
+          merged.conteoPan = JSON.parse(JSON.stringify(hojaHoy.conteoPan || []));
+          merged.conteoTortilla = JSON.parse(JSON.stringify(hojaHoy.conteoTortilla || []));
+          merged.comprasProveedores = JSON.parse(JSON.stringify(hojaHoy.comprasProveedores || []));
+          merged.prestamosPendientes = JSON.parse(JSON.stringify(hojaHoy.prestamosPendientes || []));
+          merged.arqueoColumnas = JSON.parse(JSON.stringify(hojaHoy.arqueoColumnas || SEED_DATA.arqueoColumnas));
+          merged.retiros = JSON.parse(JSON.stringify(hojaHoy.retiros || []));
+          merged.cascada = JSON.parse(JSON.stringify(hojaHoy.cascada || SEED_DATA.cascada));
+          merged.maquinaMunecos = JSON.parse(JSON.stringify(hojaHoy.maquinaMunecos || SEED_DATA.maquinaMunecos));
+          merged.maquinasIndividuales = JSON.parse(JSON.stringify(hojaHoy.maquinasIndividuales || SEED_DATA.maquinasIndividuales));
+        } else if (fechaPrevia !== fechaHoy) {
+          // Si hoy es un nuevo día y no tiene datos previos, iniciar plantilla limpia para hoy
+          merged.cantidadInicial = 0;
+          merged.conteoPan = PROVEEDORES_PAN_OFICIALES.map((p, idx) => ({
+            id: `cp-${idx + 1}`,
+            proveedor: p,
+            bol: '', dul: '', camb: '', total: '',
+            precioPieza: merged.preciosGuardadosPan?.[p] || '',
+            costo: ''
+          }));
+          merged.conteoTortilla = PROVEEDORES_TORTILLA_OFICIALES.map((t, idx) => ({
+            id: `ct-${idx + 1}`,
+            proveedor: t,
+            camb: '', nuev: '', total: '',
+            precioKilo: merged.preciosGuardadosTortilla?.[t] || '',
+            costo: ''
+          }));
+          merged.comprasProveedores = [];
+          merged.prestamosPendientes = [];
+          merged.retiros = [];
+          merged.arqueoColumnas = JSON.parse(JSON.stringify(SEED_DATA.arqueoColumnas));
+          merged.cascada = JSON.parse(JSON.stringify(SEED_DATA.cascada));
+          merged.maquinaMunecos = JSON.parse(JSON.stringify(SEED_DATA.maquinaMunecos));
+          merged.maquinasIndividuales = JSON.parse(JSON.stringify(SEED_DATA.maquinasIndividuales));
+        }
+
+        // Fijar cronología exacta de hoy
+        merged.fecha = fechaHoy;
+        merged.dia = diaNombreHoy;
+        merged.diaNum = diaNumHoy;
+        merged.mes = mesNombreHoy;
+        merged.ano = anoNumHoy;
 
         // Migración de nombres de tortilla si hiciera falta
         if (Array.isArray(merged.conteoTortilla)) {
@@ -561,10 +637,6 @@ class StateManager {
             if (t.proveedor === 'TORT. SAN JOSE') t.proveedor = 'TORTILLA AMARILLA';
           });
         }
-
-        // Catálogos recordatorios de precios
-        if (!merged.preciosGuardadosPan) merged.preciosGuardadosPan = { ...SEED_DATA.preciosGuardadosPan };
-        if (!merged.preciosGuardadosTortilla) merged.preciosGuardadosTortilla = { ...SEED_DATA.preciosGuardadosTortilla };
 
         // Preservar fielmente los arrays de transacciones sin resetear
         if (!Array.isArray(merged.comprasProveedores)) merged.comprasProveedores = [];
@@ -699,8 +771,9 @@ class StateManager {
         this.notify();
       });
 
-      // 2. Sincronizar hoja del día actual
-      const fechaActiva = this.data.fecha || getFechaHoyLocal();
+      // 2. Sincronizar hoja del día actual (siempre el día de hoy al abrir la app)
+      const fechaActiva = getFechaHoyLocal();
+      this.data.fecha = fechaActiva;
       const hojaRemota = await cargarHojaDeFirestore(fechaActiva);
       if (hojaRemota) {
         console.log(`Hoja activa ${fechaActiva} descargada desde Firestore`);
