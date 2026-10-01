@@ -210,8 +210,12 @@ class App {
       if (statsContainer) statsContainer.classList.add('active');
       if (pageTitle) pageTitle.innerHTML = 'Estadísticas y Reportes Generales';
       if (pageSubtitle) pageSubtitle.innerText = 'Desglose de compras, análisis por proveedor, proporciones de efectivo vs transferencia y promedios';
-      if (viewSwitcher) viewSwitcher.style.display = 'none';
       if (this.estadisticasModule) this.estadisticasModule.render();
+    }
+
+    const searchContainer = document.querySelector('.search-container');
+    if (searchContainer) {
+      searchContainer.style.display = (view === 'pipeline' || view === 'proveedores') ? '' : 'none';
     }
   }
 
