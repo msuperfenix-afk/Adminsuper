@@ -57,72 +57,77 @@ export class HojaDiariaModule {
     let html = `
       <div class="hoja-papel-container">
         
-        <!-- BARRA RÁPIDA DE DÍAS (LUNES A DOMINGO), CALENDARIO DE HISTORIAL Y FECHA -->
+        <!-- BARRA RÁPIDA DE DÍAS Y TARJETA MÉTRICA DE CANTIDAD INICIAL (ESTILO LINEAR / STRIPE) -->
         <div class="barra-navegacion-dias">
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px;">Día:</span>
-            <div style="display: flex; gap: 4px;">
+          <div class="barra-dias-flex-left">
+            <!-- Selector Semanal Compacto (ej. JUE 1, VIE 2) -->
+            <div class="selector-semana-compacto">
               ${diasSemanaBarra.map(dia => `
                 <button class="btn-dia-selector ${dia.activo ? 'activo' : ''} ${dia.esHoy ? 'es-dia-hoy' : ''}" data-fecha-iso="${dia.iso}" title="${dia.esHoy ? 'HOY (Editable)' : `Cargar hoja del ${dia.corto} ${dia.numero}`}">
-                  <strong>${dia.corto}</strong>
-                  <span>${dia.numero}</span>
+                  <span class="dia-label-corto">${dia.corto}</span>
+                  <span class="dia-num-badge">${dia.numero}</span>
                   ${dia.esHoy ? '<span class="punto-hoy-badge">•</span>' : ''}
                 </button>
               `).join('')}
             </div>
 
-            <!-- Botón Formal con Solo el Logo de Calendario -->
-            <button class="btn-abrir-calendario-icono" id="btnAbrirCalendarioHistorial" title="Calendario e Historial Contable">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-                <circle cx="8" cy="14" r="1.1" fill="currentColor"></circle>
-                <circle cx="12" cy="14" r="1.1" fill="currentColor"></circle>
-                <circle cx="16" cy="14" r="1.1" fill="currentColor"></circle>
-                <circle cx="8" cy="18" r="1.1" fill="currentColor"></circle>
-                <circle cx="12" cy="18" r="1.1" fill="currentColor"></circle>
-                <circle cx="16" cy="18" r="1.1" fill="currentColor"></circle>
-              </svg>
-            </button>
+            <!-- Métrica Editable de CANTIDAD INICIAL (Reemplaza inputs redundantes) -->
+            <div class="card-metrica-inicial ${editableGeneral ? 'campo-inicial-clickeable' : ''}" id="btnAbrirModalCantidadInicial" 
+              title="${editableGeneral ? 'Clic para capturar o editar la Cantidad Inicial de caja' : 'Cantidad inicial guardada'}"
+              tabindex="${editableGeneral ? '0' : '-1'}" role="button">
+              <div class="card-metrica-header">
+                <span class="card-metrica-label">CANTIDAD INICIAL</span>
+                ${editableGeneral ? '<span class="card-metrica-edit-icon" title="Editar">✎</span>' : ''}
+              </div>
+              <div class="card-metrica-valor mono-num ${editableGeneral && !tieneMontoInicial ? 'alerta-falta-inicial' : ''}" id="displayValorCantidadInicial">
+                ${tieneMontoInicial ? this.formatMoney(d.cantidadInicial) : '$0.00'}
+              </div>
+            </div>
           </div>
 
-          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 0.74rem; color: #64748b; font-weight: 700;">Fecha:</span>
+          <!-- Lado Derecho: Selector de Fecha, Candado de Seguridad y Status Live -->
+          <div class="barra-dias-flex-right">
+            <div class="fecha-picker-wrapper">
               <input type="date" class="input-fecha-picker" id="inputFechaSelector" value="${d.fecha || ''}">
+              <button class="btn-abrir-calendario-icono" id="btnAbrirCalendarioHistorial" title="Calendario e Historial Contable">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </button>
             </div>
 
-            <!-- Logo de Candado de Seguridad y Control de Bloqueo a las 12 AM -->
+            <!-- Candado de Seguridad (12 AM) -->
             <button class="btn-candado-seguridad ${estaBloqueada ? 'es-bloqueado' : 'es-desbloqueado'}" 
               id="btnCandadoSeguridad" 
               title="${estaBloqueada ? 'Hoja bloqueada (Corte cerrado). Clic para desbloquear con PIN de Administrador' : (estaDesbloqueadaPorPin ? 'Plantilla anterior desbloqueada con PIN. Clic para volver a bloquear' : 'Hoja activa de hoy (Editable)')}">
               ${estaBloqueada ? `
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
                 <span>Bloqueado</span>
               ` : (estaDesbloqueadaPorPin ? `
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                   <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
                 </svg>
-                <span>Desbloqueado (Admin)</span>
+                <span>Desbloqueado</span>
               ` : `
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                   <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
                 </svg>
-                <span>Editable (Hoy)</span>
+                <span>Editable</span>
               `)}
             </button>
 
-            <!-- Indicador Verde de Guardado Automático (No editable) -->
-            <div class="badge-guardado-verde" id="btnGuardadoIndicador" title="Sincronizado globalmente en la nube">
-              <span class="punto-verde-guardado"></span>
-              <span class="texto-guardado-label" id="textoGuardadoLabel">En Vivo (Global)</span>
+            <!-- Badge Live Verde Pastel -->
+            <div class="badge-status-live" id="btnGuardadoIndicador" title="Sincronizado globalmente en la nube">
+              <span class="punto-live"></span>
+              <span>Live</span>
             </div>
           </div>
         </div>
@@ -143,8 +148,8 @@ export class HojaDiariaModule {
             </div>
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
               <button type="button" class="btn-desbloquear-con-pin" id="btnDesbloquearBanner" title="Desbloquear edición y eliminación con PIN de Administrador">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
-                <span>Desbloquear con PIN 🔓</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                <span>Desbloquear con PIN</span>
               </button>
               <button type="button" class="btn-regresar-hoy" id="btnIrAHoy" title="Volver a la hoja editable del día de hoy">
                 Ir a Hoja de Hoy (${hoyISO})
@@ -167,75 +172,7 @@ export class HojaDiariaModule {
               🔒 Volver a Bloquear
             </button>
           </div>
-        `) : (!tieneMontoInicial ? `
-          <!-- RECORDATORIO: CANTIDAD INICIAL (Clickeable) -->
-          <div class="banner-aviso-monto-inicial" id="btnAvisoMontoInicial" style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px 12px; cursor: pointer;" title="Clic aquí para ingresar la Cantidad Inicial">
-            <div class="banner-aviso-contenido">
-              <span class="icono-alerta-inicial" style="font-weight: 800; font-size: 0.74rem; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #475569;">AVISO</span>
-              <div>
-                <div class="banner-titulo-inicial" style="color: #334155; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;">
-                  <span>CANTIDAD INICIAL DE CAJA</span>
-                  <span style="font-size: 0.72rem; color: #0284c7; font-weight: 700;">(✎ Clic para ingresar)</span>
-                </div>
-                <div class="banner-sub-inicial" style="color: #64748b; font-size: 0.74rem;">
-                  Haz clic aquí o en el campo superior <strong>CANTIDAD INICIAL</strong> para ingresar el fondo de apertura de hoy.
-                </div>
-              </div>
-            </div>
-          </div>
-        ` : '')}
-
-        <!-- ENCABEZADO DE LA HOJA (Idéntico al membrete físico) -->
-        <header class="hoja-header">
-          <div class="hoja-header-brand">
-            <img src="./logo-fenix.png" alt="Logo Fénix" class="hoja-logo-img">
-            <div>
-              <h1 class="hoja-titulo-principal">MINISUPER FENIX</h1>
-              <span class="hoja-subtitulo">CONTROL DIARIO DE COMPRAS, PROVEEDORES Y ARQUEOS</span>
-            </div>
-          </div>
-
-          <div class="hoja-header-datos">
-            <div class="hoja-campo-linea">
-              <span class="header-dato-label">DIA:</span>
-              <span class="hoja-texto-fijo-dia" id="displayDia">${(d.dia || 'LUNES').toUpperCase()}</span>
-            </div>
-
-            <div class="hoja-campo-fecha">
-              <span class="header-dato-label">FECHA:</span>
-              <span class="hoja-texto-fijo-fecha" id="displayFecha">${d.diaNum || ''} / ${d.mes || ''} / ${d.ano || ''}</span>
-            </div>
-
-            <!-- Recuadro Táctil de Cantidad Inicial -->
-            <div class="hoja-campo-inicial ${editableGeneral ? 'campo-inicial-clickeable' : ''}" id="btnAbrirModalCantidadInicial" 
-              title="${editableGeneral ? 'Clic para capturar o editar la Cantidad Inicial de caja' : 'Cantidad inicial guardada'}"
-              style="cursor: ${editableGeneral ? 'pointer' : 'default'}; user-select: none;">
-              <label style="cursor: inherit;">CANTIDAD INICIAL:</label>
-              <div class="input-money-wrap" style="cursor: inherit; display: flex; align-items: center; gap: 4px;">
-                <span style="font-weight: 800; color: #0f172a;">$</span>
-                <div class="hoja-valor-inicial-display ${editableGeneral && !tieneMontoInicial ? 'alerta-falta-inicial' : ''}" id="displayValorCantidadInicial"
-                  style="min-width: 72px; padding: 2px 6px; font-weight: 800; font-size: 0.88rem; text-align: right; border-radius: 4px; background: #ffffff; border: 1.5px solid ${editableGeneral && !tieneMontoInicial ? '#f59e0b' : '#cbd5e1'}; color: #0f172a;">
-                  ${tieneMontoInicial ? this.formatMoney(d.cantidadInicial).replace('$', '').trim() : '<span style="color: #94a3b8; font-weight: normal;">0.00</span>'}
-                </div>
-                ${editableGeneral ? '<span class="badge-lapiz-edit" style="font-size: 0.82rem; color: #0284c7; margin-left: 2px;" title="Editar">✎</span>' : ''}
-              </div>
-            </div>
-
-            <div class="hoja-header-actions">
-              <button class="btn-fenix-print" id="btnImprimirHoja" title="Imprimir hoja contable física">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                <span>Imprimir Hoja</span>
-              </button>
-              <button class="btn-fenix-email" id="btnEnviarCorteEmail" title="Enviar este corte contable a un correo electrónico">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                  <polyline points="22,6 12,13 2,6"></polyline>
-                </svg>
-                <span>Enviar a Correo</span>
-              </button>
-            </div>
-          </div>
-        </header>
+        `) : ''}
 
         <!-- CUERPO PRINCIPAL EN 2 COLUMNAS (COMPRAS/PROVEEDORES Y CAJA/ARQUEO) -->
         <div class="hoja-grid-layout">
@@ -247,8 +184,10 @@ export class HojaDiariaModule {
             <!-- 1. CONTEO PAN Y TORTILLA -->
             <div class="hoja-subcuadro">
               <div class="subcuadro-titulo-flex">
-                <span>CONTEO PAN Y TORTILLA</span>
-                <span class="badge-hint-click-info" title="Haz clic en cualquier renglón o en el botón de info para capturar cantidades y precio">Clic en renglón o botón (i) para capturar</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span>CONTEO PAN Y TORTILLA</span>
+                  <span class="badge-status-live"><span class="punto-live"></span> Live</span>
+                </div>
               </div>
               
               <div class="tabla-responsive-wrap">
@@ -342,11 +281,14 @@ export class HojaDiariaModule {
             <!-- 2. TABLA DE COMPRAS / PROVEEDORES (Con scroll y botón + en último renglón) -->
             <div class="hoja-subcuadro" style="margin-top: 14px;">
               <div class="subcuadro-titulo-flex">
-                <span>RELACIÓN DE PROVEEDORES PAGADOS</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span>RELACIÓN DE PROVEEDORES PAGADOS</span>
+                  <span class="badge-status-live"><span class="punto-live"></span> Live</span>
+                </div>
                 <div class="badge-desglose-pagos">
-                  <span class="badge-item-pago" title="Total pagado en efectivo">Efectivo: <strong>${this.formatMoney(totales.totalEfectivoProveedores)}</strong></span>
-                  <span class="badge-item-pago" title="Total pagado por transferencia">Transf: <strong>${this.formatMoney(totales.totalTransferenciaProveedores)}</strong></span>
-                  <span class="badge-total-pagado">Total: ${this.formatMoney(totales.totalPagadoProveedores)}</span>
+                  <span class="badge-item-pago" title="Total pagado en efectivo">EF: <strong class="mono-num">${this.formatMoney(totales.totalEfectivoProveedores)}</strong></span>
+                  <span class="badge-item-pago" title="Total pagado por transferencia">TR: <strong class="mono-num">${this.formatMoney(totales.totalTransferenciaProveedores)}</strong></span>
+                  <span class="badge-total-pagado mono-num">Total: ${this.formatMoney(totales.totalPagadoProveedores)}</span>
                 </div>
               </div>
 
@@ -393,7 +335,7 @@ export class HojaDiariaModule {
                             </span>
                           </td>
                           <td style="text-align: right;">
-                            <span class="font-bold" style="font-size: 0.84rem; padding-right: 4px; color: #0f172a;">
+                            <span class="font-bold mono-num" style="font-size: 0.84rem; padding-right: 4px; color: #0f172a;">
                               ${this.formatMoney(row.pagado)}
                             </span>
                           </td>
@@ -429,8 +371,15 @@ export class HojaDiariaModule {
             <!-- 1. PRESTAMOS O PENDIENTES DE PAGO (Con scroll y botón + en último renglón) -->
             <div class="hoja-subcuadro">
               <div class="subcuadro-titulo-flex">
-                <span>PRESTAMOS O PENDIENTES DE PAGO</span>
-                <span style="font-weight: 700; color: #b91c1c; font-size: 0.78rem;">Total: ${this.formatMoney(totales.totalPendientes)}</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span>PRESTAMOS O PENDIENTES DE PAGO</span>
+                  <span class="badge-status-live"><span class="punto-live"></span> Live</span>
+                </div>
+                ${totales.totalPendientes > 0 ? `
+                  <span style="font-weight: 700; color: #dc2626; font-size: 0.78rem;" class="mono-num">Pendiente: ${this.formatMoney(totales.totalPendientes)}</span>
+                ` : `
+                  <span style="font-weight: 600; color: #64748b; font-size: 0.78rem;" class="mono-num">Al corriente ($0.00)</span>
+                `}
               </div>
               <div class="tabla-scroll-pendientes">
                 <table class="hoja-tabla-pendientes">
@@ -470,7 +419,7 @@ export class HojaDiariaModule {
                               ${pres.nota ? `<span class="prestamo-nota">${pres.nota}</span>` : ''}
                             </div>
                           </td>
-                          <td class="text-right font-bold ${pres.liquidado ? 'prestamo-monto-liquidado' : ''}" style="color: #0f172a;">
+                          <td class="text-right font-bold mono-num ${pres.liquidado ? 'prestamo-monto-liquidado' : ''}" style="color: #0f172a;">
                             ${this.formatMoney(pres.pendiente)}
                           </td>
                           ${editableGeneral ? `
@@ -500,8 +449,10 @@ export class HojaDiariaModule {
             <!-- 2. CORTE Y ARQUEO (3 Columnas - Captura por Modal y Bloqueo Definitivo) -->
             <div class="hoja-subcuadro" style="margin-top: 14px;">
               <div class="subcuadro-titulo-flex">
-                <span>CORTE Y ARQUEO</span>
-                <span style="font-size: 0.72rem; color: #64748b; font-weight: normal;">* Da clic en la columna para capturar o revisar arqueo</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span>CORTE Y ARQUEO</span>
+                  <span class="badge-status-live"><span class="punto-live"></span> Live</span>
+                </div>
               </div>
 
               <div class="tabla-responsive-wrap">

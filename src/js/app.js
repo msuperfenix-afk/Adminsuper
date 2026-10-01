@@ -243,6 +243,19 @@ class App {
       btnKanban?.classList.remove('active');
       if (this.pipelineModule) this.pipelineModule.setVistaModo('lista');
     });
+
+    // Botones Globales Minimalistas Outline en Top Bar: Print y Send Email
+    document.getElementById('btnTopBarPrint')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.print();
+    });
+
+    document.getElementById('btnTopBarEmail')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (this.modalManager) {
+        this.modalManager.openEnviarCorteEmailModal();
+      }
+    });
   }
 
   updateGlobalHeaderStats() {
