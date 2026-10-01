@@ -3619,8 +3619,16 @@ export class ModalManager {
         <!-- BLOQUE 4: CONTACTO Y NOTAS -->
         <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569;">Teléfono / Preventista</label>
-            <input type="text" class="form-control" name="contacto" placeholder="Ej. Juan Pérez / 449-123-4567" value="${p.contacto || ''}" style="font-size: 0.86rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: #475569; margin: 0;">Teléfono / Preventista</label>
+              ${p.contacto ? `
+                <button type="button" id="btnLlamarDesdeModal" style="display: inline-flex; align-items: center; gap: 4px; background: #ecfdf5; border: 1px solid #86efac; color: #15803d; border-radius: 4px; padding: 2px 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer;" title="Abrir app de llamadas del celular">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                  <span>Llamar ahora</span>
+                </button>
+              ` : ''}
+            </div>
+            <input type="text" class="form-control" name="contacto" id="inputContactoCatModal" placeholder="Ej. 449-123-4567 o Preventista: 449-123-4567" value="${p.contacto || ''}" style="font-size: 0.86rem;">
           </div>
 
           <div class="form-group" style="margin-bottom: 0;">
@@ -3647,6 +3655,17 @@ export class ModalManager {
     this.open(isEdit ? `Editar Proveedor: ${p.nombre}` : 'Nuevo Proveedor en Catálogo', body, footer);
 
     document.getElementById('btnCancelProvCat')?.addEventListener('click', () => this.close());
+    
+    // Botón de llamada directa desde el modal
+    document.getElementById('btnLlamarDesdeModal')?.addEventListener('click', () => {
+      const val = document.getElementById('inputContactoCatModal')?.value || '';
+      const limpio = val.replace(/\D/g, '');
+      if (limpio.length >= 7) {
+        window.location.href = `tel:${limpio}`;
+      } else {
+        alert('Ingresa un número telefónico de al menos 7 a 10 dígitos para marcar.');
+      }
+    });
     document.getElementById('btnSaveProvCat')?.addEventListener('click', () => {
       const form = document.getElementById('formProvCatalogo');
       if (!form.checkValidity()) {

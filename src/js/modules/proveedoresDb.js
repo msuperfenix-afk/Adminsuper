@@ -6,6 +6,52 @@
 import { stateManager } from '../state.js';
 import { DIAS_SEMANA, CATEGORIAS_PROVEEDOR } from './pipeline.js';
 
+/**
+ * Extrae y valida la información de teléfono de un campo de contacto
+ * Soporta números locales (7 dígitos), móviles/nacionales (10 dígitos) y con prefijo +52
+ */
+export function obtenerInfoTelefono(contacto) {
+  if (!contacto || typeof contacto !== 'string') return null;
+
+  // Buscar secuencias numéricas de teléfono en el texto
+  const matches = contacto.match(/(?:\+?52\s*)?(?:[0-9][\s.-]?){7,13}[0-9]/g);
+  let numero = null;
+  if (matches && matches.length > 0) {
+    numero = matches[0].replace(/\D/g, '');
+  } else {
+    const soloNum = contacto.replace(/\D/g, '');
+    if (soloNum.length >= 7 && soloNum.length <= 15) {
+      numero = soloNum;
+    }
+  }
+
+  if (!numero || numero.length < 7) return null;
+
+  // Manejar prefijo país México 52 si viene incluido
+  let numDiez = null;
+  if (numero.length === 12 && numero.startsWith('52')) {
+    numDiez = numero.slice(2);
+  } else if (numero.length === 10) {
+    numDiez = numero;
+  }
+
+  let formateado = numero;
+  if (numDiez) {
+    formateado = `(${numDiez.slice(0, 3)}) ${numDiez.slice(3, 6)}-${numDiez.slice(6)}`;
+  } else if (numero.length === 7) {
+    formateado = `${numero.slice(0, 3)}-${numero.slice(3)}`;
+  }
+
+  return {
+    numero,
+    formateado,
+    esDiezDigitos: !!numDiez,
+    numDiez: numDiez || numero,
+    urlTel: `tel:${numero}`,
+    urlWa: numDiez ? `https://wa.me/52${numDiez}` : null
+  };
+}
+
 export class ProveedoresDbModule {
   constructor(containerId, modalCallbacks = {}) {
     this.container = document.getElementById(containerId);
@@ -157,7 +203,7 @@ export class ProveedoresDbModule {
                   <th style="width: 130px; text-align: right;">PRESUPUESTO</th>
                   <th style="width: 160px; text-align: center;">CANTIDAD COMPRAS</th>
                   <th style="width: 150px; text-align: right;">TOTAL COMPRADO</th>
-                  <th style="width: 130px; text-align: center;">ACCIONES</th>
+                  <th style="width: 165px; text-align: center;">ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
@@ -179,6 +225,9 @@ export class ProveedoresDbModule {
                   const diaNombre = diaObj ? diaObj.nombre : (p.diaHabitual ? p.diaHabitual : 'Variable');
                   const esTransf = (p.tipoPago || '').toLowerCase().includes('transferencia');
                   
+                  // Extracción de datos telefónicos para llamada directa
+                  const telInfo = obtenerInfoTelefono(p.contacto);
+
                   // Obtener total pagado y cantidad de compras
                   const statsProv = stateManager.getEstadisticasProveedor(p.nombre);
                   const totalPagado = statsProv ? statsProv.totalPagado : 0;
@@ -191,7 +240,29 @@ export class ProveedoresDbModule {
                       <td>
                         <div class="provdb-name-cell fila-clickeable-compras" data-nombre-prov="${p.nombre}" style="cursor: pointer;" title="Clic para ver o registrar compras de ${p.nombre}">
                           <strong class="provdb-name-title" style="color: #0284c7;">${p.nombre}</strong>
-                          ${p.contacto ? `<span class="provdb-contact-info">Tel: ${p.contacto}</span>` : ''}
+                          
+                          <!-- Fila de Contacto y Botón de Llamada Móvil -->
+                          <div class="provdb-contact-row" onclick="event.stopPropagation();">
+                            ${p.contacto ? `
+                              <span class="provdb-contact-info" title="${p.contacto}">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                ${p.contacto}
+                              </span>
+                            ` : ''}
+
+                            ${telInfo ? `
+                              <a href="${telInfo.urlTel}" class="btn-chip-llamar" title="Llamar a ${p.nombre} (${telInfo.formateado})">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                <span>Llamar</span>
+                              </a>
+                            ` : `
+                              <button type="button" class="btn-chip-asignar-tel btn-pedir-tel" data-id="${p.id}" data-nombre="${p.nombre}" title="Ingresar teléfono para llamar con un toque">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                <span>+ Tel</span>
+                              </button>
+                            `}
+                          </div>
+
                           ${p.notas ? `<span class="provdb-notes-info">Nota: ${p.notas}</span>` : ''}
                         </div>
                       </td>
@@ -234,6 +305,22 @@ export class ProveedoresDbModule {
                       </td>
                       <td class="text-center">
                         <div class="provdb-actions-wrap">
+                          <!-- Botón de Llamada Directa (abre la app de llamadas del teléfono) -->
+                          ${telInfo ? `
+                            <a href="${telInfo.urlTel}" class="btn-act-icon btn-call-action activo" title="Llamar a ${p.nombre}: ${telInfo.formateado}">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            </a>
+                            ${telInfo.esDiezDigitos ? `
+                              <a href="${telInfo.urlWa}" target="_blank" rel="noopener noreferrer" class="btn-act-icon btn-wa-action" title="Mensaje de WhatsApp a ${p.nombre}">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                              </a>
+                            ` : ''}
+                          ` : `
+                            <button type="button" class="btn-act-icon btn-call-action sin-tel btn-pedir-tel" data-id="${p.id}" data-nombre="${p.nombre}" title="Ingresar número para llamar a ${p.nombre}">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            </button>
+                          `}
+
                           <button type="button" class="btn-act-icon btn-compras-action btn-ver-compras" data-nombre-prov="${p.nombre}" title="Registro de Compras">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                           </button>
@@ -355,6 +442,42 @@ export class ProveedoresDbModule {
         e.preventDefault();
         const nombre = el.getAttribute('data-nombre-prov');
         abrirCompras(nombre);
+      });
+    });
+
+    // 7. Acciones de Llamada Telefónica Directa (para celular y registro rápido)
+    this.container.querySelectorAll('.btn-pedir-tel').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const nombre = btn.getAttribute('data-nombre');
+        const prov = stateManager.data.catalogoProveedores.find(p => p.id === id);
+        const telExistente = prov?.contacto ? (obtenerInfoTelefono(prov.contacto)?.numero || '') : '';
+        
+        const nuevoNum = prompt(
+          `📞 Llamar a ${nombre}\n\nIngresa el número de teléfono del proveedor o preventista (ej: 4491234567) para marcarle directamente y guardarlo en su contacto:`,
+          telExistente
+        );
+
+        if (nuevoNum !== null && nuevoNum.trim() !== '') {
+          const limpio = nuevoNum.replace(/\D/g, '');
+          if (limpio.length >= 7) {
+            let contactoNuevo = '';
+            if (prov?.contacto && !prov.contacto.match(/\d{7}/)) {
+              contactoNuevo = `${prov.contacto} - Tel: ${limpio}`;
+            } else {
+              contactoNuevo = `Tel: ${limpio}`;
+            }
+            stateManager.updateProveedorCatalogo(id, { contacto: contactoNuevo });
+            this.render();
+
+            // Abrir la app de llamadas del teléfono celular inmediatamente
+            window.location.href = `tel:${limpio}`;
+          } else {
+            alert('Por favor ingresa un número de teléfono válido (mínimo 7 a 10 dígitos).');
+          }
+        }
       });
     });
   }

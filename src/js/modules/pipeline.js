@@ -4,6 +4,7 @@
  */
 
 import { stateManager } from '../state.js';
+import { obtenerInfoTelefono } from './proveedoresDb.js';
 
 export const DIAS_SEMANA = [
   { id: 'lunes', nombre: 'Lunes', corto: 'LUN' },
@@ -345,6 +346,19 @@ export class PipelineModule {
       ? (p.vinoPreventa ? (p.costoPreventa || p.presupuestoAprox) : (p.presupuestoAprox || p.preventaPresupuesto || 0))
       : (p.presupuestoAprox || p.preventaPresupuesto || 0);
 
+    // Teléfono de contacto (del proveedor o del catálogo maestro)
+    let contactoTel = p.contacto || '';
+    if (!contactoTel && stateManager.data.catalogoProveedores) {
+      const cat = stateManager.data.catalogoProveedores.find(c => 
+        (c.id && p.catalogoId && c.id === p.catalogoId) ||
+        (c.nombre && p.proveedor && c.nombre.trim().toLowerCase() === p.proveedor.trim().toLowerCase())
+      );
+      if (cat) {
+        contactoTel = cat.contacto || cat.telefono || '';
+      }
+    }
+    const telInfo = obtenerInfoTelefono(contactoTel);
+
     return `
       <div class="deal-card ${esVino ? 'proveedor-vino' : ''} ${esPreventa ? 'card-preventa' : ''}" data-id="${p.id}" id="card-${p.id}" style="cursor: pointer; ${esPreventa ? 'border-left: 3.5px solid #d97706;' : ''}">
         
@@ -364,11 +378,18 @@ export class PipelineModule {
         <!-- Acciones especiales de Preventa si aplica -->
         ${bloqueAccionPreventa}
 
-        <!-- Línea 2: Hora / Estado + Botones con Logo (Lista, Editar, Eliminar) -->
+        <!-- Línea 2: Hora / Estado + Botones con Logo (Lista, Llamar, Editar, Eliminar) -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px; padding-top: 4px; border-top: 1px solid #f1f5f9;">
           ${subtituloEstado}
 
           <div style="display: flex; align-items: center; gap: 4px;" class="card-action-bar">
+            ${telInfo.tieneNumero ? `
+              <!-- Botón Llamar Directo a Celular con Icono SVG -->
+              <a href="${telInfo.urlTel}" class="btn-card-accion btn-card-call" title="Llamar a ${p.proveedor} (${telInfo.formateado})" onclick="event.stopPropagation();">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              </a>
+            ` : ''}
+
             <!-- Botón Lista de Pedido con Icono SVG -->
             <button type="button" class="btn-card-accion" data-action="ver-pedido" data-id="${p.id}" title="Ver/Editar lista de pedido">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>
@@ -413,6 +434,15 @@ export class PipelineModule {
             <tbody>
               ${filtrados.map(p => {
                 const cant = Array.isArray(p.listaPedido) ? p.listaPedido.length : 0;
+                let cTel = p.contacto || '';
+                if (!cTel && stateManager.data.catalogoProveedores) {
+                  const cat = stateManager.data.catalogoProveedores.find(c => 
+                    (c.id && p.catalogoId && c.id === p.catalogoId) ||
+                    (c.nombre && p.proveedor && c.nombre.trim().toLowerCase() === p.proveedor.trim().toLowerCase())
+                  );
+                  if (cat) cTel = cat.contacto || cat.telefono || '';
+                }
+                const telInfo = obtenerInfoTelefono(cTel);
                 return `
                 <tr style="cursor: pointer;" class="fila-proveedor-lista ${p.yaVino ? 'proveedor-vino' : ''}" data-id="${p.id}">
                   <td class="font-bold">${p.dia.toUpperCase()}</td>
@@ -434,6 +464,11 @@ export class PipelineModule {
                     }
                   </td>
                   <td>
+                    ${telInfo.tieneNumero ? `
+                      <a href="${telInfo.urlTel}" class="btn-card-accion btn-card-call" title="Llamar a ${p.proveedor} (${telInfo.formateado})" onclick="event.stopPropagation();" style="margin-right: 4px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                      </a>
+                    ` : ''}
                     <button class="btn-card-accion" data-action="edit" data-id="${p.id}" title="Editar">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                     </button>
