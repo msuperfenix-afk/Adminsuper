@@ -354,7 +354,25 @@ input, button, select, textarea {
   box-shadow: 0 4px 8px rgba(185, 28, 28, 0.35);
 }
 
-/* Botones Globales Minimalistas en Top Bar (Outline: Print & Send Email) */
+/* Selector / Badge de Sucursal Estilo Xero/Stripe */
+.sucursal-selector-badge {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.sucursal-selector-badge strong {
+  color: #0f172a;
+}
+
+/* Botones Globales Minimalistas en Top Bar (Outline: Imprimir y Enviar Correo) */
 .topbar-global-actions {
   display: flex;
   align-items: center;
@@ -1016,17 +1034,17 @@ input, button, select, textarea {
 
 .hoja-subcuadro {
   border: 1px solid #e2e8f0;
-  border-radius: 4px;
+  border-radius: 8px;
   background: #ffffff;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
 }
 
 .subcuadro-titulo {
   background: #fafafa;
   border-bottom: 1px solid #e2e8f0;
-  padding: 6px 10px;
+  padding: 7px 12px;
   font-size: 0.76rem;
   font-weight: 700;
   color: #334155;
@@ -1036,7 +1054,7 @@ input, button, select, textarea {
 .subcuadro-titulo-flex {
   background: #fafafa;
   border-bottom: 1px solid #e2e8f0;
-  padding: 6px 10px;
+  padding: 7px 12px;
   font-size: 0.76rem;
   font-weight: 700;
   color: #334155;
@@ -1052,10 +1070,10 @@ input, button, select, textarea {
   font-size: 0.76rem;
   font-weight: 700;
   border: 1px solid #e2e8f0;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
-/* Tablas Fénix Estilo Cuadrícula Contable Limpia */
+/* Tablas Fénix Estilo Cuadrícula Contable Limpia (Xero / Stripe) */
 .hoja-tabla-conteo, .hoja-tabla-proveedores, .hoja-tabla-pendientes, .hoja-tabla-arqueo, .hoja-tabla-retiros {
   width: 100%;
   border-collapse: collapse;
@@ -1066,15 +1084,16 @@ input, button, select, textarea {
   border: 1px solid #e2e8f0;
   background: #f8fafc;
   color: #475569;
-  padding: 5px 8px;
+  padding: 6px 10px;
   font-weight: 700;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .hoja-tabla-conteo td, .hoja-tabla-proveedores td, .hoja-tabla-pendientes td, .hoja-tabla-arqueo td, .hoja-tabla-retiros td {
   border: 1px solid #e2e8f0;
-  padding: 3px 6px;
+  padding: 5px 8px;
   color: #1e293b;
   vertical-align: middle;
 }

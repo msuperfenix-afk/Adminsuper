@@ -94,16 +94,21 @@
           <input type="text" class="search-input" id="globalSearchInput" placeholder="Buscar proveedor, nota, pago...">
         </div>
 
-        <!-- Acciones y Perfil a la Derecha (Outline buttons: Print & Send Email) -->
+        <!-- Acciones y Perfil a la Derecha (Outline buttons en español: Imprimir y Enviar Correo) -->
         <div class="top-bar-right">
+          <!-- Badge de Sucursal Estilo Xero/Stripe -->
+          <div class="sucursal-selector-badge" title="Sucursal activa">
+            <span>Sucursal: <strong>Caja Principal</strong></span>
+          </div>
+
           <div class="topbar-global-actions">
-            <button type="button" class="btn-topbar-outline" id="btnTopBarPrint" title="Imprimir hoja contable">
+            <button type="button" class="btn-topbar-outline" id="btnTopBarPrint" title="Imprimir hoja contable física">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-              <span>Print</span>
+              <span>Imprimir</span>
             </button>
             <button type="button" class="btn-topbar-outline" id="btnTopBarEmail" title="Enviar corte contable por correo">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-              <span>Send Email</span>
+              <span>Enviar Correo</span>
             </button>
           </div>
 
