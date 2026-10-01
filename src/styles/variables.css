@@ -36,8 +36,11 @@
   --border-color: #e2e8f0;
   --border-color-light: #f1f5f9;
   --border-radius-sm: 4px;
-  --border-radius-md: 6px;
-  --border-radius-lg: 8px;
+  --border-radius-md: 4px;
+  --border-radius-lg: 4px;
+  
+  --color-blue-deep: #1e3a8a;
+  --color-blue-deep-hover: #1e40af;
   
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);

@@ -458,12 +458,12 @@ input, button, select, textarea {
    ====================================================== */
 .hoja-papel-container {
   max-width: 1380px;
-  margin: 16px auto 40px;
+  margin: 14px auto 36px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   padding: 0;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
@@ -502,14 +502,14 @@ input, button, select, textarea {
 .selector-semana-compacto .btn-dia-selector {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 4px 10px;
+  border-radius: 4px;
+  padding: 3px 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 46px;
-  height: 42px;
+  gap: 5px;
+  min-width: 42px;
+  height: 36px;
   transition: all var(--transition-fast);
 }
 
@@ -550,10 +550,10 @@ input, button, select, textarea {
 .card-metrica-inicial {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 4px 14px;
-  min-width: 145px;
-  height: 42px;
+  border-radius: 4px;
+  padding: 3px 12px;
+  min-width: 135px;
+  height: 36px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -568,6 +568,68 @@ input, button, select, textarea {
 .card-metrica-inicial.campo-inicial-clickeable:hover {
   border-color: #94a3b8;
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+}
+
+/* Componente Integrado Inline de Cantidad Inicial (Clean Data Density) */
+.input-inline-cantidad-inicial {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 4px 10px;
+  height: 36px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.input-inline-cantidad-inicial:hover {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+}
+
+.inline-ci-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.inline-ci-valor {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.inline-ci-icon {
+  font-size: 0.72rem;
+  color: #0284c7;
+}
+
+/* Botones Flecha Día Anterior / Siguiente */
+.btn-flecha-dia {
+  width: 28px;
+  height: 36px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  line-height: 1;
+}
+
+.btn-flecha-dia:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 .card-metrica-header {
@@ -1034,18 +1096,18 @@ input, button, select, textarea {
 
 .hoja-subcuadro {
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 4px;
   background: #ffffff;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .subcuadro-titulo {
   background: #fafafa;
   border-bottom: 1px solid #e2e8f0;
-  padding: 7px 12px;
-  font-size: 0.76rem;
+  padding: 6px 10px;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #334155;
   letter-spacing: 0.3px;
@@ -1054,8 +1116,8 @@ input, button, select, textarea {
 .subcuadro-titulo-flex {
   background: #fafafa;
   border-bottom: 1px solid #e2e8f0;
-  padding: 7px 12px;
-  font-size: 0.76rem;
+  padding: 6px 10px;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #334155;
   display: flex;
@@ -1066,34 +1128,34 @@ input, button, select, textarea {
 .badge-total-pagado {
   background: #f1f5f9;
   color: #0f172a;
-  padding: 2px 8px;
-  font-size: 0.76rem;
+  padding: 2px 7px;
+  font-size: 0.74rem;
   font-weight: 700;
   border: 1px solid #e2e8f0;
   border-radius: 4px;
 }
 
-/* Tablas Fénix Estilo Cuadrícula Contable Limpia (Xero / Stripe) */
+/* Tablas Fénix Estilo Cuadrícula Contable Limpia (Data Density) */
 .hoja-tabla-conteo, .hoja-tabla-proveedores, .hoja-tabla-pendientes, .hoja-tabla-arqueo, .hoja-tabla-retiros {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 
 .hoja-tabla-conteo th, .hoja-tabla-proveedores th, .hoja-tabla-pendientes th, .hoja-tabla-arqueo th, .hoja-tabla-retiros th {
   border: 1px solid #e2e8f0;
   background: #f8fafc;
   color: #475569;
-  padding: 6px 10px;
+  padding: 5px 8px;
   font-weight: 700;
-  font-size: 0.72rem;
+  font-size: 0.70rem;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
 .hoja-tabla-conteo td, .hoja-tabla-proveedores td, .hoja-tabla-pendientes td, .hoja-tabla-arqueo td, .hoja-tabla-retiros td {
   border: 1px solid #e2e8f0;
-  padding: 5px 8px;
+  padding: 4px 7px;
   color: #1e293b;
   vertical-align: middle;
 }

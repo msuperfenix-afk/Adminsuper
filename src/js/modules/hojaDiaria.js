@@ -54,6 +54,14 @@ export class HojaDiariaModule {
       });
     }
 
+    // Fechas anterior y siguiente para navegación directa
+    const fechaAnt = new Date(hoy);
+    fechaAnt.setDate(hoy.getDate() - 1);
+    const fechaSig = new Date(hoy);
+    fechaSig.setDate(hoy.getDate() + 1);
+    const isoAnt = fechaAnt.toISOString().split('T')[0];
+    const isoSig = fechaSig.toISOString().split('T')[0];
+
     let html = `
       <div class="hoja-papel-container">
         
@@ -85,10 +93,12 @@ export class HojaDiariaModule {
             </div>
           </div>
 
-          <!-- Lado Derecho: Selector de Fecha, Candado de Seguridad y Status Live -->
+          <!-- Lado Derecho: Selector de Fecha con Flechas Anterior/Siguiente, Candado y Status Live -->
           <div class="barra-dias-flex-right">
-            <div class="fecha-picker-wrapper">
+            <div class="fecha-picker-wrapper" style="display: flex; align-items: center; gap: 4px;">
+              <button type="button" class="btn-flecha-dia" id="btnDiaAnteriorHoja" data-fecha-target="${isoAnt}" title="Día anterior">‹</button>
               <input type="date" class="input-fecha-picker" id="inputFechaSelector" value="${d.fecha || ''}">
+              <button type="button" class="btn-flecha-dia" id="btnDiaSiguienteHoja" data-fecha-target="${isoSig}" title="Día siguiente">›</button>
               <button class="btn-abrir-calendario-icono" id="btnAbrirCalendarioHistorial" title="Calendario e Historial Contable">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -738,12 +748,24 @@ export class HojaDiariaModule {
       });
     });
 
-    // 2. Selector de fecha calendario
+    // 2. Selector de fecha calendario y flechas de navegación
     document.getElementById('inputFechaSelector')?.addEventListener('change', (e) => {
       const fecha = e.target.value;
       if (fecha) {
         stateManager.cambiarFechaHoja(fecha);
       }
+    });
+
+    document.getElementById('btnDiaAnteriorHoja')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = e.currentTarget.getAttribute('data-fecha-target');
+      if (target) stateManager.cambiarFechaHoja(target);
+    });
+
+    document.getElementById('btnDiaSiguienteHoja')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = e.currentTarget.getAttribute('data-fecha-target');
+      if (target) stateManager.cambiarFechaHoja(target);
     });
 
     // 2.1 Botón de Apertura de Calendario e Historial
