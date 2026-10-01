@@ -134,10 +134,9 @@ export class HojaDiariaModule {
               `)}
             </button>
 
-            <!-- Badge En Vivo Verde Pastel -->
-            <div class="badge-status-live" id="btnGuardadoIndicador" title="Sincronizado globalmente en la nube">
+            <!-- Indicador Punto Live (Sincronizado en la nube) -->
+            <div class="badge-status-live" id="btnGuardadoIndicador" title="Sincronizado en tiempo real en la nube">
               <span class="punto-live"></span>
-              <span>En Vivo</span>
             </div>
           </div>
         </div>
@@ -196,7 +195,7 @@ export class HojaDiariaModule {
               <div class="subcuadro-titulo-flex">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span>CONTEO PAN Y TORTILLA</span>
-                  <span class="badge-status-live"><span class="punto-live"></span> En Vivo</span>
+                  <span class="punto-live" title="Sincronizado en tiempo real"></span>
                 </div>
               </div>
               
@@ -293,7 +292,7 @@ export class HojaDiariaModule {
               <div class="subcuadro-titulo-flex">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span>RELACIÓN DE PROVEEDORES PAGADOS</span>
-                  <span class="badge-status-live"><span class="punto-live"></span> En Vivo</span>
+                  <span class="punto-live" title="Sincronizado en tiempo real"></span>
                 </div>
                 <div class="badge-desglose-pagos">
                   <span class="badge-item-pago" title="Total pagado en efectivo">EF: <strong class="mono-num">${this.formatMoney(totales.totalEfectivoProveedores)}</strong></span>
@@ -383,7 +382,7 @@ export class HojaDiariaModule {
               <div class="subcuadro-titulo-flex">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span>PRESTAMOS O PENDIENTES DE PAGO</span>
-                  <span class="badge-status-live"><span class="punto-live"></span> En Vivo</span>
+                  <span class="punto-live" title="Sincronizado en tiempo real"></span>
                 </div>
                 ${totales.totalPendientes > 0 ? `
                   <span style="font-weight: 700; color: #dc2626; font-size: 0.78rem;" class="mono-num">Pendiente: ${this.formatMoney(totales.totalPendientes)}</span>
@@ -461,7 +460,7 @@ export class HojaDiariaModule {
               <div class="subcuadro-titulo-flex">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span>CORTE Y ARQUEO</span>
-                  <span class="badge-status-live"><span class="punto-live"></span> En Vivo</span>
+                  <span class="punto-live" title="Sincronizado en tiempo real"></span>
                 </div>
               </div>
 
