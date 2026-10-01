@@ -3499,6 +3499,641 @@ export class ModalManager {
   }
 
   // ==========================================
+  // MODAL: IMPRIMIR LISTA DE PEDIDOS CONSOLIDADA (AGENDA SEMANAL)
+  // ==========================================
+  openModalImprimirListaConsolidada({ filtroInicial = 'hoy', diaInicial = null } = {}) {
+    const fStr = stateManager.data.fecha || new Date().toISOString().split('T')[0];
+    const fechaObj = new Date(fStr + 'T12:00:00');
+    const diasIds = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    const idHoy = diasIds[fechaObj.getDay()];
+    const nombreHoy = DIAS_SEMANA.find(d => d.id === idHoy)?.nombre || 'Hoy';
+
+    let filtroActual = diaInicial || filtroInicial || 'hoy';
+    let anchoRollo = localStorage.getItem('adminfenix_ancho_ticket') || '58mm';
+    let soloConArticulos = false;
+
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(v || 0);
+
+    const obtenerProveedoresFiltrados = () => {
+      const todos = stateManager.data.proveedores || [];
+      let filtrados = [];
+      if (filtroActual === 'hoy') {
+        filtrados = todos.filter(p => p.dia === idHoy);
+      } else if (filtroActual === 'todos') {
+        filtrados = todos;
+      } else {
+        filtrados = todos.filter(p => p.dia === filtroActual);
+      }
+
+      if (soloConArticulos) {
+        filtrados = filtrados.filter(p => Array.isArray(p.listaPedido) && p.listaPedido.length > 0);
+      }
+      return filtrados;
+    };
+
+    const generarVistaPrevia = () => {
+      const provs = obtenerProveedoresFiltrados();
+      const es58 = (anchoRollo === '58mm');
+      const ahora = new Date();
+      const fechaHora = ahora.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' +
+                        ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+      const totalArticulos = provs.reduce((acc, p) => acc + (Array.isArray(p.listaPedido) ? p.listaPedido.length : 0), 0);
+      const totalPresupuesto = provs.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
+
+      const nombrePeriodo = filtroActual === 'hoy' 
+        ? `HOY (${nombreHoy.toUpperCase()})` 
+        : (filtroActual === 'todos' ? 'SEMANA COMPLETA' : (DIAS_SEMANA.find(d => d.id === filtroActual)?.nombre.toUpperCase() || filtroActual.toUpperCase()));
+
+      if (provs.length === 0) {
+        return `
+          <div style="background:#ffffff; border:1.5px dashed #cbd5e1; border-radius:8px; padding:30px 20px; text-align:center; color:#64748b;">
+            <div style="font-size:2rem; margin-bottom:8px;">📋</div>
+            <div style="font-weight:700; color:#0f172a; margin-bottom:4px;">No hay proveedores con pedidos registrados para este filtro (${nombrePeriodo})</div>
+            <div style="font-size:0.8rem;">Puedes cambiar el selector a "Semana Completa" o abrir un proveedor para agregar productos a su pedido.</div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="ticket-preview-box" style="background:#ffffff; border:1.5px dashed #94a3b8; border-radius:8px; padding:14px 18px; font-family:'Courier New', Courier, monospace; color:#000000; font-size:${es58 ? '11.5px' : '13px'}; line-height:1.25; max-width:${es58 ? '320px' : '440px'}; margin:0 auto; box-shadow:0 4px 6px -1px rgba(0,0,0,0.08);">
+          <div style="text-align:center; font-weight:900; font-size:${es58 ? '15px' : '17px'}; letter-spacing:0.5px;">MINISÚPER FÉNIX</div>
+          <div style="text-align:center; font-weight:bold; font-size:${es58 ? '11px' : '12.5px'}; margin:2px 0;">*** LISTA CONSOLIDADA DE PEDIDOS ***</div>
+          <div style="text-align:center; font-size:9.5px; color:#333;">PERIODO: ${nombrePeriodo}</div>
+          <div style="text-align:center; font-size:9px; color:#555;">${fechaHora}</div>
+          <div style="border-top:2px solid #000; margin:6px 0;"></div>
+
+          <div style="font-size:${es58 ? '10.5px' : '12px'}; margin-bottom:6px;">
+            <div style="display:flex; justify-content:space-between;"><span>PROVEEDORES:</span><span style="font-weight:bold;">${provs.length}</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>TOTAL PRODUCTOS:</span><span style="font-weight:bold;">${totalArticulos} artículos</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>PRESUPUESTO APROX:</span><span style="font-weight:bold;">${fmt(totalPresupuesto)}</span></div>
+          </div>
+
+          ${provs.map((p, idx) => {
+            const items = Array.isArray(p.listaPedido) ? p.listaPedido : [];
+            const pres = parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0;
+            return `
+              <div style="border-top:1px dashed #000; padding-top:6px; margin-top:6px;">
+                <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                  <strong style="font-size:${es58 ? '12px' : '13.5px'};">#${idx + 1} ${(p.proveedor || '').toUpperCase()}</strong>
+                  <span style="font-weight:bold;">${pres > 0 ? fmt(pres) : ''}</span>
+                </div>
+                <div style="font-size:9.5px; color:#444; margin-bottom:4px;">
+                  Día: ${(p.dia || '').toUpperCase()} ${p.hora ? `• ${p.hora}` : ''} ${p.yaVino ? '• ✓ LLEGÓ' : ''}
+                </div>
+
+                ${items.length === 0 ? `
+                  <div style="font-style:italic; font-size:10px; color:#666; padding:2px 0;">* Sin lista de productos detallada *</div>
+                ` : `
+                  <table style="width:100%; border-collapse:collapse; font-size:${es58 ? '11px' : '12px'};">
+                    <tbody>
+                      ${items.map(it => `
+                        <tr style="border-bottom:0.5px dotted #ddd;">
+                          <td style="padding:2px 0; font-weight:900; width:30%; white-space:nowrap; vertical-align:top;">[ ${it.cantidad || '1'} ]</td>
+                          <td style="padding:2px 0; vertical-align:top;">
+                            <div style="font-weight:bold;">${it.producto || 'Producto'}</div>
+                            ${it.notas ? `<div style="font-size:9.5px; color:#333;">Nota: ${it.notas}</div>` : ''}
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                `}
+                ${p.notas ? `<div style="font-size:9.5px; color:#333; margin-top:3px;">Nota Prov: ${p.notas}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+
+          <div style="border-top:2px solid #000; margin:10px 0 6px 0;"></div>
+
+          <div style="display:flex; justify-content:space-between; font-weight:900; font-size:${es58 ? '12px' : '13px'};">
+            <span>GRAN TOTAL ARTÍCULOS:</span>
+            <span>${totalArticulos}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-weight:900; font-size:${es58 ? '12px' : '13px'};">
+            <span>PRESUPUESTO TOTAL:</span>
+            <span>${fmt(totalPresupuesto)}</span>
+          </div>
+
+          <div style="margin-top:20px; font-size:10px;">
+            <div style="border-bottom:1px solid #000; margin:22px 6px 4px 6px;"></div>
+            <div style="text-align:center; font-weight:bold;">FIRMA ENCARGADO / COMPRAS FÉNIX</div>
+          </div>
+
+          <div style="margin-top:14px; text-align:center; font-size:9.5px; color:#444;">
+            <div>================================</div>
+            <div>MINISÚPER FÉNIX - CONTROL DE PEDIDOS</div>
+          </div>
+        </div>
+      `;
+    };
+
+    const body = `
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <!-- Barra de Filtros y Configuración -->
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:12px 14px; display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span style="font-size:0.82rem; font-weight:700; color:#0f172a;">Filtrar Pedidos:</span>
+              <select id="selectFiltroConsolidado" class="form-control" style="font-size:0.82rem; font-weight:700; padding:4px 10px; height:32px; border-radius:6px;">
+                <option value="hoy" ${filtroActual === 'hoy' ? 'selected' : ''}>Pedidos de Hoy (${nombreHoy})</option>
+                <option value="todos" ${filtroActual === 'todos' ? 'selected' : ''}>Toda la Semana Completa</option>
+                ${DIAS_SEMANA.map(d => `<option value="${d.id}" ${filtroActual === d.id ? 'selected' : ''}>Solo ${d.nombre}</option>`).join('')}
+              </select>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:0.8rem; font-weight:700; color:#475569;">Rollo Térmico:</span>
+              <button type="button" class="btn-ancho-rollo-cons" data-ancho="58mm" id="btnAnchoCons58" style="padding:4px 10px; font-size:0.75rem; font-weight:700; border-radius:5px; cursor:pointer; border:1.5px solid ${anchoRollo === '58mm' ? '#0284c7' : '#cbd5e1'}; background:${anchoRollo === '58mm' ? '#e0f2fe' : '#ffffff'}; color:${anchoRollo === '58mm' ? '#0369a1' : '#334155'};">
+                58 mm
+              </button>
+              <button type="button" class="btn-ancho-rollo-cons" data-ancho="80mm" id="btnAnchoCons80" style="padding:4px 10px; font-size:0.75rem; font-weight:700; border-radius:5px; cursor:pointer; border:1.5px solid ${anchoRollo === '80mm' ? '#0284c7' : '#cbd5e1'}; background:${anchoRollo === '80mm' ? '#e0f2fe' : '#ffffff'}; color:${anchoRollo === '80mm' ? '#0369a1' : '#334155'};">
+                80 mm
+              </button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px; border-top:1px solid #e2e8f0; padding-top:8px;">
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:0.8rem; color:#334155; cursor:pointer;">
+              <input type="checkbox" id="chkSoloConArticulos" ${soloConArticulos ? 'checked' : ''} style="cursor:pointer; width:15px; height:15px;">
+              <span>Mostrar únicamente proveedores que tienen productos anotados en su lista</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Contenedor con la Vista Previa del Ticket -->
+        <div id="contenedorPreviewConsolidado" style="max-height:360px; overflow-y:auto; padding:4px;">
+          ${generarVistaPrevia()}
+        </div>
+
+        <div style="font-size:0.78rem; color:#64748b; background:#f1f5f9; padding:8px 12px; border-radius:6px; display:flex; align-items:center; gap:6px;">
+          <span>💡</span>
+          <span><strong>Opciones de salida:</strong> Puedes imprimir en <strong>ticket térmico por cable USB</strong>, generar un <strong>documento formato carta / PDF</strong> para impresora de hojas, o <strong>copiar la lista</strong> para enviarla por WhatsApp al repartidor o encargado.</span>
+        </div>
+      </div>
+    `;
+
+    const footer = `
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap; gap:8px;">
+        <button type="button" class="btn-secondary" id="btnCerrarModalConsolidado">Cerrar</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn-secondary" id="btnCopiarWhatsAppConsolidado" style="background:#f0fdf4; border:1.5px solid #86efac; color:#166534; font-weight:700; padding:7px 12px; display:inline-flex; align-items:center; gap:5px; border-radius:6px; cursor:pointer;" title="Copiar texto con viñetas para enviar por WhatsApp">
+            💬 Copiar para WhatsApp
+          </button>
+          <button type="button" class="btn-secondary" id="btnImprimirCartaConsolidado" style="background:#ffffff; border:1.5px solid #cbd5e1; color:#0f172a; font-weight:700; padding:7px 12px; display:inline-flex; align-items:center; gap:5px; border-radius:6px; cursor:pointer;" title="Imprimir o guardar en PDF formato hoja carta">
+            📄 Hoja Carta / PDF
+          </button>
+          <button type="button" class="btn-primary" id="btnImprimirTermicoConsolidado" style="background:#0284c7; font-weight:700; padding:7px 16px; min-width:160px; display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:6px; cursor:pointer;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            <span>🖨️ Imprimir Ticket USB</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    this.open('Imprimir Lista de Pedidos a Proveedores', body, footer);
+
+    const actualizarVista = () => {
+      const cont = document.getElementById('contenedorPreviewConsolidado');
+      if (cont) cont.innerHTML = generarVistaPrevia();
+    };
+
+    // Evento selector de filtro
+    document.getElementById('selectFiltroConsolidado')?.addEventListener('change', (e) => {
+      filtroActual = e.target.value;
+      actualizarVista();
+    });
+
+    // Checkbox solo con articulos
+    document.getElementById('chkSoloConArticulos')?.addEventListener('change', (e) => {
+      soloConArticulos = e.target.checked;
+      actualizarVista();
+    });
+
+    // Selector ancho 58 / 80
+    const b58 = document.getElementById('btnAnchoCons58');
+    const b80 = document.getElementById('btnAnchoCons80');
+    b58?.addEventListener('click', () => {
+      anchoRollo = '58mm';
+      localStorage.setItem('adminfenix_ancho_ticket', anchoRollo);
+      if (b58 && b80) {
+        b58.style.borderColor = '#0284c7'; b58.style.background = '#e0f2fe'; b58.style.color = '#0369a1';
+        b80.style.borderColor = '#cbd5e1'; b80.style.background = '#ffffff'; b80.style.color = '#334155';
+      }
+      actualizarVista();
+    });
+    b80?.addEventListener('click', () => {
+      anchoRollo = '80mm';
+      localStorage.setItem('adminfenix_ancho_ticket', anchoRollo);
+      if (b58 && b80) {
+        b80.style.borderColor = '#0284c7'; b80.style.background = '#e0f2fe'; b80.style.color = '#0369a1';
+        b58.style.borderColor = '#cbd5e1'; b58.style.background = '#ffffff'; b58.style.color = '#334155';
+      }
+      actualizarVista();
+    });
+
+    // Botón Imprimir Ticket Térmico USB
+    document.getElementById('btnImprimirTermicoConsolidado')?.addEventListener('click', () => {
+      const provs = obtenerProveedoresFiltrados();
+      const nombrePeriodo = filtroActual === 'hoy' 
+        ? `HOY (${nombreHoy.toUpperCase()})` 
+        : (filtroActual === 'todos' ? 'SEMANA COMPLETA' : (DIAS_SEMANA.find(d => d.id === filtroActual)?.nombre.toUpperCase() || filtroActual.toUpperCase()));
+
+      this.imprimirTicketTermicoConsolidado({
+        proveedores: provs,
+        periodoNombre: nombrePeriodo,
+        ancho: anchoRollo
+      });
+    });
+
+    // Botón Imprimir Hoja Carta / PDF
+    document.getElementById('btnImprimirCartaConsolidado')?.addEventListener('click', () => {
+      const provs = obtenerProveedoresFiltrados();
+      const nombrePeriodo = filtroActual === 'hoy' 
+        ? `HOY (${nombreHoy.toUpperCase()})` 
+        : (filtroActual === 'todos' ? 'SEMANA COMPLETA' : (DIAS_SEMANA.find(d => d.id === filtroActual)?.nombre.toUpperCase() || filtroActual.toUpperCase()));
+
+      this.imprimirDocumentoListaPedidosConsolidada({
+        proveedores: provs,
+        periodoNombre: nombrePeriodo
+      });
+    });
+
+    // Botón Copiar para WhatsApp
+    document.getElementById('btnCopiarWhatsAppConsolidado')?.addEventListener('click', async () => {
+      const provs = obtenerProveedoresFiltrados();
+      const nombrePeriodo = filtroActual === 'hoy' 
+        ? `HOY (${nombreHoy.toUpperCase()})` 
+        : (filtroActual === 'todos' ? 'SEMANA COMPLETA' : (DIAS_SEMANA.find(d => d.id === filtroActual)?.nombre.toUpperCase() || filtroActual.toUpperCase()));
+
+      await this.copiarTextoListaPedidosConsolidada({
+        proveedores: provs,
+        periodoNombre: nombrePeriodo
+      });
+    });
+
+    document.getElementById('btnCerrarModalConsolidado')?.addEventListener('click', () => this.close());
+  }
+
+  // Helper: Impresión térmica USB consolidada aislada (iframe)
+  imprimirTicketTermicoConsolidado({ proveedores, periodoNombre, ancho = '58mm' }) {
+    const es58mm = (ancho === '58mm');
+    const ahora = new Date();
+    const fechaHora = ahora.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + 
+                      ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(v || 0);
+
+    const totalArticulos = proveedores.reduce((acc, p) => acc + (Array.isArray(p.listaPedido) ? p.listaPedido.length : 0), 0);
+    const totalPresupuesto = proveedores.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ticket Pedidos - Minisúper Fénix</title>
+  <style>
+    @page { size: ${ancho} auto; margin: 0; }
+    @media print { html, body { margin: 0 !important; padding: 0 !important; width: ${ancho} !important; } }
+    body {
+      margin: 0;
+      padding: ${es58mm ? '4px 6px' : '6px 10px'};
+      width: ${ancho};
+      box-sizing: border-box;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: ${es58mm ? '11px' : '13px'};
+      line-height: 1.25;
+      color: #000000;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .text-center { text-align: center; }
+    .bold { font-weight: bold; }
+    .divider { border-top: 1px dashed #000; margin: 5px 0; }
+    .divider-double { border-top: 2px solid #000; margin: 6px 0; }
+    .titulo { font-size: ${es58mm ? '15px' : '18px'}; font-weight: 900; margin: 0; letter-spacing: 0.5px; }
+    .subtitulo { font-size: ${es58mm ? '11px' : '13px'}; font-weight: bold; margin: 2px 0; }
+    .fila-dato { display: flex; justify-content: space-between; margin-bottom: 2px; }
+    .tabla-items { width: 100%; border-collapse: collapse; margin: 3px 0; }
+    .tabla-items td { padding: 2px 0; vertical-align: top; }
+    .item-cant { font-weight: 900; padding-right: 6px; white-space: nowrap; font-size: ${es58mm ? '11.5px' : '13px'}; }
+    .linea-firma { border-bottom: 1px solid #000; margin: 22px 4px 4px 4px; }
+    .pie-ticket { margin-top: 14px; text-align: center; font-size: ${es58mm ? '9px' : '10px'}; }
+  </style>
+</head>
+<body>
+  <div class="text-center">
+    <div class="titulo">MINISÚPER FÉNIX</div>
+    <div class="subtitulo">*** PEDIDOS CONSOLIDADOS ***</div>
+    <div style="font-size:9.5px;">PERIODO: ${periodoNombre}</div>
+    <div style="font-size:9px; color:#333;">${fechaHora}</div>
+  </div>
+  <div class="divider-double"></div>
+  <div class="fila-dato"><span class="bold">PROVEEDORES:</span><span class="bold">${proveedores.length}</span></div>
+  <div class="fila-dato"><span class="bold">TOTAL ARTÍCULOS:</span><span class="bold">${totalArticulos}</span></div>
+  <div class="fila-dato"><span class="bold">PRESUPUESTO:</span><span class="bold">${fmt(totalPresupuesto)}</span></div>
+  <div class="divider-double"></div>
+
+  ${proveedores.map((p, idx) => {
+    const items = Array.isArray(p.listaPedido) ? p.listaPedido : [];
+    const pres = parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0;
+    return `
+      <div style="margin: 6px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <span class="bold" style="font-size:${es58mm ? '12px' : '13.5px'};">#${idx + 1} ${(p.proveedor || '').toUpperCase()}</span>
+          <span class="bold">${pres > 0 ? fmt(pres) : ''}</span>
+        </div>
+        <div style="font-size:9.5px; color:#333;">
+          Día: ${(p.dia || '').toUpperCase()} ${p.hora ? `(${p.hora})` : ''}
+        </div>
+        ${items.length === 0 ? `
+          <div style="font-style:italic; font-size:10px; color:#555; padding:2px 0;">* Sin artículos detallados *</div>
+        ` : `
+          <table class="tabla-items">
+            <tbody>
+              ${items.map(it => `
+                <tr>
+                  <td class="item-cant" style="width:28%;">[ ${it.cantidad || '1'} ]</td>
+                  <td>
+                    <div class="bold">${it.producto || 'Producto'}</div>
+                    ${it.notas ? `<div style="font-size:9px; color:#333;">Nota: ${it.notas}</div>` : ''}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `}
+        ${p.notas ? `<div style="font-size:9px; color:#333;">Nota: ${p.notas}</div>` : ''}
+        <div class="divider"></div>
+      </div>
+    `;
+  }).join('')}
+
+  <div class="fila-dato bold" style="font-size:${es58mm ? '12px' : '13px'};">
+    <span>TOTAL ARTÍCULOS:</span>
+    <span>${totalArticulos}</span>
+  </div>
+  <div class="fila-dato bold" style="font-size:${es58mm ? '12px' : '13px'};">
+    <span>TOTAL PRESUPUESTO:</span>
+    <span>${fmt(totalPresupuesto)}</span>
+  </div>
+
+  <div style="margin-top: 16px; font-size: ${es58mm ? '10px' : '11px'};">
+    <div class="linea-firma"></div>
+    <div class="text-center bold">FIRMA ENCARGADO / COMPRAS</div>
+  </div>
+
+  <div class="pie-ticket">
+    <div>================================</div>
+    <div>MINISÚPER FÉNIX - SISTEMA DE CAJA</div>
+  </div>
+</body>
+</html>`;
+
+    let iframe = document.getElementById('iframeTicketTermicoAdminFenix');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'iframeTicketTermicoAdminFenix';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+    }
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }, 250);
+  }
+
+  // Helper: Impresión en documento / formato carta / PDF
+  imprimirDocumentoListaPedidosConsolidada({ proveedores, periodoNombre }) {
+    const ahora = new Date();
+    const fechaHora = ahora.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }) + ' ' + 
+                      ahora.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(v || 0);
+
+    const totalArticulos = proveedores.reduce((acc, p) => acc + (Array.isArray(p.listaPedido) ? p.listaPedido.length : 0), 0);
+    const totalPresupuesto = proveedores.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Lista Consolidada de Pedidos - Minisúper Fénix</title>
+  <style>
+    @page { size: letter portrait; margin: 15mm 12mm 15mm 12mm; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: #0f172a;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .titulo { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.5px; }
+    .subtitulo { font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px; }
+    .meta-box { text-align: right; font-size: 11px; color: #334155; }
+    .kpi-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .kpi-card {
+      flex: 1;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px 12px;
+    }
+    .kpi-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+    .kpi-val { font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 2px; }
+    .card-prov {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      page-break-inside: avoid;
+    }
+    .card-prov-header {
+      background: #f1f5f9;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #cbd5e1;
+    }
+    .tabla-items { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .tabla-items th { background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 4px 10px; text-align: left; font-size: 10px; color: #475569; text-transform: uppercase; }
+    .tabla-items td { padding: 5px 10px; border-bottom: 1px solid #f1f5f9; }
+    .chk-box { width: 14px; height: 14px; border: 1.5px solid #64748b; border-radius: 3px; display: inline-block; vertical-align: middle; }
+    .firmas-row {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 35px;
+      page-break-inside: avoid;
+    }
+    .firma-col { width: 220px; text-align: center; font-size: 11px; }
+    .firma-linea { border-bottom: 1px solid #0f172a; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="titulo">MINISÚPER FÉNIX</h1>
+      <div class="subtitulo">CONTROL DE COMPRAS Y PEDIDOS A PROVEEDORES</div>
+    </div>
+    <div class="meta-box">
+      <div><strong>PERIODO:</strong> ${periodoNombre}</div>
+      <div><strong>EMISIÓN:</strong> ${fechaHora}</div>
+      <div><strong>SUCURSAL:</strong> Caja Principal</div>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Proveedores Agendados</div>
+      <div class="kpi-val">${proveedores.length}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Productos Solicitados</div>
+      <div class="kpi-val">${totalArticulos} artículos</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Presupuesto Estimado Caja</div>
+      <div class="kpi-val" style="color:#047857;">${fmt(totalPresupuesto)}</div>
+    </div>
+  </div>
+
+  ${proveedores.map((p, idx) => {
+    const items = Array.isArray(p.listaPedido) ? p.listaPedido : [];
+    const pres = parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0;
+    return `
+      <div class="card-prov">
+        <div class="card-prov-header">
+          <div>
+            <strong style="font-size:13px;">#${idx + 1} ${(p.proveedor || '').toUpperCase()}</strong>
+            <span style="font-size:11px; color:#475569; margin-left:8px;">Día: <strong style="text-transform:capitalize;">${p.dia || ''}</strong> ${p.hora ? `• ${p.hora}` : ''}</span>
+          </div>
+          <div>
+            ${pres > 0 ? `<span style="font-size:12px; font-weight:700; color:#0f172a;">Presupuesto: ${fmt(pres)}</span>` : ''}
+            <span style="background:#e2e8f0; font-size:10px; font-weight:700; padding:2px 7px; border-radius:9999px; margin-left:6px;">${items.length} art.</span>
+          </div>
+        </div>
+
+        ${items.length === 0 ? `
+          <div style="padding:10px 12px; font-style:italic; color:#94a3b8; font-size:11px;">* Sin artículos específicos en el pedido *</div>
+        ` : `
+          <table class="tabla-items">
+            <thead>
+              <tr>
+                <th style="width: 35px; text-align: center;">REC.</th>
+                <th style="width: 130px;">CANTIDAD</th>
+                <th>DESCRIPCIÓN DEL PRODUCTO</th>
+                <th style="width: 200px;">OBSERVACIONES / VARIEDAD</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(it => `
+                <tr>
+                  <td style="text-align: center;"><span class="chk-box"></span></td>
+                  <td style="font-weight: 700; color:#0f172a;">[ ${it.cantidad || '1'} ]</td>
+                  <td style="font-weight: 600;">${it.producto || 'Producto'}</td>
+                  <td style="color:#64748b; font-size:11px;">${it.notas || '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `}
+        ${p.notas ? `<div style="background:#f8fafc; padding:4px 10px; font-size:10.5px; color:#475569; border-top:1px solid #f1f5f9;"><strong>Nota Proveedor:</strong> ${p.notas}</div>` : ''}
+      </div>
+    `;
+  }).join('')}
+
+  <div class="firmas-row">
+    <div class="firma-col">
+      <div class="firma-linea"></div>
+      <div><strong>FIRMA ENCARGADO DE COMPRAS</strong></div>
+      <div style="font-size:10px; color:#64748b;">Minisúper Fénix</div>
+    </div>
+    <div class="firma-col">
+      <div class="firma-linea"></div>
+      <div><strong>FIRMA RECEPCIÓN / CAJA</strong></div>
+      <div style="font-size:10px; color:#64748b;">Corte y Arqueo</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const ventana = window.open('', '_blank');
+    if (ventana) {
+      ventana.document.open();
+      ventana.document.write(html);
+      ventana.document.close();
+      setTimeout(() => {
+        ventana.focus();
+        ventana.print();
+      }, 350);
+    }
+  }
+
+  // Helper: Copiar resumen de pedidos formateado para WhatsApp
+  async copiarTextoListaPedidosConsolidada({ proveedores, periodoNombre }) {
+    const ahora = new Date();
+    const fechaHora = ahora.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+    const fmt = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(v || 0);
+
+    let texto = `*MINISÚPER FÉNIX - LISTA DE PEDIDOS*\n`;
+    texto += `📅 *Periodo:* ${periodoNombre} (${fechaHora})\n`;
+    texto += `📦 *Total Proveedores:* ${proveedores.length}\n`;
+    texto += `=================================\n\n`;
+
+    proveedores.forEach((p, idx) => {
+      const items = Array.isArray(p.listaPedido) ? p.listaPedido : [];
+      const pres = parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0;
+      texto += `🔹 *${idx + 1}. ${(p.proveedor || '').toUpperCase()}*\n`;
+      texto += `   • Día: ${(p.dia || '').toUpperCase()} ${p.hora ? `(${p.hora})` : ''}\n`;
+      if (pres > 0) texto += `   • Presupuesto: ${fmt(pres)}\n`;
+
+      if (items.length === 0) {
+        texto += `   • _Sin artículos anotados_\n`;
+      } else {
+        items.forEach(it => {
+          texto += `   ✓ *[ ${it.cantidad || '1'} ]* ${it.producto || 'Producto'}${it.notas ? ` (${it.notas})` : ''}\n`;
+        });
+      }
+      if (p.notas) texto += `   💬 _Nota: ${p.notas}_\n`;
+      texto += `\n`;
+    });
+
+    texto += `=================================\n`;
+    texto += `📍 *Minisúper Fénix - Control de Caja*`;
+
+    try {
+      await navigator.clipboard.writeText(texto);
+      alert('✓ ¡Lista de pedidos copiada al portapapeles!\nPuedes pegarla directamente en WhatsApp con tus repartidores o encargados.');
+    } catch (e) {
+      alert('No se pudo copiar automáticamente. Puedes seleccionar el texto de la vista previa.');
+    }
+  }
+
+  // ==========================================
   // 19. MODAL: AGREGAR / EDITAR PROVEEDOR EN BASE DE DATOS MAESTRA
   // ==========================================
   openProveedorCatalogoModal(prov = null, onGuardado = null) {
