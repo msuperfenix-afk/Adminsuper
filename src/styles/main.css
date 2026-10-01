@@ -499,51 +499,92 @@ input, button, select, textarea {
   align-items: center;
 }
 
-.selector-semana-compacto .btn-dia-selector {
+.selector-semana-compacto .btn-dia-selector,
+.btn-dia-selector {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 4px;
-  padding: 3px 8px;
+  padding: 3px 6px;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 5px;
-  min-width: 42px;
-  height: 36px;
+  justify-content: center;
+  min-width: 44px;
+  height: 38px;
+  box-sizing: border-box;
+  position: relative;
   transition: all var(--transition-fast);
+  line-height: 1;
+  gap: 2px;
+  user-select: none;
 }
 
-.selector-semana-compacto .btn-dia-selector:hover {
+.selector-semana-compacto .btn-dia-selector:hover,
+.btn-dia-selector:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
 }
 
-.selector-semana-compacto .btn-dia-selector.activo {
+.selector-semana-compacto .btn-dia-selector.activo,
+.btn-dia-selector.activo {
   background: #0f172a;
   border-color: #0f172a;
   color: #ffffff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.15);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
 }
 
 .dia-label-corto {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
   color: #64748b;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+  text-transform: uppercase;
+  display: block;
 }
 
-.selector-semana-compacto .btn-dia-selector.activo .dia-label-corto {
+.selector-semana-compacto .btn-dia-selector.activo .dia-label-corto,
+.btn-dia-selector.activo .dia-label-corto {
   color: #94a3b8;
 }
 
 .dia-num-badge {
-  font-size: 0.88rem;
+  font-size: 0.90rem;
   font-weight: 800;
   color: #0f172a;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+  display: block;
 }
 
-.selector-semana-compacto .btn-dia-selector.activo .dia-num-badge {
+.selector-semana-compacto .btn-dia-selector.activo .dia-num-badge,
+.btn-dia-selector.activo .dia-num-badge {
   color: #ffffff;
+}
+
+.btn-dia-selector.es-dia-hoy {
+  border-color: #0284c7;
+}
+
+.punto-hoy-badge {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  width: 5px;
+  height: 5px;
+  background-color: #10b981;
+  border-radius: 50%;
+  font-size: 0;
+  line-height: 0;
+  display: block;
+}
+
+.btn-dia-selector.activo .punto-hoy-badge {
+  background-color: #34d399;
 }
 
 /* Tarjeta Métrica Limpia de CANTIDAD INICIAL (Reemplaza inputs redundantes) */
@@ -553,11 +594,12 @@ input, button, select, textarea {
   border-radius: 4px;
   padding: 3px 12px;
   min-width: 135px;
-  height: 36px;
+  height: 38px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  box-sizing: border-box;
   transition: all var(--transition-fast);
 }
 
@@ -611,7 +653,7 @@ input, button, select, textarea {
 /* Botones Flecha Día Anterior / Siguiente */
 .btn-flecha-dia {
   width: 28px;
-  height: 36px;
+  height: 38px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 4px;
@@ -624,6 +666,7 @@ input, button, select, textarea {
   cursor: pointer;
   transition: all var(--transition-fast);
   line-height: 1;
+  box-sizing: border-box;
 }
 
 .btn-flecha-dia:hover {
@@ -690,70 +733,14 @@ input, button, select, textarea {
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
-.btn-dia-selector {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.74rem;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1.15;
-  min-width: 40px;
-  transition: all var(--transition-fast);
-}
-
-.btn-dia-selector strong {
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  color: #64748b;
-}
-
-.btn-dia-selector span {
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-top: 1px;
-}
-
-.btn-dia-selector:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-}
-
-.btn-dia-selector.activo {
-  background: #0f172a;
-  border-color: #0f172a;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
-}
-
-.btn-dia-selector.activo strong {
-  color: #94a3b8;
-}
-
-.btn-dia-selector.activo span {
-  color: #ffffff;
-}
-
-.punto-hoy-badge {
-  color: #10b981;
-  font-size: 0.85rem;
-  line-height: 0.5;
-  margin-top: 2px;
-}
-
 /* Botón Formal con Solo el Logo de Calendario */
 .btn-abrir-calendario-icono {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   color: #475569;
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -761,6 +748,7 @@ input, button, select, textarea {
   transition: all var(--transition-fast);
   padding: 0;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .btn-abrir-calendario-icono:hover {
@@ -778,11 +766,13 @@ input, button, select, textarea {
   border: 1px solid #e2e8f0;
   color: #0f172a;
   padding: 5px 10px;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+  height: 38px;
+  box-sizing: border-box;
   transition: border-color var(--transition-fast);
 }
 
@@ -1982,19 +1972,6 @@ input, button, select, textarea {
    ESTILOS DE HISTORIAL, CALENDARIO Y MODO SOLO LECTURA
    ====================================================== */
 
-/* Botón de Selección de Día con Indicador de Hoy */
-.btn-dia-selector.es-dia-hoy {
-  border-color: #64748b;
-  position: relative;
-}
-
-.punto-hoy-badge {
-  color: #94a3b8;
-  font-size: 0.9rem;
-  line-height: 0.5;
-  margin-left: 2px;
-}
-
 /* Botón de Apertura de Calendario Historial */
 .btn-abrir-calendario {
   background: #334155;
@@ -2804,9 +2781,9 @@ input:disabled {
   }
 
   .btn-dia-selector {
-    padding: 2px 6px;
+    padding: 2px 4px;
     min-width: 38px;
-    font-size: 0.7rem;
+    height: 36px;
   }
 
   .btn-abrir-calendario {
@@ -4248,17 +4225,17 @@ input:disabled {
 
   .btn-dia-selector {
     min-width: 32px !important;
+    height: 34px !important;
     padding: 2px 3px !important;
-    font-size: 0.65rem !important;
     border-radius: 4px !important;
   }
 
-  .btn-dia-selector strong {
-    font-size: 0.6rem !important;
+  .btn-dia-selector .dia-label-corto {
+    font-size: 0.58rem !important;
   }
 
-  .btn-dia-selector span {
-    font-size: 0.74rem !important;
+  .btn-dia-selector .dia-num-badge {
+    font-size: 0.76rem !important;
   }
 
   .btn-abrir-calendario-icono {
@@ -4825,15 +4802,16 @@ input:disabled {
 
   .btn-dia-selector {
     min-width: 28px !important;
+    height: 32px !important;
     padding: 1px 2px !important;
   }
 
-  .btn-dia-selector strong {
-    font-size: 0.55rem !important;
+  .btn-dia-selector .dia-label-corto {
+    font-size: 0.54rem !important;
   }
 
-  .btn-dia-selector span {
-    font-size: 0.68rem !important;
+  .btn-dia-selector .dia-num-badge {
+    font-size: 0.70rem !important;
   }
 
   .provdb-kpi-grid {
