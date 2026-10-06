@@ -1722,43 +1722,51 @@ input, button, select, textarea {
 }
 
 /* ======================================================
-   KANBAN SEMANAL CON PALETA SOBRIA Y COMPACTA
+   KANBAN SEMANAL CON PALETA SOBRIA Y ESTRUCTURA POR DÍA
    ====================================================== */
 .kanban-board {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 12px;
-  padding: 12px 20px;
-  width: 100%;
-  max-width: 100%;
+  display: flex;
+  gap: 14px;
+  padding: 16px 20px 24px;
+  width: max-content;
+  min-width: 100%;
   box-sizing: border-box;
 }
 
 .kanban-column {
-  min-width: 0;
+  width: 295px;
+  min-width: 295px;
+  flex-shrink: 0;
   background-color: #ffffff;
   border-radius: 6px;
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid #cbd5e1;
   box-shadow: var(--shadow-xs);
   display: flex;
   flex-direction: column;
 }
 
 .column-header {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-bottom: 1.5px solid #0f172a;
   background-color: #f8fafc;
 }
 
 .column-day {
-  font-weight: 800;
-  font-size: 0.9rem;
+  font-weight: 900;
+  font-size: 0.95rem;
   color: #0f172a;
 }
 
 .column-total-budget {
-  font-weight: 800;
-  color: #0f172a;
+  font-weight: 900;
+  color: #b91c1c;
+}
+
+.column-progress-fill {
+  background: #1e3a8a;
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 
 .column-cards-scroll {
@@ -1825,21 +1833,35 @@ input, button, select, textarea {
   white-space: nowrap;
 }
 
+.kanban-column.col-manana {
+  border: 2px solid #0284c7;
+}
+
+.kanban-column.col-manana .column-header {
+  background-color: #f0f9ff;
+  border-bottom: 2px solid #0284c7;
+}
+
 .kanban-column.col-hoy {
-  border: 1.5px solid #10b981;
+  border: 2px solid #10b981;
 }
 
 .kanban-column.col-hoy .column-header {
   background-color: #f0fdf4;
-  border-bottom: 1.5px solid #10b981;
+  border-bottom: 2px solid #10b981;
 }
 
 .badge-dia-destacado {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 800;
-  padding: 1px 5px;
-  border-radius: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
   letter-spacing: 0.5px;
+}
+
+.badge-dia-destacado.manana {
+  background: #0284c7;
+  color: #ffffff;
 }
 
 .badge-dia-destacado.hoy {
