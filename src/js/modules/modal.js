@@ -4,7 +4,13 @@
 
 import { stateManager, CATALOGO_PROVEEDORES_PREDETERMINADOS } from '../state.js';
 import { DIAS_SEMANA, CATEGORIAS_PROVEEDOR } from './pipeline.js';
-import { inicializarFirebase, getFirebaseConfigActual, isFirebaseConectado } from '../firebaseClient.js';
+import { 
+  inicializarFirebase, 
+  getFirebaseConfigActual, 
+  isFirebaseConectado,
+  obtenerEstadisticasMemoriaFirestore,
+  LIMITE_FIRESTORE_BYTES
+} from '../firebaseClient.js';
 import { ExportManager } from './exportManager.js';
 import { obtenerListaBackupsDiarios, cargarBackupDiarioPorId } from './storageManager.js';
 
@@ -1514,6 +1520,13 @@ export class ModalManager {
       console.warn('Error al cargar backups diarios:', e);
     }
 
+    let statsFirebase = null;
+    try {
+      statsFirebase = await obtenerEstadisticasMemoriaFirestore(false);
+    } catch (eF) {
+      console.warn('Error al obtener memoria en backup modal:', eF);
+    }
+
     const body = `
       <div style="display: flex; flex-direction: column; gap: 16px;">
         <!-- Cabecera Informativa con Blindaje de Datos -->
@@ -1528,6 +1541,33 @@ export class ModalManager {
           <p style="margin: 6px 0 0; font-size: 0.75rem; color: #334155; line-height: 1.4;">
             Tus hojas, cuentas y catálogo de proveedores están protegidos en <strong>IndexedDB</strong> (base de datos local de alta capacidad sin límite de 5MB) y en <strong>Cloud Firestore</strong>. La memoria del navegador y Android tiene prohibido borrar tus datos.
           </p>
+        </div>
+
+        <!-- Tarjeta de Memoria y Capacidad de Firebase Firestore -->
+        <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 1rem;">☁️</span>
+              <strong style="font-size: 0.86rem; color: #0f172a;">Capacidad de Base de Datos en Firebase</strong>
+            </div>
+            <button type="button" id="btnVerDetallesMemoriaDesdeBackup" style="background: transparent; border: none; color: #2563eb; font-size: 0.74rem; font-weight: 700; cursor: pointer; text-decoration: underline;">
+              Ver detalles completos
+            </button>
+          </div>
+          
+          <!-- Barra visual de memoria -->
+          <div style="width: 100%; height: 10px; background: #e2e8f0; border-radius: 9999px; overflow: hidden; margin: 8px 0;">
+            <div style="width: ${statsFirebase ? Math.max(statsFirebase.porcentajeUsado, 1.2) : 1}%; height: 100%; background: #2563eb; border-radius: 9999px;"></div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; flex-wrap: wrap; gap: 4px;">
+            <span style="color: #64748b;">
+              Usado: <strong>${statsFirebase ? statsFirebase.mbUsados : '0.00'} MB</strong> de 1,024 MB (1 GB)
+            </span>
+            <span style="color: #166534; font-weight: 700; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 1px 6px; border-radius: 4px;">
+              Faltan ${statsFirebase ? statsFirebase.mbRestantes : '1,024.00'} MB para llenar (${statsFirebase ? statsFirebase.porcentajeRestante : '100'}% libre)
+            </span>
+          </div>
         </div>
 
         <!-- Filtro por Período de Exportación -->
@@ -1675,6 +1715,10 @@ export class ModalManager {
     this.open('Gestión y Blindaje de Datos', body, footer);
 
     document.getElementById('modalCancelBtn')?.addEventListener('click', () => this.close());
+
+    document.getElementById('btnVerDetallesMemoriaDesdeBackup')?.addEventListener('click', () => {
+      this.openFirebaseStorageModal();
+    });
 
     // Conmutador Día / Mes
     const rDia = document.getElementById('radioExportDia');
@@ -1862,6 +1906,136 @@ export class ModalManager {
         }
       } catch (err) {
         alert('Error al interpretar el código de Firebase. Asegúrate de incluir las llaves { ... }. Error: ' + err.message);
+      }
+    });
+  }
+
+  // ==========================================================
+  // 11.1 MODAL: ESTADO Y CAPACIDAD DE MEMORIA EN FIREBASE FIRESTORE
+  // ==========================================================
+  async openFirebaseStorageModal() {
+    const footer = `
+      <button type="button" class="btn-secondary" id="modalCancelBtn">Cerrar</button>
+      <button type="button" class="btn-primary" id="btnRecalcularMemoriaFirebase" style="background: #0f172a; border-color: #0f172a; display: inline-flex; align-items: center; gap: 6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        <span>Recalcular en Vivo</span>
+      </button>
+    `;
+
+    this.open('Capacidad y Memoria de Firebase Firestore', `
+      <div style="text-align: center; padding: 30px 10px;">
+        <div style="display: inline-block; width: 26px; height: 26px; border: 2.5px solid #e2e8f0; border-top-color: #0f172a; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+        <div style="font-size: 0.82rem; color: #64748b; margin-top: 10px;">Consultando tamaño de la base de datos en Firebase Firestore...</div>
+      </div>
+    `, footer);
+
+    document.getElementById('modalCancelBtn')?.addEventListener('click', () => this.close());
+
+    // Cargar estadísticas
+    const stats = await obtenerEstadisticasMemoriaFirestore(false);
+    this.renderContenidoModalMemoria(stats);
+  }
+
+  renderContenidoModalMemoria(stats) {
+    const modalBody = this.container.querySelector('.modal-body');
+    if (!modalBody) return;
+
+    const colorBarra = stats.porcentajeUsado >= 90 ? '#dc2626' : (stats.porcentajeUsado >= 70 ? '#d97706' : '#2563eb');
+    const anchoBarra = Math.max(stats.porcentajeUsado, 1.2);
+
+    modalBody.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- Tarjeta Principal con la Barra de Memoria -->
+        <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(15,23,42,0.03);">
+          
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 1.1rem;">☁️</span>
+              <strong style="font-size: 0.92rem; color: #0f172a;">Capacidad de Almacenamiento</strong>
+            </div>
+            <span style="font-size: 0.72rem; font-weight: 800; background: #f1f5f9; color: #475569; padding: 2px 7px; border-radius: 4px; border: 1px solid #cbd5e1;">
+              1,024 MB (1 GB) • Plan Spark Gratuito
+            </span>
+          </div>
+
+          <!-- LA BARRA DE MEMORIA -->
+          <div style="width: 100%; height: 16px; background: #e2e8f0; border-radius: 9999px; overflow: hidden; position: relative; margin: 10px 0 6px;">
+            <div style="width: ${anchoBarra}%; height: 100%; background: ${colorBarra}; border-radius: 9999px; transition: width 0.4s ease;"></div>
+          </div>
+
+          <!-- RESUMEN DESTACADO: CUÁNTO LE FALTA PARA LLENARSE -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.82rem; flex-wrap: wrap; gap: 6px;">
+            <div>
+              <span style="color: #64748b;">Memoria Usada: </span>
+              <strong style="color: #0f172a;">${stats.mbUsados} MB (${stats.porcentajeUsado}%)</strong>
+            </div>
+            <div style="text-align: right;">
+              <span style="color: #166534; font-weight: 700; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 4px;">
+                Faltan ${stats.mbRestantes} MB para llenar (${stats.porcentajeRestante}% libre)
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tarjetas Desglose de Métricas -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+          
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;">
+            <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Espacio Restante</div>
+            <div style="font-size: 1.05rem; font-weight: 900; color: #166534; margin-top: 2px;">${stats.mbRestantes} MB</div>
+            <div style="font-size: 0.68rem; color: #64748b;">${stats.porcentajeRestante}% disponible</div>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;">
+            <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Espacio Ocupado</div>
+            <div style="font-size: 1.05rem; font-weight: 900; color: #0f172a; margin-top: 2px;">${stats.kbUsados} KB</div>
+            <div style="font-size: 0.68rem; color: #64748b;">${stats.mbUsados} MB en total</div>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;">
+            <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Días Guardados</div>
+            <div style="font-size: 1.05rem; font-weight: 900; color: #0f172a; margin-top: 2px;">${stats.cantidadHojas}</div>
+            <div style="font-size: 0.68rem; color: #64748b;">Hojas en Firestore</div>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;">
+            <div style="font-size: 0.68rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Límite Gratuito</div>
+            <div style="font-size: 1.05rem; font-weight: 900; color: #334155; margin-top: 2px;">1,024 MB</div>
+            <div style="font-size: 0.68rem; color: #64748b;">1 GiB (Google Cloud)</div>
+          </div>
+
+        </div>
+
+        <!-- Banner Explicativo de Tranquilidad y Proyección -->
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 10px 12px; font-size: 0.78rem; color: #166534; line-height: 1.4;">
+          <strong>Información sobre tu cuota:</strong>
+          Cada hoja diaria ocupa en promedio entre 20 y 40 KB. Con los <strong>${stats.mbRestantes} MB</strong> libres que le faltan para llenarse, tu base de datos tiene capacidad para almacenar más de <strong>30,000 días continuos</strong> (más de 80 años de registros) sin agotar el plan gratuito de Google Firebase.
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.74rem; color: #64748b; padding-top: 4px;">
+          <span>Última medición: ${stats.horaActualizacion || 'Reciente'}</span>
+          <button type="button" id="btnConfigurarFirebaseDesdeMemoria" style="background: transparent; border: none; color: #2563eb; font-weight: 700; cursor: pointer; text-decoration: underline; font-size: 0.74rem;">
+            Ver credenciales de Firebase
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    document.getElementById('btnConfigurarFirebaseDesdeMemoria')?.addEventListener('click', () => {
+      this.openFirebaseConfigModal();
+    });
+
+    const btnRecalcular = document.getElementById('btnRecalcularMemoriaFirebase');
+    btnRecalcular?.addEventListener('click', async () => {
+      btnRecalcular.disabled = true;
+      btnRecalcular.innerHTML = `<span>Midiendo...</span>`;
+      const nuevasStats = await obtenerEstadisticasMemoriaFirestore(true);
+      this.renderContenidoModalMemoria(nuevasStats);
+      if (typeof window !== 'undefined' && window.refrescarBarrasMemoriaUI) {
+        window.refrescarBarrasMemoriaUI(nuevasStats);
       }
     });
   }

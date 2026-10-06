@@ -254,3 +254,154 @@ export async function listarFechasGuardadasFirestore() {
     return [];
   }
 }
+
+// Límite de almacenamiento gratuito de Firebase Firestore (Plan Spark: 1 GiB = 1,024 MB)
+export const LIMITE_FIRESTORE_BYTES = 1024 * 1024 * 1024; // 1,073,741,824 bytes
+const STORAGE_STATS_CACHE_KEY = 'adminfenix_firebase_storage_stats';
+
+/**
+ * Mide el tamaño exacto en bytes de un texto UTF-8
+ */
+function calcularBytesTexto(str) {
+  if (!str) return 0;
+  try {
+    return new Blob([str]).size;
+  } catch (e) {
+    return (new TextEncoder().encode(str)).length;
+  }
+}
+
+/**
+ * Calcula el uso actual de memoria en la base de datos de Firebase Firestore y cuánto le falta para llenarse.
+ * @param {boolean} forzarRecalculo Si es true, consulta Firestore en vivo ignorando el caché
+ * @returns {Promise<object>} Estadísticas detalladas de memoria
+ */
+export async function obtenerEstadisticasMemoriaFirestore(forzarRecalculo = false) {
+  // 1. Verificar si hay un resultado reciente en caché (3 minutos)
+  if (!forzarRecalculo) {
+    try {
+      const cacheStr = localStorage.getItem(STORAGE_STATS_CACHE_KEY);
+      if (cacheStr) {
+        const cache = JSON.parse(cacheStr);
+        if (cache && cache.timestamp && (Date.now() - cache.timestamp < 180000)) {
+          return cache;
+        }
+      }
+    } catch (e) {
+      console.warn('Error al leer caché de memoria Firebase:', e);
+    }
+  }
+
+  // 2. Si Firebase no está activo, estimar con base en almacenamiento local
+  if (!db) {
+    return estimarMemoriaFirestoreLocal();
+  }
+
+  try {
+    // 3. Consultar colección hojas_diarias en Firestore
+    const colRef = collection(db, 'hojas_diarias');
+    const snap = await getDocs(colRef);
+    let totalBytesHojas = 0;
+    const cantidadHojas = snap.size;
+
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      const jsonStr = JSON.stringify(data);
+      // Tamaño JSON + id de documento + 32 bytes de metadatos Firestore
+      const bytesDoc = calcularBytesTexto(jsonStr) + (docSnap.id.length + 32);
+      totalBytesHojas += bytesDoc;
+    });
+
+    // 4. Consultar colección sistema_global
+    let bytesGlobal = 0;
+    try {
+      const globalDocRef = doc(db, 'sistema_global', 'proveedores_datos');
+      const snapGlobal = await getDoc(globalDocRef);
+      if (snapGlobal.exists()) {
+        const dataGlobal = snapGlobal.data();
+        bytesGlobal = calcularBytesTexto(JSON.stringify(dataGlobal)) + 64;
+      }
+    } catch (eG) {
+      console.warn('No se pudo leer sistema_global para estadísticas:', eG);
+    }
+
+    const bytesUsados = totalBytesHojas + bytesGlobal;
+    const bytesTotales = LIMITE_FIRESTORE_BYTES;
+    const bytesRestantes = Math.max(0, bytesTotales - bytesUsados);
+    const porcentajeUsado = (bytesUsados / bytesTotales) * 100;
+    const porcentajeRestante = Math.max(0, 100 - porcentajeUsado);
+
+    const stats = {
+      conectado: true,
+      esEstimacion: false,
+      bytesUsados,
+      bytesRestantes,
+      bytesTotales,
+      mbUsados: (bytesUsados / (1024 * 1024)).toFixed(2),
+      mbRestantes: (bytesRestantes / (1024 * 1024)).toFixed(2),
+      mbTotales: 1024,
+      kbUsados: (bytesUsados / 1024).toFixed(1),
+      kbRestantes: (bytesRestantes / 1024).toFixed(1),
+      porcentajeUsado: porcentajeUsado < 0.01 && bytesUsados > 0 ? 0.01 : parseFloat(porcentajeUsado.toFixed(2)),
+      porcentajeRestante: parseFloat(porcentajeRestante.toFixed(2)),
+      cantidadHojas,
+      bytesHojas: totalBytesHojas,
+      bytesGlobal,
+      timestamp: Date.now(),
+      horaActualizacion: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    try {
+      localStorage.setItem(STORAGE_STATS_CACHE_KEY, JSON.stringify(stats));
+    } catch (e) {}
+
+    return stats;
+  } catch (error) {
+    console.error('Error al calcular uso de memoria en Firestore:', error);
+    return estimarMemoriaFirestoreLocal();
+  }
+}
+
+/**
+ * Estimación defensiva en base a datos locales
+ */
+function estimarMemoriaFirestoreLocal() {
+  let bytesLocales = 0;
+  let cantHojas = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('adminfenix_hoja_') || k.includes('hoja') || k.includes('adminfenix_'))) {
+        const v = localStorage.getItem(k);
+        bytesLocales += calcularBytesTexto(v);
+        if (k.includes('hoja_')) cantHojas++;
+      }
+    }
+  } catch (e) {}
+
+  const bytesUsados = Math.max(bytesLocales, 25000);
+  const bytesTotales = LIMITE_FIRESTORE_BYTES;
+  const bytesRestantes = Math.max(0, bytesTotales - bytesUsados);
+  const porcentajeUsado = (bytesUsados / bytesTotales) * 100;
+
+  return {
+    conectado: isFirebaseConectado(),
+    esEstimacion: true,
+    bytesUsados,
+    bytesRestantes,
+    bytesTotales,
+    mbUsados: (bytesUsados / (1024 * 1024)).toFixed(2),
+    mbRestantes: (bytesRestantes / (1024 * 1024)).toFixed(2),
+    mbTotales: 1024,
+    kbUsados: (bytesUsados / 1024).toFixed(1),
+    kbRestantes: (bytesRestantes / 1024).toFixed(1),
+    porcentajeUsado: porcentajeUsado < 0.01 ? 0.01 : parseFloat(porcentajeUsado.toFixed(2)),
+    porcentajeRestante: parseFloat((100 - porcentajeUsado).toFixed(2)),
+    cantidadHojas: Math.max(cantHojas, 1),
+    bytesHojas: bytesUsados,
+    bytesGlobal: 0,
+    timestamp: Date.now(),
+    horaActualizacion: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+  };
+}
+

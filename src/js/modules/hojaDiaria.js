@@ -134,8 +134,16 @@ export class HojaDiariaModule {
               `)}
             </button>
 
+            <!-- Indicador y Barra de Memoria Firebase BD en Hoja Diaria -->
+            <div class="indicador-memoria-hoja-container" id="btnHojaMemoriaFirebase" title="Capacidad de memoria en Firebase Firestore. Clic para ver detalles">
+              <div class="mini-barra-memoria-track">
+                <div class="mini-barra-memoria-fill" id="miniBarraFillHoja" style="width: 1%;"></div>
+              </div>
+              <span class="mini-barra-memoria-txt" id="miniBarraTxtHoja">☁️ Faltan 1,023 MB</span>
+            </div>
+
             <!-- Indicador Punto Live (Sincronizado en la nube) -->
-            <div class="badge-status-live" id="btnGuardadoIndicador" title="Sincronizado en tiempo real en la nube">
+            <div class="badge-status-live" id="btnGuardadoIndicador" title="Sincronizado en tiempo real en la nube. Clic para ver memoria">
               <span class="punto-live"></span>
             </div>
           </div>
@@ -745,6 +753,21 @@ export class HojaDiariaModule {
           stateManager.cambiarFechaHoja(fecha);
         }
       });
+    });
+
+    // 2.0 Click en widget de memoria Firebase o punto live para ver estado de memoria
+    document.getElementById('btnHojaMemoriaFirebase')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.adminFenixApp?.modalManager) {
+        window.adminFenixApp.modalManager.openFirebaseStorageModal();
+      }
+    });
+
+    document.getElementById('btnGuardadoIndicador')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.adminFenixApp?.modalManager) {
+        window.adminFenixApp.modalManager.openFirebaseStorageModal();
+      }
     });
 
     // 2. Selector de fecha calendario y flechas de navegación

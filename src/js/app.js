@@ -11,6 +11,47 @@ import { EstadisticasModule } from './modules/estadisticas.js';
 import { ModalManager } from './modules/modal.js';
 import { initTabletKeyboardSupport } from './modules/tabletKeyboard.js';
 import { solicitarPersistenciaPermanente } from './modules/storageManager.js';
+import { obtenerEstadisticasMemoriaFirestore } from './firebaseClient.js';
+
+export async function refrescarBarrasMemoriaUI(stats = null) {
+  try {
+    if (!stats) {
+      stats = await obtenerEstadisticasMemoriaFirestore(false);
+    }
+    if (!stats) return;
+
+    // 1. Barra en TopBar
+    const topTxt = document.getElementById('topbarFirebaseLibre');
+    const topFill = document.getElementById('topbarFirebaseFill');
+    const topWidget = document.getElementById('btnTopbarFirebaseStorage');
+    if (topTxt) topTxt.textContent = `Faltan ${stats.mbRestantes} MB (${stats.porcentajeRestante}% libre)`;
+    if (topFill) {
+      topFill.style.width = `${Math.max(stats.porcentajeUsado, 1.2)}%`;
+      topFill.style.background = stats.porcentajeUsado >= 90 ? '#dc2626' : (stats.porcentajeUsado >= 70 ? '#d97706' : '#2563eb');
+    }
+    if (topWidget) {
+      topWidget.title = `Firebase Firestore: ${stats.mbUsados} MB usados de 1,024 MB (1 GB). Faltan ${stats.mbRestantes} MB para llenar (${stats.porcentajeRestante}% libre). Clic para ver detalles.`;
+    }
+
+    // 2. Barra en Hoja Diaria
+    const hojaTxt = document.getElementById('miniBarraTxtHoja');
+    const hojaFill = document.getElementById('miniBarraFillHoja');
+    const hojaContainer = document.getElementById('btnHojaMemoriaFirebase');
+    if (hojaTxt) hojaTxt.textContent = `☁️ Faltan ${stats.mbRestantes} MB`;
+    if (hojaFill) {
+      hojaFill.style.width = `${Math.max(stats.porcentajeUsado, 1.2)}%`;
+      hojaFill.style.background = stats.porcentajeUsado >= 90 ? '#dc2626' : (stats.porcentajeUsado >= 70 ? '#d97706' : '#2563eb');
+    }
+    if (hojaContainer) {
+      hojaContainer.title = `Capacidad Firebase BD: ${stats.mbUsados} MB usados de 1,024 MB. Faltan ${stats.mbRestantes} MB para llenar. Clic para ver detalles.`;
+    }
+  } catch (err) {
+    console.warn('Error al refrescar barras de memoria:', err);
+  }
+}
+if (typeof window !== 'undefined') {
+  window.refrescarBarrasMemoriaUI = refrescarBarrasMemoriaUI;
+}
 
 class App {
   constructor() {
@@ -96,11 +137,15 @@ class App {
     // 7. Suscribirse a cambios de estado
     stateManager.subscribe(() => {
       this.updateGlobalHeaderStats();
+      refrescarBarrasMemoriaUI();
     });
 
     // 8. Garantizar SIEMPRE que al abrir la página salga en la hoja diaria del día actual
     this.forzarHojaDiariaDeHoy();
     this.setupDetectorCambioDeDia();
+
+    // 9. Inicializar medición de capacidad de memoria en Firebase Firestore
+    refrescarBarrasMemoriaUI();
   }
 
   forzarHojaDiariaDeHoy() {
@@ -172,6 +217,12 @@ class App {
     document.getElementById('btnTopBarBackup')?.addEventListener('click', (e) => {
       e.preventDefault();
       this.modalManager.openBackupModal();
+    });
+
+    // Widget con Barra de Memoria Firebase en TopBar
+    document.getElementById('btnTopbarFirebaseStorage')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.modalManager.openFirebaseStorageModal();
     });
   }
 
