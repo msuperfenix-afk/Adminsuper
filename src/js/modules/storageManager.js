@@ -335,3 +335,70 @@ export async function cargarBackupDiarioPorId(idBackup) {
     return null;
   }
 }
+
+/**
+ * Elimina una hoja específica de la base de datos local IndexedDB
+ * @param {string} fecha YYYY-MM-DD
+ */
+export async function eliminarHojaDeIndexedDB(fecha) {
+  if (!fecha) return false;
+  try {
+    const db = await abrirBaseDatos();
+    if (!db) return false;
+
+    return new Promise((resolve) => {
+      const transaction = db.transaction(['hojas_diarias'], 'readwrite');
+      const store = transaction.objectStore('hojas_diarias');
+      const req = store.delete(fecha);
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => resolve(false);
+    });
+  } catch (err) {
+    console.warn('Error al eliminar hoja de IndexedDB:', err);
+    return false;
+  }
+}
+
+/**
+ * Elimina un lote de fechas de la base de datos local IndexedDB
+ * @param {string[]} fechas Array de fechas YYYY-MM-DD
+ */
+export async function eliminarLoteHojasIndexedDB(fechas = []) {
+  if (!Array.isArray(fechas) || fechas.length === 0) return 0;
+  try {
+    const db = await abrirBaseDatos();
+    if (!db) return 0;
+
+    return new Promise((resolve) => {
+      const transaction = db.transaction(['hojas_diarias'], 'readwrite');
+      const store = transaction.objectStore('hojas_diarias');
+      fechas.forEach(f => store.delete(f));
+      transaction.oncomplete = () => resolve(fechas.length);
+      transaction.onerror = () => resolve(0);
+    });
+  } catch (err) {
+    console.warn('Error al eliminar lote de hojas en IndexedDB:', err);
+    return 0;
+  }
+}
+
+/**
+ * Obtiene todas las fechas de hojas guardadas en IndexedDB
+ */
+export async function listarFechasGuardadasIndexedDB() {
+  try {
+    const db = await abrirBaseDatos();
+    if (!db) return [];
+
+    return new Promise((resolve) => {
+      const transaction = db.transaction(['hojas_diarias'], 'readonly');
+      const store = transaction.objectStore('hojas_diarias');
+      const req = store.getAllKeys();
+      req.onsuccess = () => resolve((req.result || []).sort().reverse());
+      req.onerror = () => resolve([]);
+    });
+  } catch (err) {
+    return [];
+  }
+}
+

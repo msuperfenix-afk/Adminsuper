@@ -1550,9 +1550,14 @@ export class ModalManager {
               <span style="font-size: 1rem;">☁️</span>
               <strong style="font-size: 0.86rem; color: #0f172a;">Capacidad de Base de Datos en Firebase</strong>
             </div>
-            <button type="button" id="btnVerDetallesMemoriaDesdeBackup" style="background: transparent; border: none; color: #2563eb; font-size: 0.74rem; font-weight: 700; cursor: pointer; text-decoration: underline;">
-              Ver detalles completos
-            </button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <button type="button" id="btnAbrirDepuradorDesdeBackup" style="background: transparent; border: none; color: #dc2626; font-size: 0.74rem; font-weight: 700; cursor: pointer; text-decoration: underline;">
+                🧹 Depurar registros
+              </button>
+              <button type="button" id="btnVerDetallesMemoriaDesdeBackup" style="background: transparent; border: none; color: #2563eb; font-size: 0.74rem; font-weight: 700; cursor: pointer; text-decoration: underline;">
+                Ver memoria
+              </button>
+            </div>
           </div>
           
           <!-- Barra visual de memoria -->
@@ -1718,6 +1723,10 @@ export class ModalManager {
 
     document.getElementById('btnVerDetallesMemoriaDesdeBackup')?.addEventListener('click', () => {
       this.openFirebaseStorageModal();
+    });
+
+    document.getElementById('btnAbrirDepuradorDesdeBackup')?.addEventListener('click', () => {
+      this.openDepuracionModal();
     });
 
     // Conmutador Día / Mes
@@ -2014,6 +2023,21 @@ export class ModalManager {
           Cada hoja diaria ocupa en promedio entre 20 y 40 KB. Con los <strong>${stats.mbRestantes} MB</strong> libres que le faltan para llenarse, tu base de datos tiene capacidad para almacenar más de <strong>30,000 días continuos</strong> (más de 80 años de registros) sin agotar el plan gratuito de Google Firebase.
         </div>
 
+        <!-- Apartado de Depuración y Limpieza -->
+        <div style="background: #ffffff; border: 1.5px dashed #cbd5e1; border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 4px;">
+          <div>
+            <strong style="font-size: 0.84rem; color: #0f172a; display: flex; align-items: center; gap: 5px;">
+              <span>🧹</span> Depuración y Limpieza de Registros
+            </strong>
+            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">
+              Elimina días o meses específicos para liberar memoria en Firebase y tu navegador.
+            </div>
+          </div>
+          <button type="button" class="btn-secondary" id="btnAbrirDepuradorDesdeMemoria" style="font-size: 0.76rem; font-weight: 700; height: 30px; padding: 0 12px; border-color: #cbd5e1; color: #0f172a; cursor: pointer; white-space: nowrap;">
+            Abrir Depurador
+          </button>
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.74rem; color: #64748b; padding-top: 4px;">
           <span>Última medición: ${stats.horaActualizacion || 'Reciente'}</span>
           <button type="button" id="btnConfigurarFirebaseDesdeMemoria" style="background: transparent; border: none; color: #2563eb; font-weight: 700; cursor: pointer; text-decoration: underline; font-size: 0.74rem;">
@@ -2028,6 +2052,10 @@ export class ModalManager {
       this.openFirebaseConfigModal();
     });
 
+    document.getElementById('btnAbrirDepuradorDesdeMemoria')?.addEventListener('click', () => {
+      this.openDepuracionModal();
+    });
+
     const btnRecalcular = document.getElementById('btnRecalcularMemoriaFirebase');
     btnRecalcular?.addEventListener('click', async () => {
       btnRecalcular.disabled = true;
@@ -2037,6 +2065,340 @@ export class ModalManager {
       if (typeof window !== 'undefined' && window.refrescarBarrasMemoriaUI) {
         window.refrescarBarrasMemoriaUI(nuevasStats);
       }
+    });
+  }
+
+  // ==========================================================
+  // 11.2 MODAL: DEPURACIÓN Y LIMPIEZA DE REGISTROS (DÍAS Y MESES)
+  // ==========================================================
+  async openDepuracionModal() {
+    const footer = `
+      <button type="button" class="btn-secondary" id="modalCancelBtn">Cerrar</button>
+    `;
+
+    this.open('Depuración de Registros Contables', `
+      <div style="text-align: center; padding: 26px;">
+        <div style="display: inline-block; width: 24px; height: 24px; border: 2px solid #e2e8f0; border-top-color: #0f172a; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+        <div style="font-size: 0.82rem; color: #64748b; margin-top: 8px;">Cargando historial de fechas registradas...</div>
+      </div>
+    `, footer);
+
+    document.getElementById('modalCancelBtn')?.addEventListener('click', () => this.close());
+
+    const fechas = await stateManager.obtenerTodasLasFechasRegistradas();
+    this.renderContenidoModalDepuracion(fechas);
+  }
+
+  renderContenidoModalDepuracion(fechas = []) {
+    const modalBody = this.container.querySelector('.modal-body');
+    if (!modalBody) return;
+
+    const hoyStr = stateManager.getFechaHoy();
+    const [anoActual, mesActual] = hoyStr.split('-');
+
+    // Agrupar fechas por mes para contador rápido
+    const contarFechasMes = (ano, mes) => {
+      const prefijo = `${ano}-${String(mes).padStart(2, '0')}`;
+      return fechas.filter(f => f.startsWith(prefijo)).length;
+    };
+
+    modalBody.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- Banner de advertencia de seguridad -->
+        <div style="background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: 6px; padding: 10px 12px; font-size: 0.78rem; color: #9a3412; line-height: 1.4;">
+          <strong>Zona de Depuración Contable:</strong>
+          Al borrar días o meses, los cortes contables seleccionados se eliminarán permanentemente de <strong>Firebase Cloud Firestore</strong>, <strong>IndexedDB</strong> y de la memoria de tu dispositivo para liberar espacio. Tus catálogos de proveedores y configuraciones no se alteran.
+        </div>
+
+        <!-- Pestañas de Tipo de Depuración -->
+        <div style="display: flex; gap: 6px; background: #f1f5f9; padding: 3px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <button type="button" class="btn-tab-depuracion" id="tabDepurarMes" style="flex: 1; padding: 6px 10px; font-size: 0.76rem; font-weight: 700; border: none; border-radius: 4px; cursor: pointer; background: #ffffff; color: #0f172a; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            🗓️ Por Mes Completo
+          </button>
+          <button type="button" class="btn-tab-depuracion" id="tabDepurarDia" style="flex: 1; padding: 6px 10px; font-size: 0.76rem; font-weight: 700; border: none; border-radius: 4px; cursor: pointer; background: transparent; color: #64748b;">
+            📅 Por Día Específico
+          </button>
+          <button type="button" class="btn-tab-depuracion" id="tabDepurarLista" style="flex: 1; padding: 6px 10px; font-size: 0.76rem; font-weight: 700; border: none; border-radius: 4px; cursor: pointer; background: transparent; color: #64748b;">
+            📋 Todos los Días (${fechas.length})
+          </button>
+        </div>
+
+        <!-- SECCIÓN 1: DEPURAR POR MES COMPLETO -->
+        <div id="seccionDepurarMes" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px;">
+          <label style="display: block; font-weight: 700; font-size: 0.82rem; color: #0f172a; margin-bottom: 8px;">
+            Selecciona el mes a depurar:
+          </label>
+
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <div>
+              <label class="form-label" style="font-size: 0.74rem; font-weight: 600; color: #475569;">Mes:</label>
+              <select id="selectDepurarMes" class="form-control" style="font-size: 0.82rem; font-weight: 600;">
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.74rem; font-weight: 600; color: #475569;">Año:</label>
+              <input type="number" id="inputDepurarAno" class="form-control" value="${anoActual}" style="font-size: 0.82rem; font-weight: 600;">
+            </div>
+          </div>
+
+          <!-- Indicador dinámico de registros encontrados en ese mes -->
+          <div id="infoRegistrosMes" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 5px; padding: 8px 12px; font-size: 0.76rem; color: #334155; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span>Registros encontrados:</span>
+            <strong id="contadorDiasMesTexto" style="color: #0f172a;">0 días</strong>
+          </div>
+
+          <button type="button" class="btn-primary" id="btnEjecutarDepurarMes" style="background: #dc2626; border-color: #dc2626; font-size: 0.78rem; font-weight: 700; width: 100%; padding: 8px 14px; cursor: pointer;">
+            🗑️ Eliminar Mes Completo de la Base de Datos
+          </button>
+        </div>
+
+        <!-- SECCIÓN 2: DEPURAR POR DÍA ESPECÍFICO (Oculta por default) -->
+        <div id="seccionDepurarDia" style="display: none; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px;">
+          <label style="display: block; font-weight: 700; font-size: 0.82rem; color: #0f172a; margin-bottom: 8px;">
+            Selecciona el día específico a eliminar:
+          </label>
+
+          <div style="margin-bottom: 12px;">
+            <input type="date" id="inputDepurarDiaFecha" class="form-control" value="${hoyStr}" style="font-size: 0.85rem; max-width: 240px;">
+          </div>
+
+          <div id="infoEstadoDiaSeleccionado" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 5px; padding: 8px 12px; font-size: 0.76rem; color: #334155; margin-bottom: 12px;">
+            Verificando registro...
+          </div>
+
+          <button type="button" class="btn-primary" id="btnEjecutarDepurarDia" style="background: #dc2626; border-color: #dc2626; font-size: 0.78rem; font-weight: 700; width: 100%; padding: 8px 14px; cursor: pointer;">
+            🗑️ Eliminar Registro de Este Día
+          </button>
+        </div>
+
+        <!-- SECCIÓN 3: TABLA DE TODOS LOS DÍAS REGISTRADOS (Oculta por default) -->
+        <div id="seccionDepurarLista" style="display: none; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.78rem; font-weight: 700; color: #0f172a;">Listado de Registros en la Base de Datos:</span>
+            <span style="font-size: 0.72rem; color: #64748b;">${fechas.length} días almacenados</span>
+          </div>
+
+          <div style="max-height: 240px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 5px;">
+            ${fechas.length === 0 ? `
+              <div style="padding: 18px; text-align: center; color: #94a3b8; font-size: 0.76rem;">No hay registros almacenados.</div>
+            ` : `
+              <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+                <thead>
+                  <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: left; color: #475569;">
+                    <th style="padding: 6px 10px;">Fecha</th>
+                    <th style="padding: 6px 10px; text-align: center;">Estado</th>
+                    <th style="padding: 6px 10px; text-align: right;">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${fechas.map(f => {
+                    const esHoy = f === hoyStr;
+                    return `
+                      <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 6px 10px; font-weight: 600; color: #0f172a;">
+                          ${f} ${esHoy ? '<span style="background: #0f172a; color: #fff; font-size: 0.62rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px;">HOY</span>' : ''}
+                        </td>
+                        <td style="padding: 6px 10px; text-align: center; color: #166534; font-size: 0.70rem; font-weight: 600;">
+                          ✓ Registrado
+                        </td>
+                        <td style="padding: 6px 10px; text-align: right;">
+                          <button type="button" class="btn-borrar-dia-tabla" data-fecha="${f}" style="background: transparent; border: 1px solid #fecaca; color: #dc2626; border-radius: 4px; padding: 2px 7px; font-size: 0.70rem; cursor: pointer; font-weight: 700;" title="Eliminar registro del día ${f}">
+                            🗑️ Borrar
+                          </button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            `}
+          </div>
+        </div>
+
+        <!-- Botón para ver capacidad de memoria -->
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.74rem; color: #64748b; padding-top: 4px; border-top: 1px solid #f1f5f9;">
+          <span>Los datos se purgan en Firestore, IndexedDB y memoria local</span>
+          <button type="button" id="btnVerMemoriaDesdeDepurador" style="background: transparent; border: none; color: #2563eb; font-weight: 700; cursor: pointer; text-decoration: underline; font-size: 0.74rem;">
+            Ver barra de memoria Firebase
+          </button>
+        </div>
+
+      </div>
+    `;
+
+    // Conmutador de Pestañas
+    const tabMes = document.getElementById('tabDepurarMes');
+    const tabDia = document.getElementById('tabDepurarDia');
+    const tabLista = document.getElementById('tabDepurarLista');
+    const secMes = document.getElementById('seccionDepurarMes');
+    const secDia = document.getElementById('seccionDepurarDia');
+    const secLista = document.getElementById('seccionDepurarLista');
+
+    const activarTab = (tabActivo, secActiva) => {
+      [tabMes, tabDia, tabLista].forEach(t => {
+        if (t) {
+          t.style.background = 'transparent';
+          t.style.color = '#64748b';
+          t.style.boxShadow = 'none';
+        }
+      });
+      [secMes, secDia, secLista].forEach(s => { if (s) s.style.display = 'none'; });
+
+      if (tabActivo) {
+        tabActivo.style.background = '#ffffff';
+        tabActivo.style.color = '#0f172a';
+        tabActivo.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+      }
+      if (secActiva) secActiva.style.display = 'block';
+    };
+
+    tabMes?.addEventListener('click', () => activarTab(tabMes, secMes));
+    tabDia?.addEventListener('click', () => activarTab(tabDia, secDia));
+    tabLista?.addEventListener('click', () => activarTab(tabLista, secLista));
+
+    // Contador dinámico de mes
+    const selectMes = document.getElementById('selectDepurarMes');
+    const inputAno = document.getElementById('inputDepurarAno');
+    const contadorTexto = document.getElementById('contadorDiasMesTexto');
+    const btnMes = document.getElementById('btnEjecutarDepurarMes');
+
+    // Inicializar select de mes con el mes actual
+    if (selectMes && mesActual) {
+      selectMes.value = String(parseInt(mesActual, 10));
+    }
+
+    const actualizarContadorMes = () => {
+      const a = inputAno?.value || anoActual;
+      const m = selectMes?.value || mesActual;
+      const cant = contarFechasMes(a, m);
+      if (contadorTexto) {
+        contadorTexto.textContent = `${cant} días con registros`;
+        contadorTexto.style.color = cant > 0 ? '#b91c1c' : '#64748b';
+      }
+      if (btnMes) {
+        btnMes.disabled = cant === 0;
+        btnMes.textContent = cant > 0 
+          ? `🗑️ Eliminar Mes Completo (${cant} días)` 
+          : 'Sin registros para este mes';
+      }
+    };
+
+    selectMes?.addEventListener('change', actualizarContadorMes);
+    inputAno?.addEventListener('input', actualizarContadorMes);
+    actualizarContadorMes();
+
+    // Verificador de día individual
+    const inputDia = document.getElementById('inputDepurarDiaFecha');
+    const infoDia = document.getElementById('infoEstadoDiaSeleccionado');
+    const btnDia = document.getElementById('btnEjecutarDepurarDia');
+
+    const actualizarEstadoDia = () => {
+      const f = inputDia?.value;
+      const existe = f && fechas.includes(f);
+      if (infoDia) {
+        if (existe) {
+          infoDia.innerHTML = `<span style="color: #b91c1c; font-weight: 700;">● Registro activo encontrado</span> para el día <strong>${f}</strong>.`;
+        } else {
+          infoDia.innerHTML = `<span style="color: #64748b;">○ No existen registros guardados</span> para el día <strong>${f}</strong>.`;
+        }
+      }
+      if (btnDia) {
+        btnDia.disabled = !existe;
+      }
+    };
+    inputDia?.addEventListener('change', actualizarEstadoDia);
+    actualizarEstadoDia();
+
+    // ACCIÓN: Ejecutar borrado de mes completo
+    btnMes?.addEventListener('click', async () => {
+      const a = inputAno?.value;
+      const m = selectMes?.value;
+      const cant = contarFechasMes(a, m);
+      if (cant === 0) return;
+
+      const nombreMes = selectMes.options[selectMes.selectedIndex].text;
+      const confirmar = confirm(`¿Estás SEGURO de eliminar permanentemente los registros de ${nombreMes} de ${a}?\n\nSe borrarán ${cant} días de la base de datos de Firebase Firestore y del almacenamiento local.\n\nEsta acción NO se puede deshacer.`);
+      if (!confirmar) return;
+
+      btnMes.disabled = true;
+      btnMes.textContent = 'Eliminando registros...';
+
+      const res = await stateManager.eliminarRegistrosPorMes(a, m);
+      if (res.ok) {
+        alert(`¡Mes de ${nombreMes} ${a} depurado exitosamente!\n\nSe eliminaron ${res.eliminados} días y se liberó espacio en Firebase.`);
+        const nuevasFechas = await stateManager.obtenerTodasLasFechasRegistradas();
+        this.renderContenidoModalDepuracion(nuevasFechas);
+      } else {
+        alert('Ocurrió un error al depurar: ' + (res.error || 'Error desconocido'));
+        actualizarContadorMes();
+      }
+    });
+
+    // ACCIÓN: Ejecutar borrado de día específico
+    btnDia?.addEventListener('click', async () => {
+      const f = inputDia?.value;
+      if (!f) return;
+
+      const esHoy = f === hoyStr;
+      const avisoHoy = esHoy ? '\n\n⚠️ ATENCIÓN: Es la fecha del día de hoy. Si la eliminas, la hoja actual se reiniciará en ceros.' : '';
+      const confirmar = confirm(`¿Estás seguro de eliminar el registro del día ${f} de la base de datos?${avisoHoy}`);
+      if (!confirmar) return;
+
+      btnDia.disabled = true;
+      btnDia.textContent = 'Borrando...';
+
+      const res = await stateManager.eliminarRegistroFecha(f);
+      if (res.ok) {
+        alert(`¡Registro del día ${f} eliminado permanentemente!`);
+        const nuevasFechas = await stateManager.obtenerTodasLasFechasRegistradas();
+        this.renderContenidoModalDepuracion(nuevasFechas);
+      } else {
+        alert('Error al eliminar: ' + (res.error || 'Error desconocido'));
+        actualizarEstadoDia();
+      }
+    });
+
+    // ACCIÓN: Borrado individual desde la tabla
+    modalBody.querySelectorAll('.btn-borrar-dia-tabla').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const f = btn.getAttribute('data-fecha');
+        if (!f) return;
+
+        const esHoy = f === hoyStr;
+        const avisoHoy = esHoy ? ' (Fecha de hoy. Se reiniciará en ceros)' : '';
+        if (confirm(`¿Eliminar permanentemente el registro del día ${f}${avisoHoy}?`)) {
+          btn.disabled = true;
+          btn.textContent = '...';
+          const res = await stateManager.eliminarRegistroFecha(f);
+          if (res.ok) {
+            const nuevasFechas = await stateManager.obtenerTodasLasFechasRegistradas();
+            this.renderContenidoModalDepuracion(nuevasFechas);
+          } else {
+            alert('Error al eliminar: ' + (res.error || ''));
+            btn.disabled = false;
+            btn.textContent = '🗑️ Borrar';
+          }
+        }
+      });
+    });
+
+    // Enlace para volver a ver la memoria
+    document.getElementById('btnVerMemoriaDesdeDepurador')?.addEventListener('click', () => {
+      this.openFirebaseStorageModal();
     });
   }
 

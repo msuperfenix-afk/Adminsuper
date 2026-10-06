@@ -5,7 +5,10 @@ import {
   guardarProveedoresGlobalFirestore,
   cargarProveedoresGlobalFirestore,
   escucharProveedoresGlobalFirestore,
-  isFirebaseConectado 
+  isFirebaseConectado,
+  eliminarHojaDeFirestore,
+  eliminarLoteHojasFirestore,
+  listarFechasGuardadasFirestore
 } from './firebaseClient.js';
 import {
   solicitarPersistenciaPermanente,
@@ -14,7 +17,10 @@ import {
   cargarTodasLasHojasIndexedDB,
   guardarProveedoresEnIndexedDB,
   cargarProveedoresDeIndexedDB,
-  guardarBackupDiarioAutomatico
+  guardarBackupDiarioAutomatico,
+  eliminarHojaDeIndexedDB,
+  eliminarLoteHojasIndexedDB,
+  listarFechasGuardadasIndexedDB
 } from './modules/storageManager.js';
 
 const STORAGE_KEY = 'adminfenix_data_v5';
@@ -3038,6 +3044,210 @@ class StateManager {
     this.notify();
     return true;
   }
+
+  /**
+   * Obtiene la lista unificada de todas las fechas que tienen registros en el sistema
+   * (Memoria, LocalStorage, IndexedDB y Cloud Firestore)
+   */
+  async obtenerTodasLasFechasRegistradas() {
+    const conjuntoFechas = new Set();
+
+    // 1. Fechas en memoria local
+    if (this.data.hojasPorFecha) {
+      Object.keys(this.data.hojasPorFecha).forEach(f => {
+        if (f && f.length === 10) conjuntoFechas.add(f);
+      });
+    }
+    if (this.data.fecha && this.data.fecha.length === 10) {
+      conjuntoFechas.add(this.data.fecha);
+    }
+
+    // 2. Fechas en localStorage
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('adminfenix_hoja_')) {
+          const f = k.replace('adminfenix_hoja_', '');
+          if (f.length === 10) conjuntoFechas.add(f);
+        }
+      }
+    } catch (e) {}
+
+    // 3. Fechas en IndexedDB
+    try {
+      const fechasIdb = await listarFechasGuardadasIndexedDB();
+      fechasIdb.forEach(f => {
+        if (f && f.length === 10) conjuntoFechas.add(f);
+      });
+    } catch (e) {}
+
+    // 4. Fechas en Cloud Firestore si está conectado
+    if (isFirebaseConectado()) {
+      try {
+        const fechasFs = await listarFechasGuardadasFirestore();
+        fechasFs.forEach(f => {
+          if (f && f.length === 10) conjuntoFechas.add(f);
+        });
+      } catch (e) {}
+    }
+
+    return Array.from(conjuntoFechas).sort().reverse();
+  }
+
+  /**
+   * Elimina permanentemente el registro de una fecha específica
+   * de Memoria, LocalStorage, IndexedDB y Firestore.
+   */
+  async eliminarRegistroFecha(fecha) {
+    if (!fecha || fecha.length !== 10) return { ok: false, error: 'Fecha inválida' };
+
+    try {
+      // 1. Borrar de memoria y localStorage
+      if (this.data.hojasPorFecha && this.data.hojasPorFecha[fecha]) {
+        delete this.data.hojasPorFecha[fecha];
+      }
+      try {
+        localStorage.removeItem('adminfenix_hoja_' + fecha);
+      } catch (e) {}
+
+      // 2. Borrar de IndexedDB
+      await eliminarHojaDeIndexedDB(fecha);
+
+      // 3. Borrar de Cloud Firestore
+      if (isFirebaseConectado()) {
+        await eliminarHojaDeFirestore(fecha);
+      }
+
+      // 4. Si la fecha eliminada era la que estaba abierta en pantalla
+      const hoy = this.getFechaHoy();
+      if (this.data.fecha === fecha) {
+        if (fecha === hoy) {
+          const plantillaLimpia = this.crearPlantillaLimpia(hoy);
+          Object.assign(this.data, plantillaLimpia);
+        } else {
+          await this.cambiarFechaHoja(hoy);
+        }
+      }
+
+      this.saveState();
+      this.notify();
+
+      // Refrescar barras de memoria de Firebase
+      if (typeof window !== 'undefined' && window.refrescarBarrasMemoriaUI) {
+        window.refrescarBarrasMemoriaUI();
+      }
+
+      console.log(`Registro de la fecha ${fecha} depurado exitosamente.`);
+      return { ok: true, fecha };
+    } catch (error) {
+      console.error(`Error al depurar registro de ${fecha}:`, error);
+      return { ok: false, error: error.message };
+    }
+  }
+
+  /**
+   * Depura y elimina todos los registros de un mes específico (ej: ano=2026, mes=9)
+   */
+  async eliminarRegistrosPorMes(ano, mes) {
+    const prefijo = `${ano}-${String(mes).padStart(2, '0')}`;
+    const todasLasFechas = await this.obtenerTodasLasFechasRegistradas();
+    const fechasMes = todasLasFechas.filter(f => f.startsWith(prefijo));
+
+    if (fechasMes.length === 0) {
+      return { ok: true, eliminados: 0, fechas: [] };
+    }
+
+    try {
+      // 1. Eliminar de memoria y localStorage
+      fechasMes.forEach(f => {
+        if (this.data.hojasPorFecha && this.data.hojasPorFecha[f]) {
+          delete this.data.hojasPorFecha[f];
+        }
+        try {
+          localStorage.removeItem('adminfenix_hoja_' + f);
+        } catch (e) {}
+      });
+
+      // 2. Eliminar de IndexedDB
+      await eliminarLoteHojasIndexedDB(fechasMes);
+
+      // 3. Eliminar de Firestore
+      if (isFirebaseConectado()) {
+        await eliminarLoteHojasFirestore(fechasMes);
+      }
+
+      // 4. Si la fecha actual activa estaba en ese mes
+      const hoy = this.getFechaHoy();
+      if (this.data.fecha && this.data.fecha.startsWith(prefijo)) {
+        if (this.data.fecha === hoy) {
+          const plantillaLimpia = this.crearPlantillaLimpia(hoy);
+          Object.assign(this.data, plantillaLimpia);
+        } else {
+          await this.cambiarFechaHoja(hoy);
+        }
+      }
+
+      this.saveState();
+      this.notify();
+
+      if (typeof window !== 'undefined' && window.refrescarBarrasMemoriaUI) {
+        window.refrescarBarrasMemoriaUI();
+      }
+
+      console.log(`Mes ${prefijo} depurado exitosamente: ${fechasMes.length} registros eliminados.`);
+      return { ok: true, eliminados: fechasMes.length, fechas: fechasMes };
+    } catch (error) {
+      console.error(`Error al depurar registros del mes ${prefijo}:`, error);
+      return { ok: false, error: error.message };
+    }
+  }
+
+  /**
+   * Depura y elimina todos los registros anteriores a una fecha límite
+   */
+  async eliminarRegistrosAnterioresA(fechaLimite) {
+    if (!fechaLimite) return { ok: false, error: 'Fecha límite requerida' };
+    const todasLasFechas = await this.obtenerTodasLasFechasRegistradas();
+    const fechasAnteriores = todasLasFechas.filter(f => f < fechaLimite);
+
+    if (fechasAnteriores.length === 0) {
+      return { ok: true, eliminados: 0, fechas: [] };
+    }
+
+    try {
+      fechasAnteriores.forEach(f => {
+        if (this.data.hojasPorFecha && this.data.hojasPorFecha[f]) {
+          delete this.data.hojasPorFecha[f];
+        }
+        try {
+          localStorage.removeItem('adminfenix_hoja_' + f);
+        } catch (e) {}
+      });
+
+      await eliminarLoteHojasIndexedDB(fechasAnteriores);
+
+      if (isFirebaseConectado()) {
+        await eliminarLoteHojasFirestore(fechasAnteriores);
+      }
+
+      const hoy = this.getFechaHoy();
+      if (this.data.fecha && this.data.fecha < fechaLimite) {
+        await this.cambiarFechaHoja(hoy);
+      }
+
+      this.saveState();
+      this.notify();
+
+      if (typeof window !== 'undefined' && window.refrescarBarrasMemoriaUI) {
+        window.refrescarBarrasMemoriaUI();
+      }
+
+      return { ok: true, eliminados: fechasAnteriores.length, fechas: fechasAnteriores };
+    } catch (error) {
+      return { ok: false, error: error.message };
+    }
+  }
 }
 
 export const stateManager = new StateManager();
+

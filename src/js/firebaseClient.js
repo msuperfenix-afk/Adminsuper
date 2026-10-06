@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { getAuth, signInAnonymously } from 'firebase/auth';
 
 const STORAGE_FIREBASE_KEY = 'adminfenix_firebase_config';
@@ -403,5 +403,47 @@ function estimarMemoriaFirestoreLocal() {
     timestamp: Date.now(),
     horaActualizacion: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
   };
+}
+
+/**
+ * Elimina el documento de una hoja específica de Cloud Firestore
+ * @param {string} fecha Formato YYYY-MM-DD
+ */
+export async function eliminarHojaDeFirestore(fecha) {
+  if (!db || !fecha) return false;
+  try {
+    const docRef = doc(db, 'hojas_diarias', fecha);
+    await deleteDoc(docRef);
+    console.log(`Documento ${fecha} eliminado exitosamente de Firestore`);
+    try { localStorage.removeItem(STORAGE_STATS_CACHE_KEY); } catch (e) {}
+    return true;
+  } catch (error) {
+    console.error(`Error al eliminar hoja de Firestore (${fecha}):`, error);
+    return false;
+  }
+}
+
+/**
+ * Elimina un lote de fechas de Cloud Firestore
+ * @param {string[]} fechas Array de fechas en formato YYYY-MM-DD
+ */
+export async function eliminarLoteHojasFirestore(fechas = []) {
+  if (!db || !Array.isArray(fechas) || fechas.length === 0) return { eliminados: 0, errores: 0 };
+  let eliminados = 0;
+  let errores = 0;
+
+  for (const f of fechas) {
+    try {
+      const docRef = doc(db, 'hojas_diarias', f);
+      await deleteDoc(docRef);
+      eliminados++;
+    } catch (e) {
+      console.warn(`Error al eliminar hoja ${f} de Firestore:`, e);
+      errores++;
+    }
+  }
+
+  try { localStorage.removeItem(STORAGE_STATS_CACHE_KEY); } catch (e) {}
+  return { eliminados, errores };
 }
 

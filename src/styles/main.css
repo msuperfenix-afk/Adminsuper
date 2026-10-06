@@ -908,6 +908,19 @@ input, button, select, textarea {
   color: #166534;
 }
 
+/* Apartado de Depuración de Registros */
+.btn-tab-depuracion {
+  transition: all 0.15s ease;
+}
+.btn-tab-depuracion:hover {
+  background: #ffffff;
+  color: #0f172a;
+}
+.btn-borrar-dia-tabla:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+}
+
 /* Botón Formal con Solo el Logo de Calendario */
 .btn-abrir-calendario-icono {
   background: #ffffff;
