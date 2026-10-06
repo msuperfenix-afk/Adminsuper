@@ -40,8 +40,8 @@ export class PipelineModule {
     this.vistaModo = 'kanban';
     this.draggedCardId = null;
 
-    // Control para mostrar los días que caben en pantalla sin saturar
-    this.diasVisiblesCantidad = 4;
+    // Por defecto mostrar los 7 días de la semana completa (Lunes a Domingo)
+    this.diasVisiblesCantidad = 7;
     this.offsetDias = 0;
 
     this.init();
@@ -65,7 +65,7 @@ export class PipelineModule {
 
   setVistaModo(modo) {
     this.vistaModo = modo;
-    // Sincronizar botones de la barra superior global
+    // Sincronizar botones de la barra superior global si existen
     const btnTopKanban = document.getElementById('btnViewKanban');
     const btnTopList = document.getElementById('btnViewList');
     if (btnTopKanban && btnTopList) {
@@ -96,10 +96,8 @@ export class PipelineModule {
   }
 
   getDiasOrdenadosDesdeHoy() {
-    const diasInfo = this.getDiasInfo();
-    const idxHoy = DIAS_SEMANA.findIndex(d => d.id === diasInfo.idHoy);
-    if (idxHoy === -1) return DIAS_SEMANA;
-    return [...DIAS_SEMANA.slice(idxHoy), ...DIAS_SEMANA.slice(0, idxHoy)];
+    // Mantener la secuencia cronológica canónica de la semana: Lunes a Domingo
+    return DIAS_SEMANA;
   }
 
   getDiasVisibles() {
@@ -252,10 +250,12 @@ export class PipelineModule {
           ` : `
             <!-- Navegación de columnas en pantalla en Kanban -->
             <div style="display: flex; align-items: center; gap: 5px;">
-              <span style="font-size: 0.74rem; font-weight: 600; color: #64748b; margin-right: 4px;">En pantalla: <strong style="color: #0f172a;">${diasVisibles.map(d => d.corto).join(' - ')}</strong></span>
-              <button type="button" id="btnDiaAnterior" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 0.72rem; cursor: pointer;" title="Desplazar al día anterior">‹ Anterior</button>
-              <button type="button" id="btnDiaSiguiente" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 0.72rem; cursor: pointer;" title="Desplazar al día siguiente">Siguiente ›</button>
-              <button type="button" id="btnToggleTodosDias" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 0.72rem; cursor: pointer;">
+              <span style="font-size: 0.74rem; font-weight: 600; color: #64748b; margin-right: 4px;">En pantalla: <strong style="color: #0f172a;">${this.diasVisiblesCantidad === 7 ? 'Semana Completa (LUN - DOM)' : diasVisibles.map(d => d.corto).join(' - ')}</strong></span>
+              ${this.diasVisiblesCantidad < 7 ? `
+                <button type="button" id="btnDiaAnterior" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 0.72rem; cursor: pointer;" title="Desplazar al día anterior">‹ Anterior</button>
+                <button type="button" id="btnDiaSiguiente" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 0.72rem; cursor: pointer;" title="Desplazar al día siguiente">Siguiente ›</button>
+              ` : ''}
+              <button type="button" id="btnToggleTodosDias" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 0.72rem; cursor: pointer;" title="Alternar entre ver todos los días o vista compacta">
                 ${this.diasVisiblesCantidad === 7 ? 'Ver 4 días' : 'Ver 7 días'}
               </button>
             </div>

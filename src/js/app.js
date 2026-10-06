@@ -201,21 +201,7 @@ class App {
       if (pipeContainer) pipeContainer.classList.add('active');
       if (pageTitle) pageTitle.innerHTML = 'Agenda Semanal de Proveedores';
       if (pageSubtitle) pageSubtitle.innerText = 'Organización de visitas y presupuestos de Lunes a Domingo';
-      if (viewSwitcher) {
-        viewSwitcher.style.display = 'flex';
-        const btnKanban = document.getElementById('btnViewKanban');
-        const btnList = document.getElementById('btnViewList');
-        const modo = this.pipelineModule?.vistaModo || 'kanban';
-        if (btnKanban && btnList) {
-          if (modo === 'kanban') {
-            btnKanban.classList.add('active');
-            btnList.classList.remove('active');
-          } else {
-            btnList.classList.add('active');
-            btnKanban.classList.remove('active');
-          }
-        }
-      }
+      if (viewSwitcher) viewSwitcher.style.display = 'none';
       if (this.pipelineModule) this.pipelineModule.render();
     } else if (view === 'proveedores') {
       if (provDbContainer) provDbContainer.classList.add('active');
