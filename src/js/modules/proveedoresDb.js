@@ -11,7 +11,9 @@ import { DIAS_SEMANA, CATEGORIAS_PROVEEDOR } from './pipeline.js';
  * Soporta números locales (7 dígitos), móviles/nacionales (10 dígitos) y con prefijo +52
  */
 export function obtenerInfoTelefono(contacto) {
-  if (!contacto || typeof contacto !== 'string') return null;
+  if (!contacto || typeof contacto !== 'string') {
+    return { tieneNumero: false, numero: null, formateado: '', urlTel: null, urlWa: null };
+  }
 
   // Buscar secuencias numéricas de teléfono en el texto
   const matches = contacto.match(/(?:\+?52\s*)?(?:[0-9][\s.-]?){7,13}[0-9]/g);
@@ -25,7 +27,9 @@ export function obtenerInfoTelefono(contacto) {
     }
   }
 
-  if (!numero || numero.length < 7) return null;
+  if (!numero || numero.length < 7) {
+    return { tieneNumero: false, numero: null, formateado: '', urlTel: null, urlWa: null };
+  }
 
   // Manejar prefijo país México 52 si viene incluido
   let numDiez = null;
@@ -43,6 +47,7 @@ export function obtenerInfoTelefono(contacto) {
   }
 
   return {
+    tieneNumero: true,
     numero,
     formateado,
     esDiezDigitos: !!numDiez,

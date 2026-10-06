@@ -93,11 +93,17 @@ export class PipelineModule {
   }
 
   filtrarProveedores(proveedores) {
+    if (!Array.isArray(proveedores)) return [];
     return proveedores.filter(p => {
+      if (!p) return false;
+      const provNombre = (p.proveedor || '').toLowerCase();
+      const provNotas = (p.notas || '').toLowerCase();
+      const provPago = (p.tipoPago || '').toLowerCase();
+
       const matchSearch = !this.searchTerm ||
-        p.proveedor.toLowerCase().includes(this.searchTerm) ||
-        (p.notas && p.notas.toLowerCase().includes(this.searchTerm)) ||
-        (p.tipoPago && p.tipoPago.toLowerCase().includes(this.searchTerm));
+        provNombre.includes(this.searchTerm) ||
+        provNotas.includes(this.searchTerm) ||
+        provPago.includes(this.searchTerm);
 
       const matchCat = this.filtroCategoria === 'todas' || p.categoria === this.filtroCategoria;
       const matchPago = this.filtroTipoPago === 'todos' || p.tipoPago === this.filtroTipoPago;
@@ -113,20 +119,32 @@ export class PipelineModule {
   render() {
     if (!this.container) return;
 
-    if (this.vistaModo === 'lista') {
-      this.renderLista();
-    } else {
-      this.renderKanban();
+    try {
+      if (this.vistaModo === 'lista') {
+        this.renderLista();
+      } else {
+        this.renderKanban();
+      }
+    } catch (err) {
+      console.error('Error al renderizar Agenda Semanal:', err);
+      this.container.innerHTML = `
+        <div style="padding: 24px 20px; text-align: center; color: #b91c1c; background: #fef2f2; border: 1.5px solid #f87171; border-radius: 8px; margin: 20px auto; max-width: 600px;">
+          <h3 style="margin-bottom: 6px; font-weight: 800;">Atención al cargar Agenda Semanal</h3>
+          <p style="font-size: 0.82rem; color: #7f1d1d; margin-bottom: 12px;">Se produjo un conflicto: ${err?.message || 'Error desconocido'}</p>
+          <button type="button" class="btn-primary" onclick="location.reload()" style="font-size: 0.78rem; padding: 6px 14px; cursor: pointer;">Recargar</button>
+        </div>
+      `;
     }
   }
 
-  renderBannerProximos(proveedores, diasInfo) {
-    const provsManana = proveedores.filter(p => p.dia === diasInfo.idManana);
+  renderBannerProximos(proveedores = [], diasInfo) {
+    const provsLista = Array.isArray(proveedores) ? proveedores : [];
+    const provsManana = provsLista.filter(p => p && p.dia === diasInfo.idManana);
     const totalPresupuestoManana = provsManana.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
     const totalArticulosManana = provsManana.reduce((acc, p) => acc + (Array.isArray(p.listaPedido) ? p.listaPedido.length : 0), 0);
     
-    const provsHoy = proveedores.filter(p => p.dia === diasInfo.idHoy);
-    const provsHoyVinieron = provsHoy.filter(p => p.yaVino);
+    const provsHoy = provsLista.filter(p => p && p.dia === diasInfo.idHoy);
+    const provsHoyVinieron = provsHoy.filter(p => p && p.yaVino);
     const totalPresupuestoHoy = provsHoy.reduce((acc, p) => acc + (parseFloat(p.presupuestoAprox || p.preventaPresupuesto) || 0), 0);
     const totalPagadoHoy = provsHoyVinieron.reduce((acc, p) => acc + (parseFloat(p.montoPagadoReal) || 0), 0);
     const totalArticulosHoy = provsHoy.reduce((acc, p) => acc + (Array.isArray(p.listaPedido) ? p.listaPedido.length : 0), 0);

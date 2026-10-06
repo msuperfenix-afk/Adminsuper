@@ -948,11 +948,15 @@ class StateManager {
       badge.title = 'Guardando cambios en Firestore para todos los dispositivos';
     } else {
       setTimeout(() => {
-        badge.classList.remove('guardando');
-        label.textContent = isFirebaseConectado() ? 'En Vivo (Global)' : 'Guardado';
-        badge.title = isFirebaseConectado() 
-          ? 'Conectado a la nube. Información sincronizada globalmente para todos los dispositivos.' 
-          : 'Guardado en este dispositivo.';
+        const b = document.getElementById('btnGuardadoIndicador');
+        const l = document.getElementById('textoGuardadoLabel');
+        if (b && b.classList) b.classList.remove('guardando');
+        if (l) l.textContent = isFirebaseConectado() ? 'En Vivo (Global)' : 'Guardado';
+        if (b) {
+          b.title = isFirebaseConectado() 
+            ? 'Conectado a la nube. Información sincronizada globalmente para todos los dispositivos.' 
+            : 'Guardado en este dispositivo.';
+        }
       }, 350);
     }
   }
