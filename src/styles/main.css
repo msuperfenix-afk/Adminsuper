@@ -1722,55 +1722,67 @@ input, button, select, textarea {
 }
 
 /* ======================================================
-   KANBAN SEMANAL CON PALETA SOBRIA Y ESTRUCTURA POR DÍA
+   KANBAN SEMANAL MINIMALISTA Y AJUSTABLE A PANTALLAS
    ====================================================== */
+#pipelineViewContainer {
+  overflow-x: hidden !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .kanban-board {
-  display: flex;
-  gap: 14px;
-  padding: 16px 20px 24px;
-  width: max-content;
-  min-width: 100%;
+  display: grid;
+  grid-template-columns: repeat(var(--columnas-visibles, 4), minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px 20px 24px;
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
 .kanban-column {
-  width: 295px;
-  min-width: 295px;
-  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
   background-color: #ffffff;
   border-radius: 6px;
-  border: 1.5px solid #cbd5e1;
-  box-shadow: var(--shadow-xs);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
 }
 
 .column-header {
-  padding: 12px 14px;
-  border-bottom: 1.5px solid #0f172a;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
   background-color: #f8fafc;
 }
 
 .column-day {
-  font-weight: 900;
-  font-size: 0.95rem;
+  font-weight: 800;
+  font-size: 0.90rem;
   color: #0f172a;
 }
 
 .column-total-budget {
-  font-weight: 900;
-  color: #b91c1c;
+  font-weight: 800;
+  color: #0f172a;
+  font-feature-settings: "tnum";
 }
 
 .column-progress-fill {
-  background: #1e3a8a;
+  background: #334155;
   height: 100%;
   border-radius: 2px;
   transition: width 0.3s ease;
 }
 
 .column-cards-scroll {
-  max-height: 480px;
+  flex: 1;
+  max-height: calc(100vh - 310px);
+  min-height: 240px;
   overflow-y: auto;
   padding: 8px;
   display: flex;
@@ -1790,24 +1802,24 @@ input, button, select, textarea {
 .deal-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-left: 3px solid #334155;
+  border-left: 3px solid #cbd5e1;
   border-radius: 5px;
   padding: 8px 10px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
   transition: all 0.15s ease;
 }
 
 .deal-card:hover {
-  border-color: #94a3b8;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.06);
 }
 
 /* Proveedor que ya vino (rayado / tachado conectado con Hoja Diaria) */
 .deal-card.proveedor-vino {
-  background: #f8fafc;
+  background: #fafafa;
   border-color: #e2e8f0;
   border-left: 3px solid #10b981;
-  opacity: 0.88;
+  opacity: 0.92;
 }
 
 .deal-card.proveedor-vino:hover {
@@ -1818,54 +1830,56 @@ input, button, select, textarea {
 .nombre-prov-tachado {
   text-decoration: line-through;
   text-decoration-thickness: 1.5px;
-  text-decoration-color: #64748b;
+  text-decoration-color: #94a3b8;
   color: #64748b !important;
 }
 
 .badge-vino-hora {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-  font-size: 0.7rem;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  font-size: 0.68rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 9999px;
   white-space: nowrap;
 }
 
+/* Columna destacada de Mañana y Hoy (Minimalista) */
 .kanban-column.col-manana {
-  border: 2px solid #0284c7;
+  border: 1px solid #cbd5e1;
 }
 
 .kanban-column.col-manana .column-header {
-  background-color: #f0f9ff;
-  border-bottom: 2px solid #0284c7;
+  background-color: #f8fafc;
+  border-bottom: 1.5px solid #64748b;
 }
 
 .kanban-column.col-hoy {
-  border: 2px solid #10b981;
+  border: 1.5px solid #0f172a;
 }
 
 .kanban-column.col-hoy .column-header {
-  background-color: #f0fdf4;
-  border-bottom: 2px solid #10b981;
+  background-color: #f8fafc;
+  border-bottom: 2px solid #0f172a;
 }
 
 .badge-dia-destacado {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.4px;
 }
 
 .badge-dia-destacado.manana {
-  background: #0284c7;
-  color: #ffffff;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
 }
 
 .badge-dia-destacado.hoy {
-  background: #10b981;
+  background: #0f172a;
   color: #ffffff;
 }
 
@@ -4931,19 +4945,19 @@ input:disabled {
      REDUCCIÓN Y AJUSTE DE AGENDA SEMANAL (PIPELINE)
      ====================================================== */
   .kanban-board {
-    display: flex !important;
-    flex-direction: row !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
     gap: 8px !important;
-    padding: 6px 4px 12px !important;
+    padding: 6px 4px 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
 
   .kanban-column {
-    min-width: calc(100vw - 32px) !important;
-    max-width: calc(100vw - 32px) !important;
-    scroll-snap-align: center;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
     border-radius: 6px !important;
   }
 
